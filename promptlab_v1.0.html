@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PromptLab">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1e1e1c" media="(prefers-color-scheme: dark)">
+<title>PromptLab</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzFhMWExOCIvPgogIDxyZWN0IHg9IjYiIHk9IjgiIHdpZHRoPSIxMyIgaGVpZ2h0PSIyLjUiIHJ4PSIxLjI1IiBmaWxsPSIjZmZmZmZmIi8+CiAgPHJlY3QgeD0iNiIgeT0iMTMiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyLjUiIHJ4PSIxLjI1IiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIwLjUiLz4KICA8cmVjdCB4PSI2IiB5PSIxOCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjIuNSIgcng9IjEuMjUiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuNSIvPgogIDxjaXJjbGUgY3g9IjIzIiBjeT0iMjIiIHI9IjUiIGZpbGw9IiMzNzhhZGQiLz4KICA8cmVjdCB4PSIyMiIgeT0iMTkuNSIgd2lkdGg9IjIiIGhlaWdodD0iNSIgcng9IjEiIGZpbGw9IndoaXRlIi8+CiAgPHJlY3QgeD0iMjAuNSIgeT0iMjEiIHdpZHRoPSI1IiBoZWlnaHQ9IjIiIHJ4PSIxIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj4KICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWExYTE4Ii8+CiAgPHJlY3QgeD0iMzQiIHk9IjQ1IiB3aWR0aD0iNzMiIGhlaWdodD0iMTQiIHJ4PSI3IiBmaWxsPSIjZmZmZmZmIi8+CiAgPHJlY3QgeD0iMzQiIHk9Ijc0IiB3aWR0aD0iMTEyIiBoZWlnaHQ9IjE0IiByeD0iNyIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC41Ii8+CiAgPHJlY3QgeD0iMzQiIHk9IjEwMyIgd2lkdGg9IjkwIiBoZWlnaHQ9IjE0IiByeD0iNyIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC41Ii8+CiAgPGNpcmNsZSBjeD0iMTMwIiBjeT0iMTI0IiByPSIyOCIgZmlsbD0iIzM3OGFkZCIvPgogIDxyZWN0IHg9IjEyMiIgeT0iMTEwIiB3aWR0aD0iMTYiIGhlaWdodD0iMjgiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPgogIDxyZWN0IHg9IjExNSIgeT0iMTE2IiB3aWR0aD0iMzAiIGhlaWdodD0iMTYiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=">
+<link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;PromptLab&quot;,&quot;short_name&quot;:&quot;PromptLab&quot;,&quot;start_url&quot;:&quot;./promptlab.html&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%231a1a18&quot;,&quot;theme_color&quot;:&quot;%231a1a18&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj4KICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWExYTE4Ii8+CiAgPHJlY3QgeD0iMzQiIHk9IjQ1IiB3aWR0aD0iNzMiIGhlaWdodD0iMTQiIHJ4PSI3IiBmaWxsPSIjZmZmZmZmIi8+CiAgPHJlY3QgeD0iMzQiIHk9Ijc0IiB3aWR0aD0iMTEyIiBoZWlnaHQ9IjE0IiByeD0iNyIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC41Ii8+CiAgPHJlY3QgeD0iMzQiIHk9IjEwMyIgd2lkdGg9IjkwIiBoZWlnaHQ9IjE0IiByeD0iNyIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC41Ii8+CiAgPGNpcmNsZSBjeD0iMTMwIiBjeT0iMTI0IiByPSIyOCIgZmlsbD0iIzM3OGFkZCIvPgogIDxyZWN0IHg9IjEyMiIgeT0iMTEwIiB3aWR0aD0iMTYiIGhlaWdodD0iMjgiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPgogIDxyZWN0IHg9IjExNSIgeT0iMTE2IiB3aWR0aD0iMzAiIGhlaWdodD0iMTYiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=&quot;,&quot;sizes&quot;:&quot;any&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff; --bg-2: #f5f5f3; --bg-3: #ededea;
+    --text: #1a1a18; --text-2: #6b6b66; --text-3: #a0a09a;
+    --border: rgba(0,0,0,0.10); --border-2: rgba(0,0,0,0.18);
+    --blue-bg: #e6f1fb; --blue-text: #0c447c; --blue-border: #85b7eb;
+    --teal-bg: #e1f5ee; --teal-text: #085041;
+    --amber-bg: #faeeda; --amber-text: #633806;
+    --red-bg: #fcebeb; --red-text: #a32d2d; --red-border: #f7c1c1;
+    --green-bg: #eaf3de; --green-text: #3b6d11;
+    --purple-bg: #eeedfe; --purple-text: #3c3489;
+    --coral-bg: #faece7; --coral-text: #993c1d;
+    --pink-bg: #fbeaf0; --pink-text: #72243e;
+    --star: #ba7517; --star-bg: #faeeda;
+    --radius: 8px; --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg-2: #272724; --bg-3: #2f2f2c;
+      --text: #f0f0ec; --text-2: #9a9a94; --text-3: #5c5c58;
+      --border: rgba(255,255,255,0.10); --border-2: rgba(255,255,255,0.18);
+      --blue-bg: #0c2d4f; --blue-text: #85b7eb; --blue-border: #185fa5;
+      --teal-bg: #04342c; --teal-text: #5dcaa5;
+      --amber-bg: #412402; --amber-text: #fac775;
+      --red-bg: #501313; --red-text: #f09595; --red-border: #a32d2d;
+      --green-bg: #173404; --green-text: #97c459;
+      --purple-bg: #26215c; --purple-text: #afa9ec;
+      --coral-bg: #4a1b0c; --coral-text: #f0997b;
+      --pink-bg: #4b1528; --pink-text: #ed93b1;
+      --star: #fac775; --star-bg: #412402;
+    }
+  }
+
+  html, body { height: 100%; }
+  body { font-family: var(--font); background: var(--bg-2); color: var(--text); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* topbar */
+  .topbar { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 0 20px; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 400; letter-spacing: -0.01em; }
+  .topbar-brand i { color: var(--blue-text); font-size: 20px; }
+  .topbar-brand .brand-prompt { color: var(--text-2); font-weight: 400; }
+  .topbar-brand .brand-lab { color: var(--text); font-weight: 600; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .topbar-divider { width: 0.5px; height: 20px; background: var(--border-2); margin: 0 2px; }
+
+  /* layout */
+  .layout { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 52px); }
+
+  /* sidebar */
+  .sidebar { width: 268px; flex-shrink: 0; background: var(--bg); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+
+  /* search */
+  .sidebar-search { padding: 10px 12px; border-bottom: 0.5px solid var(--border); position: relative; }
+  .sidebar-search input { width: 100%; background: var(--bg-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 7px 10px 7px 30px; font-size: 13px; color: var(--text); outline: none; font-family: var(--font); }
+  .sidebar-search input:focus { border-color: var(--border-2); }
+  .sidebar-search .search-icon { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 13px; pointer-events: none; }
+
+  /* filter strip */
+  .filter-strip { border-bottom: 0.5px solid var(--border); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+  .filter-strip-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+  .filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .f-chip {
+    font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px;
+    cursor: pointer; border: 0.5px solid transparent;
+    background: var(--bg-2); color: var(--text-2);
+    display: inline-flex; align-items: center; gap: 4px; transition: all 0.1s;
+    user-select: none;
+  }
+  .f-chip:hover { border-color: var(--border-2); color: var(--text); }
+  .f-chip.active { font-weight: 500; }
+  .f-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .f-chip.fav-chip { }
+  .f-chip.fav-chip.active { background: var(--star-bg); color: var(--star); border-color: var(--star); }
+  .f-chip.fav-chip i { font-size: 10px; }
+
+  /* prompt list */
+  .prompt-list { flex: 1; overflow-y: auto; padding: 6px; }
+  .prompt-item {
+    padding: 9px 10px 9px 12px; border-radius: var(--radius); cursor: pointer;
+    margin-bottom: 2px; border: 0.5px solid transparent; transition: background 0.1s;
+    display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: start;
+  }
+  .prompt-item:hover { background: var(--bg-2); border-color: var(--border); }
+  .prompt-item.active { background: var(--bg-2); border-color: var(--border-2); }
+  .prompt-item-body { min-width: 0; }
+  .prompt-item-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prompt-item-preview { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tag { font-size: 11px; padding: 2px 7px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; font-weight: 500; }
+  .tag .tag-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+  /* star button in list */
+  .star-btn {
+    background: none; border: none; cursor: pointer; padding: 2px 2px 0;
+    color: var(--text-3); font-size: 13px; line-height: 1; flex-shrink: 0;
+    transition: color 0.15s, transform 0.15s; margin-top: 1px;
+  }
+  .star-btn:hover { color: var(--star); transform: scale(1.2); }
+  .star-btn.starred { color: var(--star); }
+
+  .sidebar-footer { padding: 10px 12px; border-top: 0.5px solid var(--border); font-size: 12px; color: var(--text-3); text-align: center; }
+
+  /* main */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; background: var(--bg-2); }
+  .main-header { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+  .prompt-name-input { font-size: 17px; font-weight: 500; border: none; background: transparent; color: var(--text); outline: none; flex: 1; font-family: var(--font); min-width: 0; }
+  .header-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .tag-select { font-size: 12px; font-weight: 500; border: 0.5px solid var(--border); border-radius: 20px; padding: 3px 10px; background: var(--bg-2); color: var(--text); cursor: pointer; outline: none; font-family: var(--font); }
+  .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* star button in header */
+  .star-btn-lg {
+    background: none; border: 0.5px solid var(--border-2); border-radius: var(--radius);
+    cursor: pointer; padding: 5px 10px; color: var(--text-2); font-size: 14px;
+    display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;
+    font-family: var(--font); font-size: 12px; white-space: nowrap;
+  }
+  .star-btn-lg:hover { background: var(--star-bg); color: var(--star); border-color: var(--star); }
+  .star-btn-lg.starred { background: var(--star-bg); color: var(--star); border-color: var(--star); font-weight: 500; }
+
+  /* buttons */
+  .btn { font-size: 13px; border: 0.5px solid var(--border-2); border-radius: var(--radius); padding: 6px 14px; background: transparent; color: var(--text); cursor: pointer; font-family: var(--font); display: inline-flex; align-items: center; gap: 6px; transition: background 0.1s; white-space: nowrap; }
+  .btn:hover { background: var(--bg-3); }
+  .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn-primary:hover { opacity: 0.85; background: var(--text); }
+  .btn-danger { color: var(--red-text); border-color: var(--red-border); }
+  .btn-danger:hover { background: var(--red-bg); }
+  .btn-sm { font-size: 12px; padding: 4px 10px; }
+
+  /* editor */
+  .editor-area {
+    padding: 24px; display: flex; gap: 20px; align-items: flex-start;
+  }
+  .editor-col-left  { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .editor-col-right { flex: 1; min-width: 0; }
+  .prompt-textarea {
+    width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius);
+    padding: 12px 14px; font-size: 14px; font-family: var(--mono);
+    color: var(--text); background: var(--bg); resize: vertical;
+    min-height: calc(66vh - 120px); height: calc(66vh - 120px);
+    line-height: 1.65; outline: none; transition: border-color 0.1s;
+  }
+  .prompt-textarea:focus { border-color: var(--border-2); }
+  /* collapse to single column when too narrow */
+  @media (max-width: 900px) {
+    .editor-area { flex-direction: column; }
+    .editor-col-left, .editor-col-right { width: 100%; }
+    .prompt-textarea { min-height: 160px; height: 160px; }
+  }
+  .field-label { font-size: 11px; font-weight: 500; color: var(--text-2); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 7px; display: block; }
+  .hint { font-size: 12px; color: var(--text-3); margin-top: 5px; }
+  code.inline { font-family: var(--mono); font-size: 11px; background: var(--bg-3); padding: 1px 5px; border-radius: 4px; color: var(--blue-text); }
+
+  /* vars */
+  .vars-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .vars-card-header { padding: 10px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500; background: var(--bg-2); }
+  .var-row { display: grid; grid-template-columns: 150px 1fr auto; gap: 10px; padding: 10px 16px; align-items: center; border-bottom: 0.5px solid var(--border); }
+  .var-row:last-child { border-bottom: none; }
+  .var-row-instr { align-items: start; }
+  .var-name { font-size: 12px; font-weight: 500; color: var(--blue-text); font-family: var(--mono); background: var(--blue-bg); padding: 3px 8px; border-radius: 5px; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+  .var-options { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .option-pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--bg-2); border: 0.5px solid var(--border); cursor: pointer; color: var(--text-2); transition: all 0.1s; }
+  .option-pill.selected { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); font-weight: 500; }
+  .option-pill:hover:not(.selected) { border-color: var(--border-2); color: var(--text); }
+  .option-pill.selected:hover::after { content: ' ✎'; font-size: 11px; opacity: 0.6; }
+  .option-pill.pill-dragging { opacity: 0.35; }
+  .option-pill.pill-drag-left  { box-shadow: -3px 0 0 var(--blue-border); }
+  .option-pill.pill-drag-right { box-shadow:  3px 0 0 var(--blue-border); }
+
+  /* instruction variable type */
+  .var-name-instr { background: var(--teal-bg); color: var(--teal-text); }
+  .instr-list { display: flex; flex-direction: column; gap: 4px; }
+  .instr-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; cursor: pointer; padding: 3px 6px;
+    border-radius: var(--radius); border: 0.5px solid transparent;
+    transition: background 0.1s; user-select: none;
+  }
+  .instr-item:hover { background: var(--bg-2); border-color: var(--border); }
+  .instr-item.checked { background: var(--teal-bg); border-color: #1d9e75; color: var(--teal-text); }
+  .instr-cb {
+    width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+    border: 1.5px solid var(--border-2); background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: var(--teal-text);
+  }
+  .instr-item.checked .instr-cb { background: var(--teal-text); border-color: var(--teal-text); color: var(--bg); }
+  .instr-item-text { flex: 1; }
+  .instr-item-actions { display: flex; gap: 3px; opacity: 0; transition: opacity 0.1s; }
+  .instr-item:hover .instr-item-actions { opacity: 1; }
+  .instr-item.checked .instr-item-actions { opacity: 1; }
+  .instr-act-btn {
+    background: none; border: none; cursor: pointer; padding: 1px 4px;
+    border-radius: 3px; font-size: 11px; color: inherit; opacity: 0.6;
+  }
+  .instr-act-btn:hover { opacity: 1; background: rgba(0,0,0,0.08); }
+  .var-row-instr { grid-template-columns: 150px 1fr auto; align-items: start; }
+  .instr-item.instr-dragging { opacity: 0.35; }
+  .instr-item.instr-drag-top    { box-shadow: inset 0  2px 0 #1d9e75; }
+  .instr-item.instr-drag-bottom { box-shadow: inset 0 -2px 0 #1d9e75; }
+  .btn-add-opt { font-size: 12px; padding: 4px 9px; border-radius: 20px; background: transparent; border: 0.5px dashed var(--border-2); cursor: pointer; color: var(--text-3); font-family: var(--font); display: inline-flex; align-items: center; gap: 3px; transition: all 0.1s; }
+  .btn-add-opt:hover { border-style: solid; color: var(--text); }
+  .no-vars { padding: 14px 16px; font-size: 13px; color: var(--text-3); }
+
+  /* preview */
+  .preview-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; }
+  .preview-card-header { padding: 10px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg-2); font-size: 13px; font-weight: 500; flex-shrink: 0; }
+  .preview-body { padding: 14px 16px; font-size: 14px; line-height: 1.75; color: var(--text); white-space: pre-wrap; word-break: break-word; overflow-y: auto; max-height: calc(34vh - 80px); min-height: 80px; }
+  .var-highlight { background: var(--blue-bg); color: var(--blue-text); border-radius: 4px; padding: 1px 4px; font-weight: 500; font-size: 13px; }
+
+  /* empty */
+  .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-2); padding: 60px 40px; }
+  .empty i { font-size: 36px; color: var(--text-3); }
+  .empty p { font-size: 14px; }
+
+  /* category manager */
+  .cat-manager { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .cat-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 0.5px solid var(--border); cursor: default; transition: background 0.1s; }
+  .cat-row:last-child { border-bottom: none; }
+  .cat-row.cat-dragging { opacity: 0.35; }
+  .cat-row.cat-drag-top    { box-shadow: inset 0  2px 0 var(--blue-border); }
+  .cat-row.cat-drag-bottom { box-shadow: inset 0 -2px 0 var(--blue-border); }
+  .cat-drag-handle { color: var(--text-3); font-size: 12px; cursor: grab; padding: 0 2px; flex-shrink: 0; }
+  .cat-drag-handle:active { cursor: grabbing; }
+  .cat-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; cursor: pointer; transition: transform 0.1s; }
+  .cat-color-dot:hover { transform: scale(1.25); }
+  .cat-row-name { flex: 1; font-size: 13px; }
+  .cat-row-name-input {
+    flex: 1; font-size: 13px; border: 0.5px solid var(--border-2); border-radius: var(--radius);
+    padding: 3px 8px; background: var(--bg); color: var(--text); outline: none; font-family: var(--font);
+  }
+  .cat-row-name-input:focus { border-color: var(--blue-border); }
+  .cat-row-count { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+  .cat-row-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  /* color popover */
+  .color-popover {
+    display: none; position: absolute; background: var(--bg); border: 0.5px solid var(--border-2);
+    border-radius: var(--radius); padding: 8px; gap: 5px; flex-wrap: wrap; width: 132px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 300;
+  }
+  .color-popover.open { display: flex; }
+  .cat-add-row { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px; border-top: 0.5px solid var(--border); }
+  .cat-add-row-top { display: flex; gap: 8px; align-items: center; }
+  .cat-add-row input { flex: 1; min-width: 0; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 6px 10px; font-size: 13px; background: var(--bg-2); color: var(--text); outline: none; font-family: var(--font); }
+  .cat-add-row input:focus { border-color: var(--border-2); }
+  .color-picker-row { display: flex; gap: 5px; align-items: center; }
+  .color-swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.1s; flex-shrink: 0; }
+  .color-swatch.selected { border-color: var(--text); }
+
+  /* help modal */
+  .help-modal { width: 560px; max-height: 80vh; overflow-y: auto; gap: 0; padding: 0; }
+  .help-modal-header { padding: 18px 22px 14px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg); z-index: 1; }
+  .help-modal-header h3 { font-size: 16px; }
+  .help-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 20px; }
+  .help-section { display: flex; flex-direction: column; gap: 8px; }
+  .help-section-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); }
+  .help-row { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.6; color: var(--text-2); }
+  .help-row i { font-size: 14px; color: var(--text-3); flex-shrink: 0; margin-top: 2px; width: 16px; text-align: center; }
+  .help-divider { height: 0.5px; background: var(--border); }
+  .help-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px; font-family: var(--mono); white-space: nowrap; }
+  .help-badge-blue   { background: var(--blue-bg);  color: var(--blue-text); }
+  .help-badge-teal   { background: var(--teal-bg);  color: var(--teal-text); }
+  .help-tip { background: var(--bg-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--text-2); line-height: 1.6; }
+  .help-tip strong { color: var(--text); font-weight: 500; }
+
+  /* onboarding (embedded in main area) */
+  .onboarding {
+    flex: 1; display: flex; align-items: flex-start; justify-content: flex-start; padding: 32px;
+  }
+  .onboarding-card {
+    max-width: 480px; width: 100%; display: flex; flex-direction: column; gap: 28px;
+  }
+  .onboarding-logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 500; color: var(--text-2); }
+  .onboarding-logo i { font-size: 18px; }
+  .onboarding-headline { font-size: 24px; font-weight: 500; line-height: 1.35; color: var(--text); }
+  .onboarding-headline span { color: var(--blue-text); }
+  .onboarding-steps { display: flex; flex-direction: column; gap: 4px; }
+  .onboarding-step { display: flex; flex-direction: row; align-items: flex-start; gap: 16px; padding: 12px 0; }
+  .onboarding-step-arrow { color: var(--text-3); font-size: 13px; flex-shrink: 0; text-align: center; padding: 2px 0 2px 12px; width: 48px; }
+  .onboarding-step-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; flex-shrink: 0;
+  }
+  .onboarding-step-body { display: flex; flex-direction: column; gap: 3px; }
+  .onboarding-step-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .onboarding-step-desc  { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+  .onboarding-badge { display: inline-block; font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 1px 6px; border-radius: 4px; }
+  .onboarding-badge-blue { background: var(--blue-bg); color: var(--blue-text); }
+  .onboarding-badge-teal { background: var(--teal-bg); color: var(--teal-text); }
+  .onboarding-actions { display: flex; gap: 10px; align-items: center; }
+  .btn-onboarding {
+    font-size: 13px; font-weight: 500; padding: 8px 22px;
+    background: var(--text); color: var(--bg); border: none;
+    border-radius: var(--radius); cursor: pointer; font-family: var(--font);
+    display: inline-flex; align-items: center; gap: 7px; transition: opacity 0.15s;
+  }
+  .btn-onboarding:hover { opacity: 0.82; }
+
+  /* modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items: center; justify-content: center; z-index: 200; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border-2); padding: 22px; width: 380px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+  .modal h3 { font-size: 15px; font-weight: 500; }
+  .modal p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+  .modal input, .modal select { width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px 12px; font-size: 14px; background: var(--bg-2); color: var(--text); outline: none; font-family: var(--font); }
+  .modal input:focus { border-color: var(--border-2); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  .import-options { display: flex; flex-direction: column; gap: 8px; }
+  .import-option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: background 0.1s; }
+  .import-option:hover { background: var(--bg-2); }
+  .import-option input[type=radio] { margin-top: 2px; flex-shrink: 0; }
+  .import-option-text strong { display: block; font-size: 13px; font-weight: 500; }
+  .import-option-text span { font-size: 12px; color: var(--text-2); }
+
+  /* toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; transform: translateY(80px); opacity: 0; transition: all 0.25s ease; z-index: 300; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: var(--red-text); }
+
+  #fileInput { display: none; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <i class="fa-solid fa-flask"></i>
+    <span><span class="brand-prompt">Prompt</span><span class="brand-lab">Lab</span></span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
+    <div class="topbar-divider"></div>
+    <button class="btn btn-sm" onclick="exportLibrary()"><i class="fa-solid fa-download"></i> Export</button>
+    <button class="btn btn-sm" onclick="triggerImport()"><i class="fa-solid fa-upload"></i> Import</button>
+    <div class="topbar-divider"></div>
+    <button class="btn btn-sm" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New Prompt</button>
+    <div class="topbar-divider"></div>
+    <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
+    <button class="btn btn-sm" onclick="openHelp()" title="Help"><i class="fa-regular fa-circle-question"></i></button>
+    <button class="btn btn-sm" onclick="openAbout()" title="About"><i class="fa-solid fa-circle-info"></i></button>
+    <input type="file" id="fileInput" accept=".json" onchange="handleFileImport(event)">
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-search">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" id="searchInput" placeholder="Search prompts…" oninput="renderSidebar()">
+    </div>
+    <div class="filter-strip" id="filterStrip"></div>
+    <div class="prompt-list" id="promptList"></div>
+    <div class="sidebar-footer" id="sidebarCount"></div>
+  </aside>
+  <main class="main" id="mainArea"></main>
+</div>
+
+<!-- About modal -->
+<div class="modal-bg" id="aboutModalBg" onclick="if(event.target===this)closeAbout()">
+  <div class="modal" style="width:360px;gap:18px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <i class="fa-solid fa-flask" style="font-size:22px;color:var(--blue-text)"></i>
+      <div>
+        <div style="font-size:16px"><span style="color:var(--text-2);font-weight:400">Prompt</span><span style="font-weight:600">Lab</span></div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:1px">A local prompt management tool</div>
+      </div>
+    </div>
+    <div style="height:0.5px;background:var(--border)"></div>
+    <div style="font-size:13px;color:var(--text-2);line-height:1.7">
+      <div>Created by <strong style="color:var(--text)">Peer Rexroth</strong></div>
+      <div style="margin-top:6px">Feedback &amp; suggestions welcome:</div>
+      <div style="margin-top:3px">
+        <a href="mailto:peer.rexroth@db.com" style="color:var(--blue-text);text-decoration:none;font-weight:500">peer.rexroth@db.com</a>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeAbout()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help modal -->
+<div class="modal-bg" id="helpModalBg" onclick="if(event.target===this)closeHelp()">
+  <div class="modal help-modal">
+    <div class="help-modal-header">
+      <h3><i class="fa-regular fa-circle-question" style="margin-right:8px;color:var(--text-3)"></i>How PromptLab works</h3>
+      <button class="btn btn-sm" onclick="closeHelp()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="help-body">
+
+      <div class="help-section">
+        <div class="help-section-title">Overview</div>
+        <div class="help-row"><i class="fa-regular fa-file-lines"></i><span>PromptLab lets you store reusable AI prompts with <strong style="color:var(--text)">variables</strong> — placeholders that you fill in before copying. Instead of rewriting the same prompt every time, you pick values from pre-defined options and copy the finished prompt in one click.</span></div>
+      </div>
+
+      <div class="help-divider"></div>
+
+      <div class="help-section">
+        <div class="help-section-title">Creating a prompt</div>
+        <div class="help-row"><i class="fa-solid fa-plus"></i><span>Click <strong style="color:var(--text)">New Prompt</strong> in the top bar. Give it a name and assign a category using the dropdown in the header.</span></div>
+        <div class="help-row"><i class="fa-solid fa-pen"></i><span>Write your prompt text in the <strong style="color:var(--text)">Template</strong> field. Use variables anywhere in the text, then click <strong style="color:var(--text)">Sync</strong> to register them.</span></div>
+        <div class="help-row"><i class="fa-regular fa-copy"></i><span>When you're ready, click <strong style="color:var(--text)">Copy prompt</strong> — the finished text with all selected values is copied to your clipboard.</span></div>
+      </div>
+
+      <div class="help-divider"></div>
+
+      <div class="help-section">
+        <div class="help-section-title">Variable types</div>
+        <div class="help-row">
+          <i class="fa-solid fa-circle-dot"></i>
+          <span>
+            <span class="help-badge help-badge-blue">{{name}}</span>&nbsp;
+            <strong style="color:var(--text)">Option variable</strong> — single-select. Write <code style="font-family:var(--mono);font-size:11px">{{Tone}}</code> in your template. After Sync, add options like <em>formal</em>, <em>casual</em>, <em>humorous</em> and click the one you want. Only the selected value is inserted.
+          </span>
+        </div>
+        <div class="help-row">
+          <i class="fa-solid fa-list-check"></i>
+          <span>
+            <span class="help-badge help-badge-teal">[[name]]</span>&nbsp;
+            <strong style="color:var(--text)">Instruction variable</strong> — multi-select checklist. Write <code style="font-family:var(--mono);font-size:11px">[[Instructions]]</code> in your template. After Sync, add bullet items and check any combination. All checked items are inserted as a bullet list (<code style="font-family:var(--mono);font-size:11px">• item</code>).
+          </span>
+        </div>
+        <div class="help-tip">
+          <strong>Tip:</strong> After writing variables in the template, always click <strong>Sync</strong> — it reads the template and creates entries for any new variables it finds. Existing variables and their options are preserved.<br><br>
+          <strong>Escaping:</strong> Prefix any placeholder with a backslash to use it as literal text — e.g. <code style="font-family:var(--mono);font-size:11px">\{{name}}</code> is copied as <code style="font-family:var(--mono);font-size:11px">{{name}}</code> without being treated as a variable. In the preview, escaped placeholders appear dimmed and italic.
+        </div>
+      </div>
+
+      <div class="help-divider"></div>
+
+      <div class="help-section">
+        <div class="help-section-title">Managing options</div>
+        <div class="help-row"><i class="fa-solid fa-plus"></i><span>Click <strong style="color:var(--text)">+ Option</strong> (or <strong style="color:var(--text)">+ Instruction</strong>) next to a variable to add a new value.</span></div>
+        <div class="help-row"><i class="fa-solid fa-pen"></i><span><strong style="color:var(--text)">Double-click</strong> any option pill to edit its text in place.</span></div>
+        <div class="help-row"><i class="fa-solid fa-grip-dots"></i><span><strong style="color:var(--text)">Drag</strong> option pills (or instruction rows) to reorder them.</span></div>
+        <div class="help-row"><i class="fa-solid fa-trash-can"></i><span>The <strong style="color:var(--text)">trash icon</strong> on an option variable removes the currently selected option. The <strong style="color:var(--text)">× icon</strong> removes the entire variable.</span></div>
+      </div>
+
+      <div class="help-divider"></div>
+
+      <div class="help-section">
+        <div class="help-section-title">Categories &amp; filtering</div>
+        <div class="help-row"><i class="fa-solid fa-tags"></i><span>Click <strong style="color:var(--text)">Categories</strong> in the top bar to add, rename, recolor, or delete categories. A category can only be deleted when no prompts are assigned to it.</span></div>
+        <div class="help-row"><i class="fa-solid fa-filter"></i><span>Use the filter chips in the sidebar to show only prompts from a specific category, or only your <strong style="color:var(--text)">Favorites</strong>.</span></div>
+        <div class="help-row"><i class="fa-regular fa-star"></i><span>Mark any prompt as a favorite with the <strong style="color:var(--text)">★ star</strong> — either in the sidebar list or the header button when a prompt is open.</span></div>
+      </div>
+
+      <div class="help-divider"></div>
+
+      <div class="help-section">
+        <div class="help-section-title">Import &amp; export</div>
+        <div class="help-row"><i class="fa-solid fa-download"></i><span><strong style="color:var(--text)">Export</strong> saves your entire library (prompts + categories) as a <code style="font-family:var(--mono);font-size:11px">.json</code> file. Use it to back up your work or share prompts with others.</span></div>
+        <div class="help-row"><i class="fa-solid fa-upload"></i><span><strong style="color:var(--text)">Import</strong> loads a <code style="font-family:var(--mono);font-size:11px">.json</code> file. Choose <em>Merge</em> to add imported prompts alongside your existing ones (duplicates skipped), or <em>Replace</em> to overwrite your library entirely.</span></div>
+        <div class="help-tip"><strong>Your data is stored locally</strong> in your browser (localStorage). It persists between sessions in the same browser, but is not synced across devices. Use Export regularly to keep a backup.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Add / edit variable option modal -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="modalTitle">Add option</h3>
+    <input type="text" id="modalInput" placeholder="Enter value…">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modalConfirmBtn" onclick="confirmModal()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Category manager modal -->
+<div class="modal-bg" id="catModalBg" onclick="if(event.target===this)closeCatManager()">
+  <div class="modal" style="width:420px">
+    <h3>Manage categories</h3>
+    <div class="cat-manager" id="catManagerBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeCatManager()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import modal -->
+<div class="modal-bg" id="importModalBg" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal">
+    <h3>Import prompts</h3>
+    <p id="importModalDesc"></p>
+    <div class="import-options">
+      <label class="import-option">
+        <input type="radio" name="importMode" value="merge" checked>
+        <div class="import-option-text">
+          <strong>Merge</strong>
+          <span>Add imported prompts to your existing library. Duplicates are skipped.</span>
+        </div>
+      </label>
+      <label class="import-option">
+        <input type="radio" name="importMode" value="replace">
+        <div class="import-option-text">
+          <strong>Replace</strong>
+          <span>Replace your entire library with the imported file. Current prompts will be lost.</span>
+        </div>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmImport()">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Color popover (for editing category color) -->
+<div class="color-popover" id="colorPopover"></div>
+
+<div class="toast" id="toast">
+  <i id="toastIcon" class="fa-solid fa-check"></i>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+// ── Color palette ─────────────────────────────────────────────────────────────
+const CAT_COLORS = [
+  { name:'blue',   bg:'#e6f1fb', text:'#0c447c', dot:'#378add' },
+  { name:'teal',   bg:'#e1f5ee', text:'#085041', dot:'#1d9e75' },
+  { name:'amber',  bg:'#faeeda', text:'#633806', dot:'#ba7517' },
+  { name:'purple', bg:'#eeedfe', text:'#3c3489', dot:'#7f77dd' },
+  { name:'coral',  bg:'#faece7', text:'#993c1d', dot:'#d85a30' },
+  { name:'pink',   bg:'#fbeaf0', text:'#72243e', dot:'#d4537e' },
+  { name:'green',  bg:'#eaf3de', text:'#3b6d11', dot:'#639922' },
+  { name:'red',    bg:'#fcebeb', text:'#a32d2d', dot:'#e24b4a' },
+];
+
+// ── Defaults ──────────────────────────────────────────────────────────────────
+const DEFAULT_CATS = [
+  { id:'engineering',       name:'Communication',        color:'blue'   },
+  { id:'marketing',         name:'Productivity & Planning', color:'purple' },
+  { id:'other',             name:'Problem solving',      color:'teal'   },
+  { id:'content',           name:'Writing & Editing',    color:'amber'  },
+  { id:'cat_1782399802588', name:'Coding & Technical',   color:'red'    },
+];
+const DEFAULT_PROMPTS = [
+  {
+    id: 1782640335571,
+    name: "Improve prompt v1.0",
+    catId: "content",
+    favorite: false,
+    template: "## ROLE\nYou are an expert prompt engineer.\n\n## TASK\nAnalyze and rewrite the prompt provided by the user. Improve its structure, clarity, and completeness so it is ready to use as-is.\n\n## INSTRUCTIONS\n\n### Structure\n- Organize content in this order: context → task → constraints → output format\n- Use `##`, `###`, or `**` for hierarchy where appropriate\n- Use headers, bullet points, or numbered lists to aid readability\n- Keep each instruction atomic — one idea per line\n- Eliminate redundancy and tighten phrasing\n\n### Content\n- Make the objective explicit and unambiguous\n- Add any context the model needs to perform well\n- Define the target audience, role, or persona if relevant\n- Specify desired output format (length, tone, style)\n- Add constraints or edge case handling where needed\n- Include a concrete example if it reduces ambiguity\n\n### Formatting Rules\n- Do not use `---` as section separator\n- Do not add commentary, preamble, or explanation outside the two required output sections\n\n## OUTPUT FORMAT\n\n**1. Improved Prompt**\nThe fully rewritten prompt in a code block, ready to copy and use.\n\n**2. Change Log**\nA concise bullet list explaining each change and the reason for it.\n\n## INPUT\n",
+    vars: {}
+  },
+  {
+    id: 1782631824808,
+    name: "Create meeting minutes v1.0",
+    catId: "engineering",
+    favorite: true,
+    template: "## ROLE\nYou are a professional meeting minutes writer.\n\n## CONTEXT\n- **Audience:** {{audience}}\n- **Meeting type:** {{meeting_type}}\n- **Detail level:** {{detail_level}}\n- **Tone:** {{tone}}\n\n## TASK\nTransform the input into polished, structured minutes.\n\n**Strict fidelity rule:** Base output exclusively on the provided input. Do not infer, assume, or introduce any information not explicitly stated in the input.\n\n## OUTPUT STRUCTURE\nProduce only the sections listed below, in this exact order, each with a bold heading:\n\n[[sections]]\n\n## SECTION FORMATTING RULES\n\n### Action Items\nRender as a markdown table with these exact columns:\n\n| Action Item | Owner | Due Date |\n|---|---|---|\n\n- Begin each action item with a verb (e.g., \"Send budget to finance team\")\n- One action item and one owner per row\n- Format due dates as `Mon DD` or `YYYY-MM-DD`\n- Leave a cell blank if the owner or due date is not stated — do not infer\n\n### Decisions\n- One decision per bullet point\n- State each decision in full using plain declarative sentences\n- Avoid hedging language — write \"The team decided\" not \"it was generally agreed\"\n\n### Discussion Points\n- One bullet per key point, summarized accurately and concisely\n- Omit tangential or off-topic remarks\n- Match depth to {{detail_level}}\n\n### Next Steps\n- One bullet per next step\n- Capture process- or project-level progress, not individual task assignments\n\n### All Other Sections\n- Use prose or bullet points suited to the content type\n- Match formality to {{tone}} and {{audience}}\n\n## PRE-OUTPUT CHECKLIST\nBefore writing the final output, verify:\n\n- [ ] All sections in [[sections]] are present and in the specified order\n- [ ] Action items table uses the exact three-column structure\n- [ ] No action item owner or due date has been inferred — blank if unstated\n- [ ] Every decision is stated explicitly and in full, without ambiguity\n- [ ] No content has been fabricated or assumed beyond the input\n- [ ] Language matches {{tone}} and is appropriate for {{audience}}\n\n## OUTPUT\nReturn only the meeting minutes, ready to share with {{audience}}. Do not include the checklist, preamble, or any meta-commentary.",
+    vars: {
+      audience:     { type:'option',      options:["Project team","Internal team","Senior management"], selected:"Project team" },
+      meeting_type: { type:'option',      options:["Status meeting","Project meeting","SteerCo","1:1","Workshop"], selected:"Status meeting" },
+      detail_level: { type:'option',      options:["Summary only","Balanced","Detailed","High-level","Action-focused"], selected:"Summary only" },
+      tone:         { type:'option',      options:["Professional","Concise","Executive","Neutral"], selected:"Professional" },
+      sections:     { type:'instruction', options:["Meeting Summary","Executive Summary","Meeting Attendees","Discussion Points","Decisions","Action Items","Open Points","Next Steps"], selected:["Executive Summary","Decisions","Action Items","Open Points","Next Steps","Meeting Attendees","Discussion Points"] }
+    }
+  },
+  {
+    id: 1782591594332,
+    name: "Create issue tree v1.0",
+    catId: "other",
+    favorite: false,
+    template: "## ROLE\nYou are a structured problem-solving assistant specializing in issue tree frameworks used in management consulting, strategy, and root cause analysis.\n\n## OBJECTIVE\nBuild a **{{tree_depth}}** level issue tree for the problem statement below. The tree must be logically sound, consultant-grade, and ready for direct use in analysis or presentation.\n\n## DECOMPOSITION LOGIC\n- **Approach:** {{decomposition_approach}} \n- **MECE discipline:** {{mece_strictness}} — branches at every level must be mutually exclusive and collectively exhaustive\n- **Decompose across these dimensions where relevant:**\n  {{decomposition_dimensions}}\n\n## TREE STRUCTURE RULES\n- **Root node:** The core problem or question, stated precisely\n- **Branch nodes:** Each branch represents a {{branch_type}} of its parent\n- **Leaf nodes:** Each leaf contains {{leaf_node_content}}\n\n## NODE FORMAT\nFor every node, include:\n1. **Label** — {{label_style}}\n2. **Rationale** — One sentence explaining why this branch exists and what it contributes to the analysis\n3. **Priority** — {{priority_flag}} indicator: `High`, `Medium`, or `Low`\n\n## OUTPUT FORMAT\nRender the tree as {{output_format}}\n\n## TONE & AUDIENCE\n- **Tone:** {{tone}} \n- **Audience:** {{audience}} \n\n## ADDITIONAL CONSTRAINTS\n{{special_instructions}}\n\n## PROBLEM STATEMENT\n\n",
+    vars: {
+      tree_depth:               { type:'option', options:["1","2","3","4"], selected:"3" },
+      decomposition_approach:   { type:'option', options:["Hypothesis-driven","Component-based","Cause-effect"], selected:"Hypothesis-driven" },
+      mece_strictness:          { type:'option', options:["Strict","Balanced","Flexible"], selected:"Balanced" },
+      decomposition_dimensions: { type:'option', options:["People / Process / Technology","Internal / External","Short-term / Long-term","Strategic / Operational / Financial","Revenue / Cost","Porter's Five Forces","Customer journey stages","Balanced Scorecard"], selected:"People / Process / Technology" },
+      branch_type:              { type:'option', options:["Hypothesis","Component","Driver"], selected:"Hypothesis" },
+      leaf_node_content:        { type:'option', options:["Testable hypothesis","Specific action","Data request"], selected:"Testable hypothesis" },
+      label_style:              { type:'option', options:["Concise noun phrase","Action verb","Question form"], selected:"Concise noun phrase" },
+      priority_flag:            { type:'option', options:["Impact × Feasibility","Urgency × Importance"], selected:"Impact × Feasibility" },
+      output_format:            { type:'option', options:["Nested bullet list","Markdown table"], selected:"Nested bullet list" },
+      tone:                     { type:'option', options:["Analytical and precise","Neutral / Objective","Executive-facing"], selected:"Analytical and precise" },
+      audience:                 { type:'option', options:["Internal team","Senior managment","External client"], selected:"Internal team" },
+      special_instructions:     { type:'option', options:["None"], selected:"None" }
+    }
+  },
+  {
+    id: 1782587856121,
+    name: "Translate text v1.0",
+    catId: "content",
+    favorite: true,
+    template: "## ROLE\nYou are a professional translator with expertise in linguistics, cultural nuance, and domain-specific terminology.\n\n## CONTEXT\n- Target language: {{target_lang}}\n- Target audience: {{audience}}\n- Domain: {{domain}}\n- Formality level: {{formality}}\n- Source language: auto-detect\n\n**Terminology rules:**\n- Use industry-standard terminology for the specified domain\n- Preserve technical terms in the source language unless a well-established target-language equivalent exists\n- Never translate proper nouns, brand names, or technical identifiers unless explicitly instructed\n\n## TASK\n1. Detect the source language of the source text\n2. Translate the full source text into {{target_lang}}\n3. Deliver the output in the format specified below\n\n## LANGUAGE DETECTION RULES\n- If the source language is identifiable, state it before translating\n- If the source text contains multiple languages, detect and translate each segment individually\n- If detection confidence is low, prepend the output with `[detected: LANGUAGE — low confidence]`\n- If the source language cannot be determined at all, ask for clarification before proceeding\n\n## TRANSLATION RULES\n- Preserve the original meaning exactly — no omissions, additions, or inferences\n- Adapt idioms, expressions, and cultural references naturally into {{target_lang}} conventions\n- Maintain the original structure (paragraphs, lists, headings) unless target-language conventions require adjustment\n- Use consistent terminology throughout\n- Preserve active or passive voice as in the source unless {{target_lang}} norms require otherwise\n- Match the specified formality level: {{formality}}\n- Preserve the original tone (e.g., formal, casual, persuasive, neutral) — do not editorialize\n\n## OUTPUT FORMAT\nDeliver the translation using this format: **{{output_format}}**\n\nChoose the behavior based on the selected format:\n- `translation + detected language header` — Prepend one line `[detected: LANGUAGE]`, then the translation\n- `side-by-side` — Two columns: source paragraph on the left, translation on the right, aligned by paragraph\n- `translated text only` — Return the translation with no additional content\n- `markdown-formatted` — Preserve or convert structure into Markdown headings, lists, and bold\n- `plain text` — Strip all markup, headings, and bullet points from the output\n\n## QUALITY CHECKLIST\nBefore delivering, verify:\n- [ ] Source language is correctly identified\n- [ ] Translation reads naturally in {{target_lang}} — not word-for-word\n- [ ] Cultural references are appropriately adapted or annotated\n- [ ] Terminology is consistent with the specified domain\n- [ ] Formality and tone match the specified level\n- [ ] No source-language fragments remain in the output\n\n## INPUT\n",
+    vars: {
+      target_lang:   { type:'option', options:["English","German","Spanish","French"], selected:"English" },
+      audience:      { type:'option', options:["General audience","Business stakeholders","Senior management","Clients / External customers","Technical experts"], selected:"General audience" },
+      domain:        { type:'option', options:["Multi-Domain / Hybrid","Business & Corporate","Technical & IT","Product & Customer","Sales & Marketing"], selected:"Multi-Domain / Hybrid" },
+      formality:     { type:'option', options:["Neutral","Formal","Informal / Casual"], selected:"Neutral" },
+      output_format: { type:'option', options:["Side-by-side","Translated text only","Markdown-formatted","Plain text"], selected:"Side-by-side" }
+    }
+  },
+  {
+    id: 1782583967756,
+    name: "Unify prompt tone, style, and terminology v1.0",
+    catId: "content",
+    favorite: false,
+    template: "## ROLE\nYou are a prompt editor specializing in linguistic consistency.\n\n## TASK\nAnalyze the prompt provided in the INPUT section and revise it so that tone, voice, terminology, formality, and phrasing are coherent throughout — without changing the prompt's meaning, intent, or structure.\n\n## ANALYSIS PHASE\nBefore rewriting, audit the prompt across these five dimensions:\n\n### Dimension 1: Tone & Voice\n- Identify whether the register is consistently instructional, conversational, or formal\n- Flag person or mood shifts (e.g., second-person \"you\" vs. imperative \"do X\" vs. third-person \"the model should\")\n- Confirm the emotional register remains stable (neutral, warm, or authoritative)\n\n### Dimension 2: Terminology\n- Verify each concept is referred to by the same name throughout.\n- Flag inconsistent synonyms (e.g., \"user\" vs. \"customer\" vs. \"person\")\n- Flag technical vocabulary that is introduced but later abandoned\n\n### Dimension 3: Formality Level\n- Confirm sentence complexity remains consistent\n- Flag contractions used selectively rather than uniformly\n- Flag hedging phrases (\"try to\", \"you might\", \"feel free\") used inconsistently\n\n### Dimension 4: Tense & Modality\n- Flag present-tense imperatives mixed with unnecessary past or future tenses\n- Confirm modal verbs (must, should, can, may) are used with consistent intent and weight\n\n### Dimension 5: Structural Parallelism\n- Confirm list items follow a consistent grammatical pattern (all imperatives, all noun phrases, or all questions)\n- Confirm section headers follow the same style and capitalization convention\n\n## REVISION INSTRUCTIONS\nApply the following fixes in order:\n\n1. **Establish a dominant voice** — Identify the most frequently used voice and normalize all deviations to match it\n2. **Unify terminology** — Choose one term per concept and apply it throughout. Flag each substitution in the report\n3. **Normalize formality** — Set a single formality register and adjust all sentences to match\n4. **Align tense and modality** — Default to present-tense imperatives unless the prompt's logic requires otherwise\n5. **Enforce parallel structure** — Rewrite list items and headers so they follow identical grammatical patterns\n6. **Preserve intent** — Do not add, remove, or reorder instructions. Do not change examples unless they contain terminology inconsistencies\n\n## OUTPUT FORMAT\nReturn two sections in this order:\n\n### Section 1: Alignment Report\nA bulleted list of every inconsistency found, grouped by dimension. For each issue, state the original phrasing and the replacement.\n\nFormat each entry as:\n- **[Dimension]:** \"[original]\" → \"[revised]\" (reason)\n\nExamples:\n- **Terminology:** \"end user\" → \"user\" (also appeared as \"person\" and \"customer\")\n- **Tense:** \"The assistant will respond…\" → \"The assistant responds…\" (aligns with imperative voice)\n- **Parallelism:** Mixed imperatives and noun phrases in list → all converted to imperatives\n\n### Section 2: Revised Report\nThe full revised prompt with all inconsistencies resolved. Do not annotate or comment inside the revised prompt. Return it as a text block. \n\n## CONSTRAINTS\n- Do not rewrite for clarity, conciseness, or quality beyond what alignment requires\n- Do not add new instructions, examples, or context not present in the original\n- Do not alter proper nouns, technical names, or brand names\n- If the prompt uses intentional stylistic variation (e.g., a deliberate register shift for a specific section), flag it in the report but leave it unchanged\n\n## INPUT\n",
+    vars: {}
+  }
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = "promptlab-v4";
+let prompts = [], categories = [];
+let activeId = null, filterCatId = null, filterFavs = false;
+let modalTarget = null, pendingImportData = null, newCatColor = 'blue';
+
+// ── Persistence ───────────────────────────────────────────────────────────────
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      categories  = d.categories  || JSON.parse(JSON.stringify(DEFAULT_CATS));
+      prompts     = d.prompts     || JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
+      activeId    = d.activeId    || (prompts[0]?.id ?? null);
+      filterCatId = d.filterCatId || null;
+      filterFavs  = d.filterFavs  || false;
+    } else {
+      categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
+      prompts    = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
+      activeId   = prompts[0]?.id ?? null;
+    }
+    // migrate old tag-based prompts
+    prompts.forEach(p => {
+      if (p.tag && !p.catId) {
+        const m = {Marketing:'marketing',Engineering:'engineering',Content:'content',Other:'other'};
+        p.catId = m[p.tag] || 'other';
+      }
+      if (p.favorite === undefined) p.favorite = false;
+      // migrate vars without type
+      if (p.vars) Object.values(p.vars).forEach(v => {
+        if (!v.type) v.type = 'option';
+      });
+    });
+  } catch(e) {
+    categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
+    prompts    = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
+    activeId   = prompts[0]?.id ?? null;
+  }
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ prompts, categories, activeId, filterCatId, filterFavs }));
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function getCat(id)       { return categories.find(c => c.id === id) || { name:'Uncategorized', color:'blue' }; }
+function colorOf(name)    { return CAT_COLORS.find(c => c.name === name) || CAT_COLORS[0]; }
+function catDot(cat)      { return colorOf(cat.color).dot; }
+function esc(s)   { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escJs(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+// ── Filter strip ──────────────────────────────────────────────────────────────
+function renderFilterStrip() {
+  const favCount = prompts.filter(p => p.favorite).length;
+  const allCount = prompts.length;
+
+  const favChip = `<span class="f-chip fav-chip${filterFavs?' active':''}" onclick="toggleFavFilter()">
+    <i class="fa-${filterFavs?'solid':'regular'} fa-star"></i>
+    Favorites <span style="opacity:0.6">${favCount}</span>
+  </span>`;
+
+  const allChip = `<span class="f-chip${!filterCatId&&!filterFavs?' active':''}\"
+    style="${!filterCatId&&!filterFavs?'background:var(--bg-3);color:var(--text);border-color:var(--border-2)':''}"
+    onclick="setFilter(null,false)">
+    All <span style="opacity:0.6">${allCount}</span>
+  </span>`;
+
+  const catChips = categories.map(c => {
+    const count = prompts.filter(p => p.catId === c.id).length;
+    const active = filterCatId === c.id && !filterFavs;
+    const col = colorOf(c.color);
+    const dot = catDot(c);
+    const style = active ? `background:${col.bg};color:${col.text};border-color:${dot}` : '';
+    return `<span class="f-chip${active?' active':''}" style="${style}" onclick="setFilter('${c.id}',false)">
+      <span class="chip-dot" style="background:${dot}"></span>${esc(c.name)} <span style="opacity:0.6">${count}</span>
+    </span>`;
+  }).join('');
+
+  document.getElementById('filterStrip').innerHTML = `
+    <span class="filter-strip-label">Filter</span>
+    <div class="filter-chips">${allChip}${favChip}${catChips}</div>`;
+}
+
+function setFilter(catId, favs) {
+  filterCatId = catId; filterFavs = favs;
+  save(); renderSidebar();
+}
+function toggleFavFilter() {
+  filterFavs = !filterFavs;
+  if (filterFavs) filterCatId = null;
+  save(); renderSidebar();
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  renderFilterStrip();
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const filtered = prompts.filter(p => {
+    if (filterFavs && !p.favorite) return false;
+    if (filterCatId && p.catId !== filterCatId) return false;
+    if (q && !p.name.toLowerCase().includes(q) && !p.template.toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a, b) => {
+    if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  document.getElementById('promptList').innerHTML = filtered.length
+    ? filtered.map(p => {
+        const cat = getCat(p.catId);
+        const col = colorOf(cat.color);
+        const dot = catDot(cat);
+        const starred = p.favorite;
+        return `<div class="prompt-item${p.id===activeId?' active':''}" onclick="select(${p.id})">
+          <div class="prompt-item-body">
+            <div class="prompt-item-name">${esc(p.name)}</div>
+            <div class="prompt-item-preview">${esc(p.template.substring(0,50))}…</div>
+            <span class="tag" style="background:${col.bg};color:${col.text}">
+              <span class="tag-dot" style="background:${dot}"></span>${esc(cat.name)}
+            </span>
+          </div>
+          <button class="star-btn${starred?' starred':''}" onclick="toggleFav(event,${p.id})"
+            title="${starred?'Remove from favorites':'Add to favorites'}">
+            <i class="fa-${starred?'solid':'regular'} fa-star"></i>
+          </button>
+        </div>`;
+      }).join('')
+    : `<div style="padding:24px 12px;font-size:13px;color:var(--text-3);text-align:center">
+        ${filterFavs ? 'No favorites yet. Click ★ on any prompt.' : 'No prompts found.'}
+      </div>`;
+
+  const shown = filtered.length;
+  document.getElementById('sidebarCount').textContent =
+    `${shown} of ${prompts.length} prompt${prompts.length!==1?'s':''} shown`;
+}
+
+// ── Favorites ─────────────────────────────────────────────────────────────────
+function toggleFav(e, id) {
+  e.stopPropagation();
+  const p = prompts.find(x => x.id === id);
+  p.favorite = !p.favorite;
+  save();
+  renderSidebar();
+  // update header star if this is the active prompt
+  if (id === activeId) {
+    const btn = document.getElementById('headerStarBtn');
+    if (btn) {
+      btn.className = `star-btn-lg${p.favorite?' starred':''}`;
+      btn.title = p.favorite ? 'Remove from favorites' : 'Add to favorites';
+      btn.innerHTML = `<i class="fa-${p.favorite?'solid':'regular'} fa-star"></i> ${p.favorite?'Favorited':'Favorite'}`;
+    }
+  }
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+function renderMain() {
+  const p = prompts.find(x => x.id === activeId);
+  const main = document.getElementById('mainArea');
+  if (!p) {
+    main.innerHTML = `<div class="onboarding">
+      <div class="onboarding-card">
+        <div class="onboarding-logo">
+          <i class="fa-solid fa-flask"></i>
+          <span><span style="color:var(--text-2);font-weight:400">Prompt</span><span style="font-weight:600">Lab</span></span>
+        </div>
+        <div class="onboarding-headline">Your prompts.<br>Always <span>ready to use</span>.</div>
+        <div class="onboarding-steps">
+          <div class="onboarding-step">
+            <div class="onboarding-step-icon" style="background:var(--blue-bg);color:var(--blue-text)">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </div>
+            <div class="onboarding-step-body">
+              <div class="onboarding-step-title">Write your template</div>
+              <div class="onboarding-step-desc">Use <span class="onboarding-badge onboarding-badge-blue">{{variable}}</span> and <span class="onboarding-badge onboarding-badge-teal">[[instructions]]</span> as placeholders in your prompt text.</div>
+            </div>
+          </div>
+          <div class="onboarding-step-arrow"><i class="fa-solid fa-chevron-down"></i></div>
+          <div class="onboarding-step">
+            <div class="onboarding-step-icon" style="background:var(--teal-bg);color:var(--teal-text)">
+              <i class="fa-solid fa-sliders"></i>
+            </div>
+            <div class="onboarding-step-body">
+              <div class="onboarding-step-title">Fill in the options</div>
+              <div class="onboarding-step-desc">Pick predefined values for each variable — the preview updates instantly.</div>
+            </div>
+          </div>
+          <div class="onboarding-step-arrow"><i class="fa-solid fa-chevron-down"></i></div>
+          <div class="onboarding-step">
+            <div class="onboarding-step-icon" style="background:var(--amber-bg);color:var(--amber-text)">
+              <i class="fa-regular fa-copy"></i>
+            </div>
+            <div class="onboarding-step-body">
+              <div class="onboarding-step-title">Copy and use</div>
+              <div class="onboarding-step-desc">Hit <strong>Copy prompt</strong> to copy the finished prompt to your clipboard.</div>
+            </div>
+          </div>
+        </div>
+        <div class="onboarding-actions">
+          <button class="btn-onboarding" onclick="selectFirstPrompt()">
+            Open library <i class="fa-solid fa-arrow-right" style="font-size:12px"></i>
+          </button>
+          <button class="btn" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New prompt</button>
+        </div>
+      </div>
+    </div>`; return;
+  }
+
+  const catOptions = categories.map(c =>
+    `<option value="${esc(c.id)}"${c.id===p.catId?' selected':''}>${esc(c.name)}</option>`
+  ).join('');
+
+  const varRows = Object.entries(p.vars).map(([k,v]) => {
+    if (v.type === 'instruction') {
+      const items = v.options.map((o,i) => {
+        const checked = (v.selected||[]).includes(o);
+        return `<div class="instr-item${checked?' checked':''}" draggable="true" data-opt="${escJs(o)}" data-varkey="${escJs(k)}" data-promptid="${p.id}" onclick="toggleInstr(${p.id},'${escJs(k)}','${escJs(o)}')">
+          <span class="instr-cb">${checked?'✓':''}</span>
+          <span class="instr-item-text">${esc(o)}</span>
+          <span class="instr-item-actions">
+            <button class="instr-act-btn" onclick="event.stopPropagation();editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Edit">✎</button>
+            <button class="instr-act-btn" onclick="event.stopPropagation();deleteInstrItem(${p.id},'${escJs(k)}','${escJs(o)}')" title="Remove" style="color:var(--red-text)">✕</button>
+          </span>
+        </div>`;
+      }).join('');
+      const selCount = (v.selected||[]).length;
+      return `<div class="var-row var-row-instr">
+        <span class="var-name var-name-instr" title="${esc(k)}">${esc(k)}</span>
+        <div>
+          <div class="instr-list">${items||'<div style="font-size:12px;color:var(--text-3);padding:2px 0">No instructions yet.</div>'}</div>
+          <button class="btn-add-opt" style="margin-top:6px" onclick="addOption(${p.id},'${escJs(k)}')"><i class="fa-solid fa-plus" style="font-size:10px"></i> Instruction</button>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;padding-top:2px">
+          <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>`;
+    }
+    // default: option type
+    return `<div class="var-row">
+      <span class="var-name" title="${esc(k)}">${esc(k)}</span>
+      <div class="var-options">
+        ${v.options.map(o=>`<span class="option-pill${o===v.selected?' selected':''}" draggable="true" data-opt="${escJs(o)}" data-promptid="${p.id}" data-varkey="${escJs(k)}" onclick="selectOpt(${p.id},'${escJs(k)}','${escJs(o)}')" ondblclick="editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Double-click to edit">${esc(o)}</span>`).join('')}
+        <button class="btn-add-opt" onclick="addOption(${p.id},'${escJs(k)}')"><i class="fa-solid fa-plus" style="font-size:10px"></i> Option</button>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="btn btn-sm btn-danger" onclick="deleteSelectedOpt(${p.id},'${escJs(k)}')" title="Remove selected option"
+          ${v.options.length<=1?'disabled style="opacity:0.35;cursor:not-allowed"':''}>
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+        <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  main.innerHTML = `
+    <div class="main-header">
+      <input class="prompt-name-input" value="${esc(p.name)}" oninput="updateName(${p.id},this.value)" placeholder="Prompt name…">
+      <div class="header-meta">
+        <select class="tag-select" onchange="updateCat(${p.id},this.value)">${catOptions}</select>
+        <button id="headerStarBtn" class="star-btn-lg${p.favorite?' starred':''}"
+          onclick="toggleFav(event,${p.id})"
+          title="${p.favorite?'Remove from favorites':'Add to favorites'}">
+          <i class="fa-${p.favorite?'solid':'regular'} fa-star"></i> ${p.favorite?'Favorited':'Favorite'}
+        </button>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-sm" onclick="syncVars(${p.id})"><i class="fa-solid fa-rotate"></i> Sync</button>
+        <button class="btn btn-sm" onclick="clonePrompt(${p.id})" title="Clone prompt"><i class="fa-regular fa-clone"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deletePrompt(${p.id})"><i class="fa-solid fa-trash-can"></i></button>
+        <button class="btn btn-primary btn-sm" onclick="copyFinal(${p.id})"><i class="fa-regular fa-copy"></i> Copy prompt</button>
+      </div>
+    </div>
+    <div class="editor-area">
+      <div class="editor-col-left">
+        <div>
+          <span class="field-label">Template</span>
+          <textarea class="prompt-textarea" id="templateArea" oninput="updateTemplate(${p.id},this.value)">${esc(p.template)}</textarea>
+          <div class="hint">Use <code class="inline">{{name}}</code> for single-select options, <code class="inline">[[name]]</code> for multi-select instruction lists. Click <strong>Sync</strong> after editing.</div>
+        </div>
+        <div>
+          <div class="preview-card">
+            <div class="preview-card-header">
+              <span>Preview</span>
+              <button class="btn btn-sm" onclick="copyFinal(${p.id})"><i class="fa-regular fa-copy"></i> Copy</button>
+            </div>
+            <div class="preview-body" id="previewBody">${buildPreview(p)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="editor-col-right">
+        <span class="field-label">Variables &amp; Options</span>
+        <div class="vars-card">
+          <div class="vars-card-header">
+            <span>Detected variables</span>
+            <button class="btn btn-sm" onclick="syncVars(${p.id})"><i class="fa-solid fa-rotate"></i> Sync</button>
+          </div>
+          ${varRows||`<div class="no-vars">No variables yet. Use <code class="inline">{{name}}</code> for options or <code class="inline">[[name]]</code> for instruction lists.</div>`}
+        </div>
+      </div>
+    </div>`;
+  initPillDragDrop();
+}
+
+function render() { renderSidebar(); renderMain(); }
+
+// ── Option pill drag-and-drop ─────────────────────────────────────────────────
+function initPillDragDrop() {
+  let dragOpt = null, dragKey = null, dragPid = null, dragType = null;
+
+  // ── single-select pills ──
+  document.querySelectorAll('.option-pill[draggable]').forEach(pill => {
+    pill.addEventListener('dragstart', e => {
+      dragOpt = pill.dataset.opt; dragKey = pill.dataset.varkey;
+      dragPid = parseInt(pill.dataset.promptid); dragType = 'pill';
+      pill.classList.add('pill-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    pill.addEventListener('dragend', () => {
+      document.querySelectorAll('.option-pill').forEach(p =>
+        p.classList.remove('pill-dragging','pill-drag-left','pill-drag-right'));
+      dragOpt = dragKey = dragPid = dragType = null;
+    });
+    pill.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (pill.dataset.opt === dragOpt) return;
+      document.querySelectorAll('.option-pill').forEach(p =>
+        p.classList.remove('pill-drag-left','pill-drag-right'));
+      const rect = pill.getBoundingClientRect();
+      pill.classList.add(e.clientX < rect.left + rect.width / 2 ? 'pill-drag-left' : 'pill-drag-right');
+    });
+    pill.addEventListener('dragleave', () =>
+      pill.classList.remove('pill-drag-left','pill-drag-right'));
+    pill.addEventListener('drop', e => {
+      e.preventDefault();
+      const targetOpt = pill.dataset.opt;
+      if (!dragOpt || dragOpt === targetOpt || dragType !== 'pill') return;
+      const p = prompts.find(x => x.id === dragPid);
+      if (!p) return;
+      const v = p.vars[dragKey]; if (!v) return;
+      const rect = pill.getBoundingClientRect();
+      const insertBefore = e.clientX < rect.left + rect.width / 2;
+      const opts = v.options;
+      const fromIdx = opts.indexOf(dragOpt);
+      opts.splice(fromIdx, 1);
+      const newTo = opts.indexOf(targetOpt);
+      opts.splice(insertBefore ? newTo : newTo + 1, 0, dragOpt);
+      save(); renderMain();
+    });
+  });
+
+  // ── instruction items ──
+  document.querySelectorAll('.instr-item[draggable]').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragOpt = item.dataset.opt; dragKey = item.dataset.varkey;
+      dragPid = parseInt(item.dataset.promptid); dragType = 'instr';
+      item.classList.add('instr-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.stopPropagation();
+    });
+    item.addEventListener('dragend', () => {
+      document.querySelectorAll('.instr-item').forEach(i =>
+        i.classList.remove('instr-dragging','instr-drag-top','instr-drag-bottom'));
+      dragOpt = dragKey = dragPid = dragType = null;
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (item.dataset.opt === dragOpt) return;
+      document.querySelectorAll('.instr-item').forEach(i =>
+        i.classList.remove('instr-drag-top','instr-drag-bottom'));
+      const rect = item.getBoundingClientRect();
+      item.classList.add(e.clientY < rect.top + rect.height / 2 ? 'instr-drag-top' : 'instr-drag-bottom');
+    });
+    item.addEventListener('dragleave', () =>
+      item.classList.remove('instr-drag-top','instr-drag-bottom'));
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      const targetOpt = item.dataset.opt;
+      if (!dragOpt || dragOpt === targetOpt || dragType !== 'instr') return;
+      const p = prompts.find(x => x.id === dragPid);
+      if (!p) return;
+      const v = p.vars[dragKey]; if (!v) return;
+      const rect = item.getBoundingClientRect();
+      const insertBefore = e.clientY < rect.top + rect.height / 2;
+      const opts = v.options;
+      const fromIdx = opts.indexOf(dragOpt);
+      opts.splice(fromIdx, 1);
+      const newTo = opts.indexOf(targetOpt);
+      opts.splice(insertBefore ? newTo : newTo + 1, 0, dragOpt);
+      save(); renderMain();
+    });
+  });
+}
+
+// ── Prompt actions ────────────────────────────────────────────────────────────
+function select(id)        { activeId=id; save(); render(); }
+function updateName(id,v)  { prompts.find(p=>p.id===id).name=v; save(); renderSidebar(); }
+function updateCat(id,v)   { prompts.find(p=>p.id===id).catId=v; save(); renderSidebar(); }
+function updateTemplate(id,v) {
+  const p=prompts.find(x=>x.id===id); p.template=v;
+  const pb=document.getElementById('previewBody');
+  if(pb) pb.innerHTML=buildPreview(p); save();
+}
+function syncVars(id) { const p=prompts.find(x=>x.id===id); p.vars=detectVars(p.template,p.vars); save(); renderMain(); }
+function selectOpt(id,k,v) { prompts.find(p=>p.id===id).vars[k].selected=v; save(); renderMain(); }
+function deleteVar(id,k)   { delete prompts.find(p=>p.id===id).vars[k]; save(); renderMain(); }
+function deleteSelectedOpt(id,k) {
+  const v = prompts.find(p=>p.id===id).vars[k];
+  if (v.options.length <= 1) return;
+  v.options = v.options.filter(o => o !== v.selected);
+  v.selected = v.options[0];
+  save(); renderMain();
+}
+function toggleInstr(id,k,val) {
+  const v = prompts.find(p=>p.id===id).vars[k];
+  if (!Array.isArray(v.selected)) v.selected = [];
+  v.selected = v.selected.includes(val)
+    ? v.selected.filter(x=>x!==val)
+    : [...v.selected, val];
+  save(); renderMain();
+}
+function deleteInstrItem(id,k,val) {
+  const v = prompts.find(p=>p.id===id).vars[k];
+  v.options = v.options.filter(o=>o!==val);
+  if (Array.isArray(v.selected)) v.selected = v.selected.filter(x=>x!==val);
+  save(); renderMain();
+}
+
+function newPrompt() {
+  const id = Date.now();
+  const defaultCat = (filterCatId && categories.find(c=>c.id===filterCatId)) ? filterCatId : (categories[0]?.id||'other');
+  prompts.unshift({ id, name:"New Prompt", catId:defaultCat, favorite: filterFavs,
+    template:"Write a {{style}} text about {{topic}}.",
+    vars:{ style:{options:["short","detailed","creative"],selected:"short"}, topic:{options:["my topic"],selected:"my topic"} }
+  });
+  activeId=id; save(); render();
+  setTimeout(()=>document.querySelector('.prompt-name-input')?.focus(),50);
+}
+function deletePrompt(id) {
+  if(!confirm("Delete this prompt? This cannot be undone.")) return;
+  prompts=prompts.filter(p=>p.id!==id);
+  activeId=prompts.length?prompts[0].id:null;
+  save(); render();
+}
+
+function clonePrompt(id) {
+  const src = prompts.find(p => p.id === id);
+  if (!src) return;
+  const clone = JSON.parse(JSON.stringify(src));
+  clone.id = Date.now();
+  clone.name = src.name + ' (copy)';
+  clone.favorite = false;
+  prompts.unshift(clone);
+  activeId = clone.id;
+  save(); render();
+  showToast('Prompt cloned');
+}
+
+// ── Category manager ──────────────────────────────────────────────────────────
+function openCatManager() { renderCatManagerBody(); document.getElementById('catModalBg').classList.add('open'); }
+function closeCatManager() { closeColorPopover(); document.getElementById('catModalBg').classList.remove('open'); render(); }
+
+function renderCatManagerBody() {
+  const rows = categories.map(c => {
+    const count = prompts.filter(p=>p.catId===c.id).length;
+    const canDel = count === 0;
+    return `<div class="cat-row" draggable="true" data-catid="${escJs(c.id)}">
+      <span class="cat-drag-handle" title="Drag to reorder"><i class="fa-solid fa-grip-vertical"></i></span>
+      <span class="cat-color-dot" style="background:${catDot(c)}" onclick="openColorPopover(event,'${escJs(c.id)}')" title="Change color"></span>
+      <input class="cat-row-name-input" value="${esc(c.name)}"
+        oninput="renameCat('${escJs(c.id)}',this.value)"
+        onkeydown="if(event.key==='Enter')this.blur()"
+        title="Click to rename">
+      <span class="cat-row-count">${count} prompt${count!==1?'s':''}</span>
+      <div class="cat-row-actions">
+        <button class="btn btn-sm btn-danger" onclick="deleteCategory('${escJs(c.id)}')"
+          ${canDel?'':'disabled title="Move or delete prompts first"'}
+          style="${canDel?'':'opacity:0.35;cursor:not-allowed'}">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const swatches = CAT_COLORS.map(c =>
+    `<span class="color-swatch${newCatColor===c.name?' selected':''}" style="background:${c.dot}" onclick="selectNewCatColor('${c.name}')" title="${c.name}"></span>`
+  ).join('');
+
+  document.getElementById('catManagerBody').innerHTML = `
+    ${rows||'<div style="padding:12px 16px;font-size:13px;color:var(--text-3)">No categories yet.</div>'}
+    <div class="cat-add-row">
+      <div class="cat-add-row-top">
+        <input type="text" id="newCatInput" placeholder="New category name…" onkeydown="if(event.key==='Enter')addCategory()">
+        <button class="btn btn-primary btn-sm" style="flex-shrink:0" onclick="addCategory()"><i class="fa-solid fa-plus"></i> Add</button>
+      </div>
+      <div class="color-picker-row">${swatches}</div>
+    </div>`;
+  initCatDragDrop();
+}
+
+function initCatDragDrop() {
+  let dragId = null;
+  document.querySelectorAll('.cat-row[draggable]').forEach(row => {
+    row.addEventListener('dragstart', e => {
+      dragId = row.dataset.catid;
+      row.classList.add('cat-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      document.querySelectorAll('.cat-row').forEach(r =>
+        r.classList.remove('cat-dragging','cat-drag-top','cat-drag-bottom'));
+      dragId = null;
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (row.dataset.catid === dragId) return;
+      document.querySelectorAll('.cat-row').forEach(r =>
+        r.classList.remove('cat-drag-top','cat-drag-bottom'));
+      const rect = row.getBoundingClientRect();
+      row.classList.add(e.clientY < rect.top + rect.height / 2 ? 'cat-drag-top' : 'cat-drag-bottom');
+    });
+    row.addEventListener('dragleave', () =>
+      row.classList.remove('cat-drag-top','cat-drag-bottom'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      const targetId = row.dataset.catid;
+      if (!dragId || dragId === targetId) return;
+      const rect = row.getBoundingClientRect();
+      const insertBefore = e.clientY < rect.top + rect.height / 2;
+      const fromIdx = categories.findIndex(c => c.id === dragId);
+      const [moved] = categories.splice(fromIdx, 1);
+      const toIdx = categories.findIndex(c => c.id === targetId);
+      categories.splice(insertBefore ? toIdx : toIdx + 1, 0, moved);
+      save();
+      renderCatManagerBody();
+      renderFilterStrip();
+    });
+  });
+}
+
+function renameCat(id, val) {
+  const name = val.trim(); if (!name) return;
+  if (categories.find(c => c.id !== id && c.name.toLowerCase() === name.toLowerCase())) return;
+  const c = categories.find(c => c.id === id);
+  if (c) { c.name = name; save(); renderFilterStrip(); }
+}
+
+// ── Color popover ─────────────────────────────────────────────────────────────
+let colorPopoverTarget = null;
+
+function openColorPopover(e, catId) {
+  e.stopPropagation();
+  colorPopoverTarget = catId;
+  const pop = document.getElementById('colorPopover');
+  pop.innerHTML = CAT_COLORS.map(c => {
+    const cat = categories.find(x=>x.id===catId);
+    const sel = cat && cat.color === c.name;
+    return `<span class="color-swatch${sel?' selected':''}" style="background:${c.dot}"
+      onclick="applyCatColor('${catId}','${c.name}')" title="${c.name}"></span>`;
+  }).join('');
+  pop.classList.add('open');
+  const rect = e.target.getBoundingClientRect();
+  pop.style.top  = (rect.bottom + 6) + 'px';
+  pop.style.left = Math.max(4, rect.left - 4) + 'px';
+}
+
+function closeColorPopover() {
+  document.getElementById('colorPopover').classList.remove('open');
+  colorPopoverTarget = null;
+}
+
+function applyCatColor(catId, colorName) {
+  const c = categories.find(x=>x.id===catId);
+  if (c) { c.color = colorName; save(); }
+  closeColorPopover();
+  renderCatManagerBody();
+  renderFilterStrip();
+  renderSidebar();
+}
+
+document.addEventListener('click', e => {
+  const pop = document.getElementById('colorPopover');
+  if (pop && pop.classList.contains('open') && !pop.contains(e.target)) closeColorPopover();
+});
+
+function selectNewCatColor(name) { newCatColor=name; renderCatManagerBody(); setTimeout(()=>document.getElementById('newCatInput')?.focus(),30); }
+function addCategory() {
+  const inp=document.getElementById('newCatInput'); const name=inp?.value.trim(); if(!name) return;
+  if(categories.find(c=>c.name.toLowerCase()===name.toLowerCase())) { showToast('Category already exists',true); return; }
+  categories.push({ id:'cat_'+Date.now(), name, color:newCatColor });
+  save(); renderCatManagerBody(); showToast(`"${name}" added`);
+}
+function deleteCategory(id) {
+  const cat=categories.find(c=>c.id===id);
+  if(prompts.some(p=>p.catId===id)) { showToast('Move or delete prompts in this category first',true); return; }
+  if(!confirm(`Delete category "${cat?.name}"?`)) return;
+  categories=categories.filter(c=>c.id!==id);
+  if(filterCatId===id) { filterCatId=null; }
+  save(); renderCatManagerBody(); showToast(`"${cat?.name}" deleted`);
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+function exportLibrary() {
+  const blob=new Blob([JSON.stringify({version:4,exported:new Date().toISOString(),categories,prompts},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download=`prompt-library-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast(`Exported ${prompts.length} prompt${prompts.length!==1?'s':''}`);
+}
+
+// ── Import ────────────────────────────────────────────────────────────────────
+function triggerImport() { document.getElementById('fileInput').value=''; document.getElementById('fileInput').click(); }
+function handleFileImport(event) {
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try {
+      const data=JSON.parse(e.target.result);
+      const imported=Array.isArray(data)?data:(data.prompts||[]);
+      if(!imported.length||!imported[0].template) { showToast('Invalid file format',true); return; }
+      pendingImportData={prompts:imported,categories:data.categories||[]};
+      document.getElementById('importModalDesc').textContent=
+        `Found ${imported.length} prompt${imported.length!==1?'s':''} in "${file.name}". How would you like to import them?`;
+      document.getElementById('importModalBg').classList.add('open');
+    } catch(err) { showToast('Could not read file',true); }
+  };
+  reader.readAsText(file);
+}
+function closeImportModal() { document.getElementById('importModalBg').classList.remove('open'); pendingImportData=null; }
+function confirmImport() {
+  if(!pendingImportData) return;
+  const mode=document.querySelector('input[name="importMode"]:checked').value;
+  const {prompts:imp,categories:impCats}=pendingImportData; let count=0;
+  impCats.forEach(ic=>{ if(!categories.find(c=>c.id===ic.id||c.name.toLowerCase()===ic.name.toLowerCase())) categories.push(ic); });
+  if(mode==='replace') {
+    prompts=imp.map(p=>({...p,id:p.id||Date.now()+Math.random(),favorite:p.favorite||false}));
+    count=prompts.length; activeId=prompts[0]?.id??null;
+  } else {
+    const keys=new Set(prompts.map(p=>p.name+'||'+p.template));
+    const toAdd=imp.filter(p=>!keys.has(p.name+'||'+p.template));
+    toAdd.forEach(p=>{p.id=Date.now()+Math.random();p.favorite=p.favorite||false;prompts.unshift(p);});
+    count=toAdd.length; if(!activeId&&prompts.length) activeId=prompts[0].id;
+  }
+  closeImportModal(); save(); render();
+  showToast(`Imported ${count} prompt${count!==1?'s':''}`);
+}
+
+// ── Add / edit variable option modal ─────────────────────────────────────────
+function addOption(id, varName) {
+  modalTarget = { id, varName, editOld: null };
+  document.getElementById('modalTitle').textContent = `Add option for {{${varName}}}`;
+  document.getElementById('modalInput').value = '';
+  document.getElementById('modalConfirmBtn').textContent = 'Add';
+  document.getElementById('modalBg').classList.add('open');
+  setTimeout(() => document.getElementById('modalInput').focus(), 60);
+}
+
+function editOption(id, varName, oldVal) {
+  modalTarget = { id, varName, editOld: oldVal };
+  document.getElementById('modalTitle').textContent = `Edit option for {{${varName}}}`;
+  document.getElementById('modalInput').value = oldVal;
+  document.getElementById('modalConfirmBtn').textContent = 'Save';
+  document.getElementById('modalBg').classList.add('open');
+  setTimeout(() => { const i = document.getElementById('modalInput'); i.focus(); i.select(); }, 60);
+}
+
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); modalTarget = null; }
+
+function confirmModal() {
+  const val = document.getElementById('modalInput').value.trim(); if (!val) return;
+  const { id, varName, editOld } = modalTarget;
+  const v = prompts.find(p => p.id === id).vars[varName];
+
+  if (editOld !== null) {
+    // edit mode — replace old value in-place
+    const idx = v.options.indexOf(editOld);
+    if (idx !== -1) v.options[idx] = val;
+    else if (!v.options.includes(val)) v.options.push(val);
+    // update selected reference
+    if (v.type === 'instruction') {
+      if (Array.isArray(v.selected)) {
+        const si = v.selected.indexOf(editOld);
+        if (si !== -1) v.selected[si] = val;
+      }
+    } else {
+      if (v.selected === editOld) v.selected = val;
+    }
+  } else {
+    // add mode
+    if (!v.options.includes(val)) v.options.push(val);
+    if (v.type === 'instruction') {
+      if (!Array.isArray(v.selected)) v.selected = [];
+      if (!v.selected.includes(val)) v.selected.push(val);
+    } else {
+      v.selected = val;
+    }
+  }
+  closeModal(); save(); renderMain();
+}
+
+document.addEventListener('keydown', e=>{
+  if(document.getElementById('modalBg').classList.contains('open'))      { if(e.key==='Enter') confirmModal(); if(e.key==='Escape') closeModal(); }
+  else if(document.getElementById('catModalBg').classList.contains('open'))   { if(e.key==='Escape') closeCatManager(); }
+  else if(document.getElementById('importModalBg').classList.contains('open')){ if(e.key==='Escape') closeImportModal(); }
+  else if(document.getElementById('helpModalBg').classList.contains('open'))  { if(e.key==='Escape') closeHelp(); }
+  else if(document.getElementById('aboutModalBg').classList.contains('open')) { if(e.key==='Escape') closeAbout(); }
+});
+
+// ── Help ──────────────────────────────────────────────────────────────────────
+function openHelp()  { document.getElementById('helpModalBg').classList.add('open'); }
+function closeHelp() { document.getElementById('helpModalBg').classList.remove('open'); }
+function openAbout()  { document.getElementById('aboutModalBg').classList.add('open'); }
+function closeAbout() { document.getElementById('aboutModalBg').classList.remove('open'); }
+
+// ── Copy & Toast ──────────────────────────────────────────────────────────────
+function copyFinal(id) {
+  const text=buildFinal(prompts.find(p=>p.id===id));
+  navigator.clipboard.writeText(text).then(()=>showToast("Prompt copied!"));
+}
+function showToast(msg,isError=false) {
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toastIcon').className=isError?'fa-solid fa-triangle-exclamation':'fa-solid fa-check';
+  t.classList.toggle('error',isError); t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ── Build helpers ─────────────────────────────────────────────────────────────
+function detectVars(template, existing={}) {
+  const result = {};
+  // strip escaped placeholders before scanning
+  const stripped = template.replace(/\\(\{\{[^}]+\}\}|\[\[[^\]]+\]\])/g, '');
+  // {{name}} = option type
+  [...stripped.matchAll(/\{\{([^}]+)\}\}/g)].map(m=>m[1]).forEach(k => {
+    if (existing[k] && existing[k].type !== 'instruction') result[k] = existing[k];
+    else if (!result[k]) result[k] = { type:'option', options:["Option 1"], selected:"Option 1" };
+  });
+  // [[name]] = instruction type
+  [...stripped.matchAll(/\[\[([^\]]+)\]\]/g)].map(m=>m[1]).forEach(k => {
+    if (existing[k] && existing[k].type === 'instruction') result[k] = existing[k];
+    else if (!result[k]) result[k] = { type:'instruction', options:["Instruction 1"], selected:[] };
+  });
+  return result;
+}
+
+function buildPreview(p) {
+  // protect escaped placeholders with a unique token, then restore after substitution
+  const TOKEN = '\x00ESC\x00';
+  const escaped = [];
+  let t = p.template
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\\(\{\{[^}]+\}\}|\[\[[^\]]+\]\])/g, (_, ph) => {
+      escaped.push(esc(ph));
+      return TOKEN + (escaped.length - 1) + TOKEN;
+    });
+  Object.entries(p.vars).forEach(([k,v]) => {
+    if (v.type === 'instruction') {
+      const sel = sortByOptions(Array.isArray(v.selected) ? v.selected : [], v.options);
+      const html = sel.length
+        ? sel.map(s=>`• <span class="var-highlight">${esc(s)}</span>`).join('<br>')
+        : `<span class="var-highlight" style="opacity:0.5">(no instructions selected)</span>`;
+      t = t.replaceAll(`[[${k}]]`, html);
+    } else {
+      t = t.replaceAll(`{{${k}}}`, `<span class="var-highlight">${esc(v.selected)}</span>`);
+    }
+  });
+  // restore escaped placeholders as plain literal text
+  t = t.replace(new RegExp(TOKEN + '(\\d+)' + TOKEN, 'g'), (_, i) =>
+    `<span style="opacity:0.5;font-style:italic">${escaped[+i]}</span>`);
+  return t;
+}
+
+function buildFinal(p) {
+  const TOKEN = '\x00ESC\x00';
+  const escaped = [];
+  let t = p.template.replace(/\\(\{\{[^}]+\}\}|\[\[[^\]]+\]\])/g, (_, ph) => {
+    escaped.push(ph);
+    return TOKEN + (escaped.length - 1) + TOKEN;
+  });
+  Object.entries(p.vars).forEach(([k,v]) => {
+    if (v.type === 'instruction') {
+      const sel = sortByOptions(Array.isArray(v.selected) ? v.selected : [], v.options);
+      t = t.replaceAll(`[[${k}]]`, sel.map(s=>`• ${s}`).join('\n'));
+    } else {
+      t = t.replaceAll(`{{${k}}}`, v.selected);
+    }
+  });
+  // restore escaped placeholders as literal text (without the backslash)
+  t = t.replace(new RegExp(TOKEN + '(\\d+)' + TOKEN, 'g'), (_, i) => escaped[+i]);
+  return t;
+}
+
+// Sort selected items by their position in the options array
+function sortByOptions(selected, options) {
+  return [...selected].sort((a, b) => options.indexOf(a) - options.indexOf(b));
+}
+
+function goHome() { activeId = null; save(); renderMain(); }
+
+function selectFirstPrompt() {
+  if (!prompts.length) return;
+  // mirror the sidebar sort: favorites first, then alphabetical
+  const sorted = [...prompts].sort((a, b) => {
+    if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+  activeId = sorted[0].id;
+  save();
+  render();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+load();
+activeId = null;
+render();
+</script>
+</body>
+</html>
