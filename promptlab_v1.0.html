@@ -333,6 +333,13 @@
   .import-option-text strong { display: block; font-size: 13px; font-weight: 500; }
   .import-option-text span { font-size: 12px; color: var(--text-2); }
 
+  /* keyboard shortcuts */
+  kbd { font-family: var(--mono); font-size: 11px; background: var(--bg-3); border: 0.5px solid var(--border-2); border-radius: 4px; padding: 2px 6px; color: var(--text); box-shadow: 0 1px 0 var(--border-2); display: inline-block; line-height: 1.4; }
+  .shortcut-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+  .shortcut-row span { color: var(--text-2); }
+  .shortcut-keys { display: flex; gap: 3px; }
+  .shortcut-group-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
   /* toast */
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; transform: translateY(80px); opacity: 0; transition: all 0.25s ease; z-index: 300; }
   .toast.show { transform: translateY(0); opacity: 1; }
@@ -445,6 +452,7 @@
     <div class="topbar-divider"></div>
     <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
     <button id="themeBtn" class="btn btn-sm" onclick="toggleTheme()" title="Switch to dark mode"><i class="fa-solid fa-moon"></i></button>
+    <button class="btn btn-sm" onclick="openShortcuts()" title="Keyboard shortcuts (?)"><i class="fa-solid fa-keyboard"></i></button>
     <button class="btn btn-sm" onclick="openHelp()" title="Help"><i class="fa-regular fa-circle-question"></i></button>
     <button class="btn btn-sm" onclick="openAbout()" title="About"><i class="fa-solid fa-circle-info"></i></button>
     <input type="file" id="fileInput" accept=".json" onchange="handleFileImport(event)">
@@ -511,6 +519,18 @@
     <div class="modal-actions">
       <button class="btn" onclick="closeFileSyncModal()">Not now</button>
     </div>
+  </div>
+</div>
+
+<!-- Keyboard shortcuts modal -->
+<div class="modal-bg" id="shortcutsModalBg" onclick="if(event.target===this)closeShortcuts()">
+  <div class="modal" style="width:340px;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:500"><i class="fa-solid fa-keyboard" style="margin-right:8px;color:var(--text-3)"></i>Keyboard shortcuts</div>
+      <button class="btn btn-sm" onclick="closeShortcuts()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="height:0.5px;background:var(--border)"></div>
+    <div id="shortcutsBody" style="display:flex;flex-direction:column;gap:2px"></div>
   </div>
 </div>
 
@@ -1836,11 +1856,22 @@ function confirmModal() {
 }
 
 document.addEventListener('keydown', e=>{
-  if(document.getElementById('modalBg').classList.contains('open'))      { if(e.key==='Enter') confirmModal(); if(e.key==='Escape') closeModal(); }
-  else if(document.getElementById('catModalBg').classList.contains('open'))   { if(e.key==='Escape') closeCatManager(); }
-  else if(document.getElementById('importModalBg').classList.contains('open')){ if(e.key==='Escape') closeImportModal(); }
-  else if(document.getElementById('helpModalBg').classList.contains('open'))  { if(e.key==='Escape') closeHelp(); }
-  else if(document.getElementById('aboutModalBg').classList.contains('open')) { if(e.key==='Escape') closeAbout(); }
+  const inInput = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
+  // modal Escape / Enter
+  if(document.getElementById('modalBg').classList.contains('open'))           { if(e.key==='Enter') confirmModal(); if(e.key==='Escape') closeModal(); return; }
+  if(document.getElementById('shortcutsModalBg').classList.contains('open')) { if(e.key==='Escape') closeShortcuts(); return; }
+  if(document.getElementById('catModalBg').classList.contains('open'))        { if(e.key==='Escape') closeCatManager(); return; }
+  if(document.getElementById('importModalBg').classList.contains('open'))     { if(e.key==='Escape') closeImportModal(); return; }
+  if(document.getElementById('helpModalBg').classList.contains('open'))       { if(e.key==='Escape') closeHelp(); return; }
+  if(document.getElementById('aboutModalBg').classList.contains('open'))      { if(e.key==='Escape') closeAbout(); return; }
+  // ? to show shortcuts (not when typing)
+  if(e.key==='?' && !inInput && !e.metaKey && !e.ctrlKey) { openShortcuts(); return; }
+  // global shortcuts
+  if(e.metaKey || e.ctrlKey) {
+    if(e.key==='k') { e.preventDefault(); const s=document.getElementById('searchInput'); s.focus(); s.select(); return; }
+    if(e.key==='n') { e.preventDefault(); newPrompt(); return; }
+    if(e.key==='Enter' && activeId) { e.preventDefault(); copyFinal(activeId); return; }
+  }
 });
 
 // ── Help ──────────────────────────────────────────────────────────────────────
@@ -1880,6 +1911,28 @@ function openFileSyncModal(reconnectHandle) {
   document.getElementById('fileSyncModalBg').classList.add('open');
 }
 function closeFileSyncModal() { document.getElementById('fileSyncModalBg').classList.remove('open'); }
+function openShortcuts() {
+  const mac = /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const mod = mac ? '⌘' : 'Ctrl';
+  const shift = mac ? '⇧' : 'Shift';
+  const k = (...keys) => keys.map(k => `<kbd>${k}</kbd>`).join('');
+  const row = (label, ...keys) => `<div class="shortcut-row"><span>${label}</span><div class="shortcut-keys">${k(...keys)}</div></div>`;
+  const group = (label) => `<div class="shortcut-group-label" style="margin-top:8px">${label}</div>`;
+  document.getElementById('shortcutsBody').innerHTML = [
+    group('Navigation'),
+    row('Focus search', mod, 'K'),
+    row('New prompt', mod, 'N'),
+    row('Copy prompt', mod, '↵'),
+    group('Template editing'),
+    row('Undo', mod, 'Z'),
+    row('Redo', mod, shift, 'Z'),
+    group('General'),
+    row('Show shortcuts', '?'),
+    row('Close modal', 'Esc'),
+  ].join('');
+  document.getElementById('shortcutsModalBg').classList.add('open');
+}
+function closeShortcuts() { document.getElementById('shortcutsModalBg').classList.remove('open'); }
 function openHelp()  { document.getElementById('helpModalBg').classList.add('open'); }
 function closeHelp() { document.getElementById('helpModalBg').classList.remove('open'); }
 function openAbout()  { document.getElementById('aboutModalBg').classList.add('open'); }
