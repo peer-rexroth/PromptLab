@@ -1492,6 +1492,23 @@ async function linkFile() {
     });
     fileHandle = handle;
     await _fsPut(handle);
+    // If the file already has valid library data, load from it instead of overwriting
+    try {
+      const text = await (await handle.getFile()).text();
+      if (text.trim()) {
+        const data = JSON.parse(text);
+        if (data.prompts && data.categories) {
+          prompts = data.prompts; categories = data.categories;
+          if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
+          if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ prompts, categories, activeId, filterCatId, filterFavs }));
+          render();
+          updateFileSyncUI();
+          showToast(`Loaded from ${handle.name} — auto-saving enabled`);
+          return;
+        }
+      }
+    } catch(_) { /* new or empty file — fall through to write */ }
     await fileSyncWrite({ prompts, categories, activeId, filterCatId, filterFavs });
     showToast(`Linked — auto-saving to ${handle.name}`);
   } catch(e) {
