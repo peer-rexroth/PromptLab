@@ -33,21 +33,19 @@
     --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1e1e1c; --bg-2: #272724; --bg-3: #2f2f2c;
-      --text: #f0f0ec; --text-2: #9a9a94; --text-3: #5c5c58;
-      --border: rgba(255,255,255,0.10); --border-2: rgba(255,255,255,0.18);
-      --blue-bg: #0c2d4f; --blue-text: #85b7eb; --blue-border: #185fa5;
-      --teal-bg: #04342c; --teal-text: #5dcaa5;
-      --amber-bg: #412402; --amber-text: #fac775;
-      --red-bg: #501313; --red-text: #f09595; --red-border: #a32d2d;
-      --green-bg: #173404; --green-text: #97c459;
-      --purple-bg: #26215c; --purple-text: #afa9ec;
-      --coral-bg: #4a1b0c; --coral-text: #f0997b;
-      --pink-bg: #4b1528; --pink-text: #ed93b1;
-      --star: #fac775; --star-bg: #412402;
-    }
+  html[data-theme="dark"] {
+    --bg: #1e1e1c; --bg-2: #272724; --bg-3: #2f2f2c;
+    --text: #f0f0ec; --text-2: #9a9a94; --text-3: #5c5c58;
+    --border: rgba(255,255,255,0.10); --border-2: rgba(255,255,255,0.18);
+    --blue-bg: #0c2d4f; --blue-text: #85b7eb; --blue-border: #185fa5;
+    --teal-bg: #04342c; --teal-text: #5dcaa5;
+    --amber-bg: #412402; --amber-text: #fac775;
+    --red-bg: #501313; --red-text: #f09595; --red-border: #a32d2d;
+    --green-bg: #173404; --green-text: #97c459;
+    --purple-bg: #26215c; --purple-text: #afa9ec;
+    --coral-bg: #4a1b0c; --coral-text: #f0997b;
+    --pink-bg: #4b1528; --pink-text: #ed93b1;
+    --star: #fac775; --star-bg: #412402;
   }
 
   html, body { height: 100%; }
@@ -431,6 +429,7 @@
     <button class="btn btn-sm" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New Prompt</button>
     <div class="topbar-divider"></div>
     <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
+    <button id="themeBtn" class="btn btn-sm" onclick="toggleTheme()" title="Switch to dark mode"><i class="fa-solid fa-moon"></i></button>
     <button class="btn btn-sm" onclick="openHelp()" title="Help"><i class="fa-regular fa-circle-question"></i></button>
     <button class="btn btn-sm" onclick="openAbout()" title="About"><i class="fa-solid fa-circle-info"></i></button>
     <input type="file" id="fileInput" accept=".json" onchange="handleFileImport(event)">
@@ -716,8 +715,12 @@ const DEFAULT_PROMPTS = [
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const STORAGE_KEY = "promptlab-v4";
+const THEME_KEY = "promptlab-theme";
 let prompts = [], categories = [];
 let activeId = null, filterCatId = null, filterFavs = false;
+let currentTheme = 'light';
+// Apply saved theme immediately to avoid flash
+(function(){ const t=localStorage.getItem(THEME_KEY); if(t){currentTheme=t;document.documentElement.setAttribute('data-theme',t);} })();
 let modalTarget = null, pendingImportData = null, newCatColor = 'blue';
 const undoStacks = new Map(); // promptId → { past: string[], future: string[] }
 const lastSyncedTemplates = new Map(); // promptId → template string at last Sync
@@ -735,6 +738,7 @@ function load() {
       activeId    = d.activeId    || (prompts[0]?.id ?? null);
       filterCatId = d.filterCatId || null;
       filterFavs  = d.filterFavs  || false;
+      if (d.theme) { currentTheme = d.theme; document.documentElement.setAttribute('data-theme', d.theme); localStorage.setItem(THEME_KEY, d.theme); }
     } else {
       categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
       prompts    = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
@@ -767,7 +771,7 @@ function load() {
   }
 }
 function save() {
-  const data = { prompts, categories, activeId, filterCatId, filterFavs };
+  const data = { prompts, categories, activeId, filterCatId, filterFavs, theme: currentTheme };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   if (fileHandle) fileSyncWrite(data).catch(() => {});
 }
@@ -1770,6 +1774,27 @@ document.addEventListener('keydown', e=>{
 });
 
 // ── Help ──────────────────────────────────────────────────────────────────────
+function applyThemeFromData(d) {
+  if (!d || !d.theme) return;
+  currentTheme = d.theme;
+  document.documentElement.setAttribute('data-theme', d.theme);
+  localStorage.setItem(THEME_KEY, d.theme);
+  updateThemeBtn();
+}
+function updateThemeBtn() {
+  const btn = document.getElementById('themeBtn'); if (!btn) return;
+  const dark = currentTheme === 'dark';
+  btn.innerHTML = dark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+  btn.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
+}
+function toggleTheme() {
+  const next = currentTheme === 'dark' ? 'light' : 'dark';
+  currentTheme = next;
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem(THEME_KEY, next);
+  updateThemeBtn();
+  save(); // persists to localStorage + linked file
+}
 function openHelp()  { document.getElementById('helpModalBg').classList.add('open'); }
 function closeHelp() { document.getElementById('helpModalBg').classList.remove('open'); }
 function openAbout()  { document.getElementById('aboutModalBg').classList.add('open'); }
@@ -1985,6 +2010,7 @@ async function linkFile() {
           if (!categories.find(c => c.id === ic.id || c.name.toLowerCase() === ic.name.toLowerCase()))
             categories.push(ic);
         });
+        applyThemeFromData(data);
         const {added, updated} = mergePrompts(data.prompts);
         save(); render(); updateFileSyncUI();
         const parts=[]; if(added) parts.push(`${added} added`); if(updated) parts.push(`${updated} updated`);
@@ -2020,6 +2046,7 @@ async function reconnectFile() {
       prompts = data.prompts; categories = data.categories;
       if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
       if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
+      applyThemeFromData(data);
       render();
     }
     updateFileSyncUI();
@@ -2067,6 +2094,7 @@ async function initFileSync() {
           prompts = data.prompts; categories = data.categories;
           if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
           if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
+          applyThemeFromData(data);
           render();
         }
       } catch(_) { /* read failed — keep localStorage data */ }
@@ -2083,6 +2111,7 @@ async function initFileSync() {
 load();
 activeId = null;
 render();
+updateThemeBtn();
 initFileSync();
 
 document.addEventListener('click', e => { if (!e.target.closest('#linkSplitBtn')) closeLinkMenu(); });
