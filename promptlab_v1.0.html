@@ -355,6 +355,8 @@
     <button class="btn btn-sm" onclick="exportLibrary()"><i class="fa-solid fa-download"></i> Export</button>
     <button class="btn btn-sm" onclick="triggerImport()"><i class="fa-solid fa-upload"></i> Import</button>
     <div class="topbar-divider"></div>
+    <div id="fileSyncIndicator" style="display:flex;align-items:center;gap:6px"></div>
+    <div class="topbar-divider"></div>
     <button class="btn btn-sm" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New Prompt</button>
     <div class="topbar-divider"></div>
     <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
@@ -473,7 +475,7 @@
         <div class="help-section-title">Import &amp; export</div>
         <div class="help-row"><i class="fa-solid fa-download"></i><span><strong style="color:var(--text)">Export</strong> saves your entire library (prompts + categories) as a <code style="font-family:var(--mono);font-size:11px">.json</code> file. Use it to back up your work or share prompts with others.</span></div>
         <div class="help-row"><i class="fa-solid fa-upload"></i><span><strong style="color:var(--text)">Import</strong> loads a <code style="font-family:var(--mono);font-size:11px">.json</code> file. Choose <em>Merge</em> to add imported prompts alongside your existing ones (duplicates skipped), or <em>Replace</em> to overwrite your library entirely.</span></div>
-        <div class="help-tip"><strong>Your data is stored locally</strong> in your browser (localStorage). It persists between sessions in the same browser, but is not synced across devices. Use Export regularly to keep a backup.</div>
+        <div class="help-tip"><strong>Your data is stored locally</strong> in your browser (localStorage). It persists between sessions in the same browser, but is not synced across devices. Use <strong>Link file</strong> in the top bar (Chrome/Edge) to also auto-save to a local JSON file — data then persists even if browser storage is cleared. Use Export regularly to keep a backup.</div>
       </div>
 
     </div>
@@ -669,7 +671,9 @@ function load() {
   }
 }
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ prompts, categories, activeId, filterCatId, filterFavs }));
+  const data = { prompts, categories, activeId, filterCatId, filterFavs };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  if (fileHandle) fileSyncWrite(data).catch(() => {});
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1441,10 +1445,139 @@ function selectFirstPrompt() {
   render();
 }
 
+// ── File System Access API ────────────────────────────────────────────────────
+let fileHandle = null;
+
+// Minimal IndexedDB wrapper — FileSystemFileHandle can't go in localStorage
+const _FS = { db: 'promptlab-fs', store: 'handles', key: 'linked-file' };
+function _fsIdb(mode, fn) {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(_FS.db, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(_FS.store);
+    req.onsuccess = e => {
+      try { fn(e.target.result.transaction(_FS.store, mode).objectStore(_FS.store), res, rej); }
+      catch(err) { rej(err); }
+    };
+    req.onerror = () => rej(req.error);
+  });
+}
+const _fsGet = ()  => _fsIdb('readonly',  (s,r,j) => { const q=s.get(_FS.key);    q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
+const _fsPut = h   => _fsIdb('readwrite', (s,r,j) => { const q=s.put(h,_FS.key); q.onsuccess=()=>r();         q.onerror=()=>j(q.error); });
+const _fsDel = ()  => _fsIdb('readwrite', (s,r,j) => { const q=s.delete(_FS.key); q.onsuccess=()=>r();         q.onerror=()=>j(q.error); });
+
+async function fileSyncWrite(data) {
+  if (!fileHandle) return;
+  try {
+    const perm = await fileHandle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { await _clearFileLink(); return; }
+    const w = await fileHandle.createWritable();
+    await w.write(JSON.stringify(data, null, 2));
+    await w.close();
+    updateFileSyncUI();
+  } catch(e) { /* localStorage remains the authoritative fallback */ }
+}
+
+async function _clearFileLink() {
+  fileHandle = null;
+  await _fsDel().catch(() => {});
+  updateFileSyncUI();
+}
+
+async function linkFile() {
+  if (!window.showSaveFilePicker) { showToast('File linking requires Chrome or Edge', true); return; }
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'promptlab-library.json',
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+    });
+    fileHandle = handle;
+    await _fsPut(handle);
+    await fileSyncWrite({ prompts, categories, activeId, filterCatId, filterFavs });
+    showToast(`Linked — auto-saving to ${handle.name}`);
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Could not link file', true);
+  }
+}
+
+async function unlinkFile() {
+  await _clearFileLink();
+  showToast('File unlinked — saving to browser storage only');
+}
+
+async function reconnectFile() {
+  if (!fileHandle) return;
+  try {
+    const perm = await fileHandle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { showToast('Permission denied', true); return; }
+    const data = JSON.parse(await (await fileHandle.getFile()).text());
+    if (data.prompts && data.categories) {
+      prompts = data.prompts; categories = data.categories;
+      if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
+      if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
+      render();
+    }
+    updateFileSyncUI();
+    showToast(`Reconnected to ${fileHandle.name}`);
+  } catch(e) { showToast('Could not reconnect', true); }
+}
+
+function updateFileSyncUI() {
+  const el = document.getElementById('fileSyncIndicator');
+  if (!el) return;
+  if (!window.showSaveFilePicker) { el.style.display = 'none'; return; }
+  if (!fileHandle) {
+    el.innerHTML = `<button class="btn btn-sm" onclick="linkFile()" title="Link to a local file — auto-saves after every change"><i class="fa-solid fa-link"></i> Link file</button>`;
+    return;
+  }
+  fileHandle.queryPermission({ mode: 'readwrite' }).then(perm => {
+    if (!el) return;
+    if (perm === 'granted') {
+      el.innerHTML = `
+        <span style="font-size:12px;color:var(--green-text);display:flex;align-items:center;gap:5px;max-width:160px">
+          <i class="fa-solid fa-file-circle-check" style="flex-shrink:0"></i>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(fileHandle.name)}">${esc(fileHandle.name)}</span>
+        </span>
+        <button class="btn btn-sm" onclick="unlinkFile()" title="Unlink file" style="padding:4px 8px;line-height:1"><i class="fa-solid fa-link-slash"></i></button>`;
+    } else {
+      el.innerHTML = `<button class="btn btn-sm" onclick="reconnectFile()" style="color:var(--amber-text);border-color:var(--amber-text)" title="Reconnect to ${esc(fileHandle.name)}"><i class="fa-solid fa-triangle-exclamation"></i> Reconnect</button>`;
+    }
+  }).catch(() => {
+    if (el) el.innerHTML = `<button class="btn btn-sm" onclick="linkFile()"><i class="fa-solid fa-link"></i> Link file</button>`;
+  });
+}
+
+async function initFileSync() {
+  if (!window.showSaveFilePicker) return;
+  updateFileSyncUI();
+  try {
+    const handle = await _fsGet();
+    if (!handle) return;
+    fileHandle = handle;
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      try {
+        const data = JSON.parse(await (await handle.getFile()).text());
+        if (data.prompts && data.categories) {
+          prompts = data.prompts; categories = data.categories;
+          if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
+          if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
+          render();
+        }
+      } catch(_) { /* read failed — keep localStorage data */ }
+    }
+    updateFileSyncUI();
+  } catch(e) {
+    fileHandle = null;
+    _fsDel().catch(() => {});
+    updateFileSyncUI();
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 load();
 activeId = null;
 render();
+initFileSync();
 </script>
 </body>
 </html>
