@@ -126,6 +126,7 @@
   .header-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .tag-select { font-size: 12px; font-weight: 500; border: 0.5px solid var(--border); border-radius: 20px; padding: 3px 10px; background: var(--bg-2); color: var(--text); cursor: pointer; outline: none; font-family: var(--font); }
   .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .copy-footer { position: sticky; bottom: 0; background: var(--bg); border-top: 0.5px solid var(--border); padding: 10px 24px; display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; z-index: 10; }
 
   /* star button in header */
   .star-btn-lg {
@@ -1037,7 +1038,7 @@ function renderMain() {
         </div>`;
       }).join('');
       const selCount = (v.selected||[]).length;
-      return `<div class="var-row var-row-instr">
+      return `<div class="var-row var-row-instr" style="box-shadow:inset 3px 0 0 #1d9e75">
         <span class="var-name var-name-instr" title="${esc(k)}">${esc(k)}</span>
         <div>
           <div class="instr-list">${items||'<div style="font-size:12px;color:var(--text-3);padding:2px 0">No instructions yet.</div>'}</div>
@@ -1052,7 +1053,7 @@ function renderMain() {
     }
     // text type
     if (v.type === 'text') {
-      return `<div class="var-row">
+      return `<div class="var-row" style="box-shadow:inset 3px 0 0 var(--amber-text)">
         <span class="var-name var-name-text" title="${esc(k)}">${esc(k)}</span>
         <input class="var-text-input" type="text" value="${esc(v.value)}" placeholder="Type text…"
           oninput="updateTextVar(${p.id},'${escJs(k)}',this.value)">
@@ -1064,7 +1065,7 @@ function renderMain() {
       </div>`;
     }
     // default: option type
-    return `<div class="var-row">
+    return `<div class="var-row" style="box-shadow:inset 3px 0 0 var(--blue-border)">
       <span class="var-name" title="${esc(k)}">${esc(k)}</span>
       <div class="var-options">
         ${v.options.map(o=>`<span class="option-pill${o===v.selected?' selected':''}" draggable="true" data-opt="${escJs(o)}" data-promptid="${p.id}" data-varkey="${escJs(k)}" onclick="selectOpt(${p.id},'${escJs(k)}','${escJs(o)}')" ondblclick="editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Double-click to edit">${esc(o)}</span>`).join('')}
@@ -1082,8 +1083,10 @@ function renderMain() {
     </div>`;
   }).join('');
 
+  const hcat = getCat(p.catId); const hdot = catDot(hcat);
   main.innerHTML = `
     <div class="main-header">
+      <div style="width:10px;height:10px;border-radius:50%;background:${hdot};flex-shrink:0"></div>
       <input class="prompt-name-input" value="${esc(p.name)}" oninput="updateName(${p.id},this.value)" placeholder="Prompt name…">
       <div class="header-meta">
         <select class="tag-select" onchange="updateCat(${p.id},this.value)">${catOptions}</select>
@@ -1158,6 +1161,9 @@ function renderMain() {
           ${varRows||`<div class="no-vars">No variables yet. Use <code class="inline">{{name}}</code>, <code class="inline">[[name]]</code>, or <code class="inline">((name))</code>.</div>`}
         </div>
       </div>
+    </div>
+    <div class="copy-footer">
+      <button class="btn btn-primary" onclick="copyFinal(${p.id})"><i class="fa-regular fa-copy"></i> Copy prompt</button>
     </div>`;
   initPillDragDrop();
 }
