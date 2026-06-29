@@ -1432,13 +1432,23 @@ function applyPreset(id, name) {
   const p = prompts.find(x => x.id === id);
   const preset = p.presets?.find(x => x.name === name);
   if (!preset) return;
-  Object.entries(preset.values).forEach(([k, val]) => {
-    if (!p.vars[k]) return;
-    const v = p.vars[k];
-    if (v.type === 'option') v.selected = val;
-    else if (v.type === 'instruction') v.selected = Array.isArray(val) ? [...val] : [];
-    else if (v.type === 'text') v.value = val;
-  });
+  const isClear = p.presets[0] === preset && name === 'Clear';
+  if (isClear) {
+    // Reset every current var regardless of what was stored in values
+    Object.values(p.vars).forEach(v => {
+      if (v.type === 'option') v.selected = '';
+      else if (v.type === 'instruction') v.selected = [];
+      else if (v.type === 'text') v.value = '';
+    });
+  } else {
+    Object.entries(preset.values).forEach(([k, val]) => {
+      if (!p.vars[k]) return;
+      const v = p.vars[k];
+      if (v.type === 'option') v.selected = val;
+      else if (v.type === 'instruction') v.selected = Array.isArray(val) ? [...val] : [];
+      else if (v.type === 'text') v.value = val;
+    });
+  }
   save(); renderMain();
   showToast(`"${name}" applied`);
 }
