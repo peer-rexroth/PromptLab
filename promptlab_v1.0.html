@@ -634,6 +634,21 @@
       <div class="help-divider"></div>
 
       <div class="help-section">
+        <div class="help-section-title">Keyboard shortcuts</div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:6px 16px;align-items:center;font-size:13px">
+          <span style="color:var(--text-2)">Focus search</span><div style="display:flex;gap:3px"><kbd id="hkMod1">⌘</kbd><kbd>K</kbd></div>
+          <span style="color:var(--text-2)">New prompt</span><div style="display:flex;gap:3px"><kbd id="hkMod2">⌘</kbd><kbd>N</kbd></div>
+          <span style="color:var(--text-2)">Copy prompt</span><div style="display:flex;gap:3px"><kbd id="hkMod3">⌘</kbd><kbd>↵</kbd></div>
+          <span style="color:var(--text-2)">Undo</span><div style="display:flex;gap:3px"><kbd id="hkMod4">⌘</kbd><kbd>Z</kbd></div>
+          <span style="color:var(--text-2)">Redo</span><div style="display:flex;gap:3px"><kbd id="hkMod5">⌘</kbd><kbd id="hkShift">⇧</kbd><kbd>Z</kbd></div>
+          <span style="color:var(--text-2)">Show shortcuts</span><div style="display:flex;gap:3px"><kbd>?</kbd></div>
+          <span style="color:var(--text-2)">Close modal</span><div style="display:flex;gap:3px"><kbd>Esc</kbd></div>
+        </div>
+      </div>
+
+      <div class="help-divider"></div>
+
+      <div class="help-section">
         <div class="help-section-title">Import &amp; export</div>
         <div class="help-row"><i class="fa-solid fa-download"></i><span><strong style="color:var(--text)">Export</strong> saves your entire library (prompts + categories) as a <code style="font-family:var(--mono);font-size:11px">.json</code> file. Use it to back up your work or share prompts with others.</span></div>
         <div class="help-row"><i class="fa-solid fa-upload"></i><span><strong style="color:var(--text)">Import</strong> loads a <code style="font-family:var(--mono);font-size:11px">.json</code> file. Choose <em>Merge</em> to add imported prompts alongside your existing ones (duplicates skipped), or <em>Replace</em> to overwrite your library entirely.</span></div>
@@ -1933,7 +1948,13 @@ function openShortcuts() {
   document.getElementById('shortcutsModalBg').classList.add('open');
 }
 function closeShortcuts() { document.getElementById('shortcutsModalBg').classList.remove('open'); }
-function openHelp()  { document.getElementById('helpModalBg').classList.add('open'); }
+function openHelp() {
+  const mac = /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const mod = mac ? '⌘' : 'Ctrl'; const shift = mac ? '⇧' : 'Shift';
+  ['hkMod1','hkMod2','hkMod3','hkMod4','hkMod5'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = mod; });
+  const s = document.getElementById('hkShift'); if(s) s.textContent = shift;
+  document.getElementById('helpModalBg').classList.add('open');
+}
 function closeHelp() { document.getElementById('helpModalBg').classList.remove('open'); }
 function openAbout()  { document.getElementById('aboutModalBg').classList.add('open'); }
 function closeAbout() { document.getElementById('aboutModalBg').classList.remove('open'); }
