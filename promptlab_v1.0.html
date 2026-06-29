@@ -633,6 +633,7 @@ const CAT_COLORS = [
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
+const YESTERDAY_NOON = (() => { const d = new Date(); d.setDate(d.getDate()-1); d.setHours(12,0,0,0); return d.getTime(); })();
 const DEFAULT_CATS = [
   { id:'engineering',       name:'Communication',        color:'blue'   },
   { id:'marketing',         name:'Productivity & Planning', color:'purple' },
@@ -647,7 +648,8 @@ const DEFAULT_PROMPTS = [
     catId: "content",
     favorite: false,
     template: "## ROLE\nYou are an expert prompt engineer.\n\n## TASK\nAnalyze and rewrite the prompt provided by the user. Improve its structure, clarity, and completeness so it is ready to use as-is.\n\n## INSTRUCTIONS\n\n### Structure\n- Organize content in this order: context → task → constraints → output format\n- Use `##`, `###`, or `**` for hierarchy where appropriate\n- Use headers, bullet points, or numbered lists to aid readability\n- Keep each instruction atomic — one idea per line\n- Eliminate redundancy and tighten phrasing\n\n### Content\n- Make the objective explicit and unambiguous\n- Add any context the model needs to perform well\n- Define the target audience, role, or persona if relevant\n- Specify desired output format (length, tone, style)\n- Add constraints or edge case handling where needed\n- Include a concrete example if it reduces ambiguity\n\n### Formatting Rules\n- Do not use `---` as section separator\n- Do not add commentary, preamble, or explanation outside the two required output sections\n\n## OUTPUT FORMAT\n\n**1. Improved Prompt**\nThe fully rewritten prompt in a code block, ready to copy and use.\n\n**2. Change Log**\nA concise bullet list explaining each change and the reason for it.\n\n## INPUT\n",
-    vars: {}
+    vars: {},
+    lastEdited: YESTERDAY_NOON
   },
   {
     id: 1782631824808,
@@ -661,7 +663,8 @@ const DEFAULT_PROMPTS = [
       detail_level: { type:'option',      options:["Summary only","Balanced","Detailed","High-level","Action-focused"], selected:"" },
       tone:         { type:'option',      options:["Professional","Concise","Executive","Neutral"], selected:"" },
       sections:     { type:'instruction', options:["Meeting Summary","Executive Summary","Meeting Attendees","Discussion Points","Decisions","Action Items","Open Points","Next Steps"], selected:[] }
-    }
+    },
+    lastEdited: YESTERDAY_NOON
   },
   {
     id: 1782591594332,
@@ -682,7 +685,8 @@ const DEFAULT_PROMPTS = [
       tone:                     { type:'option', options:["Analytical and precise","Neutral / Objective","Executive-facing"], selected:"" },
       audience:                 { type:'option', options:["Internal team","Senior managment","External client"], selected:"" },
       special_instructions:     { type:'option', options:["None"], selected:"" }
-    }
+    },
+    lastEdited: YESTERDAY_NOON
   },
   {
     id: 1782587856121,
@@ -696,7 +700,8 @@ const DEFAULT_PROMPTS = [
       domain:        { type:'option', options:["Multi-Domain / Hybrid","Business & Corporate","Technical & IT","Product & Customer","Sales & Marketing"], selected:"" },
       formality:     { type:'option', options:["Neutral","Formal","Informal / Casual"], selected:"" },
       output_format: { type:'option', options:["Side-by-side","Translated text only","Markdown-formatted","Plain text"], selected:"" }
-    }
+    },
+    lastEdited: YESTERDAY_NOON
   },
   {
     id: 1782583967756,
@@ -704,7 +709,8 @@ const DEFAULT_PROMPTS = [
     catId: "content",
     favorite: false,
     template: "## ROLE\nYou are a prompt editor specializing in linguistic consistency.\n\n## TASK\nAnalyze the prompt provided in the INPUT section and revise it so that tone, voice, terminology, formality, and phrasing are coherent throughout — without changing the prompt's meaning, intent, or structure.\n\n## ANALYSIS PHASE\nBefore rewriting, audit the prompt across these five dimensions:\n\n### Dimension 1: Tone & Voice\n- Identify whether the register is consistently instructional, conversational, or formal\n- Flag person or mood shifts (e.g., second-person \"you\" vs. imperative \"do X\" vs. third-person \"the model should\")\n- Confirm the emotional register remains stable (neutral, warm, or authoritative)\n\n### Dimension 2: Terminology\n- Verify each concept is referred to by the same name throughout.\n- Flag inconsistent synonyms (e.g., \"user\" vs. \"customer\" vs. \"person\")\n- Flag technical vocabulary that is introduced but later abandoned\n\n### Dimension 3: Formality Level\n- Confirm sentence complexity remains consistent\n- Flag contractions used selectively rather than uniformly\n- Flag hedging phrases (\"try to\", \"you might\", \"feel free\") used inconsistently\n\n### Dimension 4: Tense & Modality\n- Flag present-tense imperatives mixed with unnecessary past or future tenses\n- Confirm modal verbs (must, should, can, may) are used with consistent intent and weight\n\n### Dimension 5: Structural Parallelism\n- Confirm list items follow a consistent grammatical pattern (all imperatives, all noun phrases, or all questions)\n- Confirm section headers follow the same style and capitalization convention\n\n## REVISION INSTRUCTIONS\nApply the following fixes in order:\n\n1. **Establish a dominant voice** — Identify the most frequently used voice and normalize all deviations to match it\n2. **Unify terminology** — Choose one term per concept and apply it throughout. Flag each substitution in the report\n3. **Normalize formality** — Set a single formality register and adjust all sentences to match\n4. **Align tense and modality** — Default to present-tense imperatives unless the prompt's logic requires otherwise\n5. **Enforce parallel structure** — Rewrite list items and headers so they follow identical grammatical patterns\n6. **Preserve intent** — Do not add, remove, or reorder instructions. Do not change examples unless they contain terminology inconsistencies\n\n## OUTPUT FORMAT\nReturn two sections in this order:\n\n### Section 1: Alignment Report\nA bulleted list of every inconsistency found, grouped by dimension. For each issue, state the original phrasing and the replacement.\n\nFormat each entry as:\n- **[Dimension]:** \"[original]\" → \"[revised]\" (reason)\n\nExamples:\n- **Terminology:** \"end user\" → \"user\" (also appeared as \"person\" and \"customer\")\n- **Tense:** \"The assistant will respond…\" → \"The assistant responds…\" (aligns with imperative voice)\n- **Parallelism:** Mixed imperatives and noun phrases in list → all converted to imperatives\n\n### Section 2: Revised Report\nThe full revised prompt with all inconsistencies resolved. Do not annotate or comment inside the revised prompt. Return it as a text block. \n\n## CONSTRAINTS\n- Do not rewrite for clarity, conciseness, or quality beyond what alignment requires\n- Do not add new instructions, examples, or context not present in the original\n- Do not alter proper nouns, technical names, or brand names\n- If the prompt uses intentional stylistic variation (e.g., a deliberate register shift for a specific section), flag it in the report but leave it unchanged\n\n## INPUT\n",
-    vars: {}
+    vars: {},
+    lastEdited: YESTERDAY_NOON
   }
 ];
 
@@ -747,6 +753,7 @@ function load() {
       });
       if (!p.presets) p.presets = [];
       if (!p.versions) p.versions = [];
+      if (!p.lastEdited) p.lastEdited = Date.now();
       if (p.presets.length === 0 && p.vars && Object.keys(p.vars).length > 0) {
         const clearValues = {};
         Object.entries(p.vars).forEach(([k, v]) => { clearValues[k] = v.type === 'instruction' ? [] : ''; });
@@ -1227,7 +1234,7 @@ function select(id) {
   if (p && !lastSyncedTemplates.has(id)) lastSyncedTemplates.set(id, p.template);
   save(); render();
 }
-function updateName(id,v)  { prompts.find(p=>p.id===id).name=v; save(); renderSidebar(); }
+function updateName(id,v)  { const p=prompts.find(q=>q.id===id); p.name=v; p.lastEdited=Date.now(); save(); renderSidebar(); }
 function updateCat(id,v)   { prompts.find(p=>p.id===id).catId=v; save(); renderSidebar(); }
 function updateTemplate(id, v) {
   const p = prompts.find(x => x.id === id);
@@ -1245,6 +1252,8 @@ function updateTemplate(id, v) {
       if (s.past.length > 50) s.past.shift();
       s.future = [];
       updateUndoUI(id);
+      prompts.find(x => x.id === id).lastEdited = Date.now();
+      save();
     }
     undoSessionStart = null;
   }, 1000);
@@ -1253,16 +1262,19 @@ function syncVars(id) {
   snapshotVersion(id);
   const p = prompts.find(x => x.id === id);
   p.vars = detectVars(p.template, p.vars);
+  p.lastEdited = Date.now();
   lastSyncedTemplates.set(id, p.template);
   save(); renderMain();
 }
 function selectOpt(id,k,v) { prompts.find(p=>p.id===id).vars[k].selected=v; save(); renderMain(); }
-function deleteVar(id,k)   { delete prompts.find(p=>p.id===id).vars[k]; save(); renderMain(); }
+function deleteVar(id,k)   { const p=prompts.find(q=>q.id===id); delete p.vars[k]; p.lastEdited=Date.now(); save(); renderMain(); }
 function deleteSelectedOpt(id,k) {
-  const v = prompts.find(p=>p.id===id).vars[k];
+  const p = prompts.find(q=>q.id===id);
+  const v = p.vars[k];
   if (v.options.length <= 1) return;
   v.options = v.options.filter(o => o !== v.selected);
   v.selected = v.options[0];
+  p.lastEdited = Date.now();
   save(); renderMain();
 }
 function updateTextVar(id, k, val) {
@@ -1335,6 +1347,7 @@ function restoreVersion(id, idx) {
   snapshotVersion(id);
   p.template = v.template;
   p.vars = detectVars(p.template, p.vars);
+  p.lastEdited = Date.now();
   lastSyncedTemplates.set(id, v.template);
   expandedVersionIdx = -1;
   save(); renderMain();
@@ -1442,7 +1455,8 @@ function newPrompt() {
     template:"Write a {{style}} text about {{topic}}.",
     vars:{ style:{options:["short","detailed","creative"],selected:"short"}, topic:{options:["my topic"],selected:"my topic"} },
     presets: [{ name: 'Clear', values: { style: '', topic: '' } }],
-    versions: []
+    versions: [],
+    lastEdited: Date.now()
   });
   activeId=id; save(); render();
   setTimeout(()=>document.querySelector('.prompt-name-input')?.focus(),50);
@@ -1706,6 +1720,7 @@ function confirmModal() {
       v.selected = val;
     }
   }
+  prompts.find(p => p.id === id).lastEdited = Date.now();
   closeModal(); save(); renderMain();
 }
 
@@ -1928,17 +1943,28 @@ async function linkFile() {
       let data;
       try { data = JSON.parse(existingText); } catch(_) {}
       if (data && data.prompts && data.categories) {
-        // Valid library — merge file into current app state
+        // Valid library — merge file into current app state (last-write-wins on same name+template)
         data.categories.forEach(ic => {
           if (!categories.find(c => c.id === ic.id || c.name.toLowerCase() === ic.name.toLowerCase()))
             categories.push(ic);
         });
-        const keys = new Set(prompts.map(p => p.name + '||' + p.template));
-        const toAdd = data.prompts.filter(p => !keys.has(p.name + '||' + p.template));
-        toAdd.forEach(p => { p.id = p.id || Date.now() + Math.random(); p.favorite = p.favorite || false; prompts.unshift(p); });
+        let added = 0, updated = 0;
+        const appByKey = new Map(prompts.map(p => [p.name + '||' + p.template, p]));
+        data.prompts.forEach(fp => {
+          const key = fp.name + '||' + fp.template;
+          const appP = appByKey.get(key);
+          if (!appP) {
+            fp.id = fp.id || Date.now() + Math.random();
+            fp.favorite = fp.favorite || false;
+            prompts.unshift(fp); added++;
+          } else if ((fp.lastEdited || 0) > (appP.lastEdited || 0)) {
+            Object.assign(appP, fp, { id: appP.id }); updated++;
+          }
+        });
         if (!activeId && prompts.length) activeId = prompts[0].id;
         save(); render(); updateFileSyncUI();
-        showToast(`Merged ${toAdd.length} prompt${toAdd.length !== 1 ? 's' : ''} from ${handle.name} — auto-saving enabled`);
+        const parts = []; if (added) parts.push(`${added} added`); if (updated) parts.push(`${updated} updated`);
+        showToast(`Merged from ${handle.name} — ${parts.length ? parts.join(', ') : 'nothing new'} — auto-saving enabled`);
       } else {
         // File has content but isn't a PromptLab library — refuse to overwrite
         fileHandle = null;
