@@ -370,6 +370,10 @@
   }
   .preset-chip-del:hover { background: var(--red-bg); color: var(--red-text); }
   .no-presets { font-size: 12px; color: var(--text-3); }
+  .preset-chip-draggable { cursor: grab; }
+  .preset-chip-dragging { opacity: 0.35; }
+  .preset-chip-drag-left  { box-shadow: -3px 0 0 var(--blue-border); }
+  .preset-chip-drag-right { box-shadow:  3px 0 0 var(--blue-border); }
 
   #fileInput { display: none; }
   ::-webkit-scrollbar { width: 6px; }
@@ -894,12 +898,16 @@ function renderMain() {
   const presetsHtml = (() => {
     if (!p.presets || p.presets.length === 0)
       return `<div class="no-presets">No presets yet — save the current values to reuse them later.</div>`;
-    return `<div class="preset-chips">${p.presets.map(pr =>
-      `<span class="preset-chip" title="${esc(pr.name)}">
+    return `<div class="preset-chips">${p.presets.map((pr, idx) => {
+      const fixed = idx === 0 && pr.name === 'Clear';
+      return `<span class="preset-chip${fixed ? '' : ' preset-chip-draggable'}"
+        ${fixed ? '' : 'draggable="true"'}
+        data-presetname="${escJs(pr.name)}" data-promptid="${p.id}" data-fixed="${fixed}"
+        title="${esc(pr.name)}">
         <span class="preset-chip-name" onclick="applyPreset(${p.id},'${escJs(pr.name)}')">${esc(pr.name)}</span>
         <button class="preset-chip-del" onclick="deletePreset(${p.id},'${escJs(pr.name)}')" title="Delete preset"><i class="fa-solid fa-xmark"></i></button>
-      </span>`
-    ).join('')}</div>`;
+      </span>`;
+    }).join('')}</div>`;
   })();
   const hasVars = Object.keys(p.vars).length > 0;
 
@@ -1105,6 +1113,49 @@ function initPillDragDrop() {
       opts.splice(fromIdx, 1);
       const newTo = opts.indexOf(targetOpt);
       opts.splice(insertBefore ? newTo : newTo + 1, 0, dragOpt);
+      save(); renderMain();
+    });
+  });
+
+  // ── preset chips ──
+  let dragPreset = null, dragPresetPid = null;
+  document.querySelectorAll('.preset-chip[draggable]').forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      dragPreset = chip.dataset.presetname; dragPresetPid = parseInt(chip.dataset.promptid);
+      dragType = 'preset'; chip.classList.add('preset-chip-dragging');
+      e.dataTransfer.effectAllowed = 'move'; e.stopPropagation();
+    });
+    chip.addEventListener('dragend', () => {
+      document.querySelectorAll('.preset-chip').forEach(c =>
+        c.classList.remove('preset-chip-dragging','preset-chip-drag-left','preset-chip-drag-right'));
+      dragPreset = dragPresetPid = null; dragType = null;
+    });
+  });
+  document.querySelectorAll('.preset-chip').forEach(chip => {
+    chip.addEventListener('dragover', e => {
+      if (dragType !== 'preset') return;
+      e.preventDefault();
+      if (chip.dataset.presetname === dragPreset) return;
+      document.querySelectorAll('.preset-chip').forEach(c =>
+        c.classList.remove('preset-chip-drag-left','preset-chip-drag-right'));
+      const rect = chip.getBoundingClientRect();
+      chip.classList.add(e.clientX < rect.left + rect.width / 2 ? 'preset-chip-drag-left' : 'preset-chip-drag-right');
+    });
+    chip.addEventListener('dragleave', () =>
+      chip.classList.remove('preset-chip-drag-left','preset-chip-drag-right'));
+    chip.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragType !== 'preset') return;
+      const targetName = chip.dataset.presetname;
+      if (!dragPreset || dragPreset === targetName) return;
+      const p = prompts.find(x => x.id === dragPresetPid); if (!p) return;
+      const presets = p.presets;
+      const fromIdx = presets.findIndex(x => x.name === dragPreset); if (fromIdx < 0) return;
+      const dragged = presets.splice(fromIdx, 1)[0];
+      const newTo = presets.findIndex(x => x.name === targetName);
+      const rect = chip.getBoundingClientRect();
+      const insertBefore = e.clientX < rect.left + rect.width / 2;
+      presets.splice(Math.max(1, insertBefore ? newTo : newTo + 1), 0, dragged);
       save(); renderMain();
     });
   });
