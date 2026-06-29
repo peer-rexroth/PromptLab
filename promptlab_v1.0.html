@@ -1661,10 +1661,22 @@ function confirmImport() {
     prompts=imp.map(p=>({...p,id:p.id||Date.now()+Math.random(),favorite:p.favorite||false}));
     count=prompts.length; activeId=prompts[0]?.id??null;
   } else {
-    const keys=new Set(prompts.map(p=>p.name+'||'+p.template));
-    const toAdd=imp.filter(p=>!keys.has(p.name+'||'+p.template));
-    toAdd.forEach(p=>{p.id=Date.now()+Math.random();p.favorite=p.favorite||false;prompts.unshift(p);});
-    count=toAdd.length; if(!activeId&&prompts.length) activeId=prompts[0].id;
+    let updated = 0;
+    const appByName = new Map(prompts.map(p => [p.name, p]));
+    imp.forEach(fp => {
+      const appP = appByName.get(fp.name);
+      if (!appP) {
+        fp.id = Date.now() + Math.random(); fp.favorite = fp.favorite || false;
+        prompts.unshift(fp); count++;
+      } else if ((fp.lastEdited || 0) > (appP.lastEdited || 0)) {
+        Object.assign(appP, fp, { id: appP.id }); updated++;
+      }
+    });
+    if (!activeId && prompts.length) activeId = prompts[0].id;
+    const parts = []; if (count) parts.push(`${count} added`); if (updated) parts.push(`${updated} updated`);
+    closeImportModal(); save(); render();
+    showToast(`Imported — ${parts.length ? parts.join(', ') : 'nothing new'}`);
+    return;
   }
   closeImportModal(); save(); render();
   showToast(`Imported ${count} prompt${count!==1?'s':''}`);
