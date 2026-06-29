@@ -371,6 +371,21 @@
   }
   .preset-chip-del:hover { background: var(--red-bg); color: var(--red-text); }
   .no-presets { font-size: 12px; color: var(--text-3); }
+
+  /* split link button */
+  .split-btn { display: inline-flex; position: relative; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: visible; }
+  .split-btn-main { display: flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--bg-2); color: var(--text); font-size: 12px; font-family: var(--font); border: none; border-radius: var(--radius) 0 0 var(--radius); cursor: pointer; white-space: nowrap; }
+  .split-btn-main:hover { background: var(--bg-3); }
+  .split-btn-chevron { display: flex; align-items: center; padding: 5px 7px; background: var(--bg-2); color: var(--text-3); font-size: 9px; font-family: var(--font); border: none; border-left: 0.5px solid var(--border); border-radius: 0 var(--radius) var(--radius) 0; cursor: pointer; }
+  .split-btn-chevron:hover { background: var(--bg-3); color: var(--text); }
+  .split-btn-menu { display: none; position: absolute; top: calc(100% + 5px); right: 0; background: var(--bg-2); border: 0.5px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0,0,0,.14); min-width: 200px; z-index: 300; overflow: hidden; }
+  .split-btn-menu.open { display: block; }
+  .split-btn-menu-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 13px; cursor: pointer; color: var(--text); }
+  .split-btn-menu-item:hover { background: var(--bg-3); }
+  .split-btn-menu-item + .split-btn-menu-item { border-top: 0.5px solid var(--border); }
+  .split-btn-menu-icon { flex-shrink: 0; width: 14px; margin-top: 1px; color: var(--text-2); font-size: 12px; }
+  .split-btn-menu-label { font-size: 12px; font-weight: 500; }
+  .split-btn-menu-desc { font-size: 11px; color: var(--text-3); margin-top: 1px; }
   .preset-chip-draggable { cursor: grab; }
   .preset-chip-dragging { opacity: 0.35; }
   .preset-chip-drag-left  { box-shadow: -3px 0 0 var(--blue-border); }
@@ -1855,6 +1870,46 @@ async function _clearFileLink() {
   updateFileSyncUI();
 }
 
+function linkSplitBtnHtml() {
+  return `<div class="split-btn" id="linkSplitBtn">
+    <button class="split-btn-main" onclick="linkFile()" title="Link an existing .json library file">
+      <i class="fa-solid fa-link"></i> Link file
+    </button>
+    <button class="split-btn-chevron" onclick="event.stopPropagation();toggleLinkMenu()" title="More options">
+      <i class="fa-solid fa-chevron-down"></i>
+    </button>
+    <div class="split-btn-menu" id="linkMenu">
+      <div class="split-btn-menu-item" onclick="linkFile();closeLinkMenu()">
+        <i class="fa-solid fa-folder-open split-btn-menu-icon"></i>
+        <div><div class="split-btn-menu-label">Link existing file…</div><div class="split-btn-menu-desc">Open a .json library and sync to it</div></div>
+      </div>
+      <div class="split-btn-menu-item" onclick="createNewLinkedFile();closeLinkMenu()">
+        <i class="fa-solid fa-file-circle-plus split-btn-menu-icon"></i>
+        <div><div class="split-btn-menu-label">Create new file…</div><div class="split-btn-menu-desc">Save current library to a new file</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+function toggleLinkMenu() { document.getElementById('linkMenu')?.classList.toggle('open'); }
+function closeLinkMenu()  { document.getElementById('linkMenu')?.classList.remove('open'); }
+
+async function createNewLinkedFile() {
+  if (!window.showSaveFilePicker) { showToast('File linking requires Chrome or Edge', true); return; }
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'promptlab-library.json',
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+    });
+    fileHandle = handle;
+    try { await _fsPut(handle); } catch(_) {}
+    await fileSyncWrite({ prompts, categories, activeId, filterCatId, filterFavs });
+    updateFileSyncUI();
+    showToast(`Linked — auto-saving to ${handle.name}`);
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Could not create file', true);
+  }
+}
+
 async function linkFile() {
   if (!window.showOpenFilePicker) { showToast('File linking requires Chrome or Edge', true); return; }
   try {
@@ -1923,7 +1978,7 @@ function updateFileSyncUI() {
   if (!el) return;
   if (!window.showOpenFilePicker) { el.style.display = 'none'; return; }
   if (!fileHandle) {
-    el.innerHTML = `<button class="btn btn-sm" onclick="linkFile()" title="Link to a local file — auto-saves after every change"><i class="fa-solid fa-link"></i> Link file</button>`;
+    el.innerHTML = linkSplitBtnHtml();
     return;
   }
   fileHandle.queryPermission({ mode: 'readwrite' }).then(perm => {
@@ -1939,7 +1994,7 @@ function updateFileSyncUI() {
       el.innerHTML = `<button class="btn btn-sm" onclick="reconnectFile()" style="color:var(--amber-text);border-color:var(--amber-text)" title="Reconnect to ${esc(fileHandle.name)}"><i class="fa-solid fa-triangle-exclamation"></i> Reconnect</button>`;
     }
   }).catch(() => {
-    if (el) el.innerHTML = `<button class="btn btn-sm" onclick="linkFile()"><i class="fa-solid fa-link"></i> Link file</button>`;
+    if (el) el.innerHTML = linkSplitBtnHtml();
   });
 }
 
@@ -1975,6 +2030,8 @@ load();
 activeId = null;
 render();
 initFileSync();
+
+document.addEventListener('click', e => { if (!e.target.closest('#linkSplitBtn')) closeLinkMenu(); });
 
 document.addEventListener('keydown', e => {
   if (document.activeElement?.id !== 'templateArea') return;
