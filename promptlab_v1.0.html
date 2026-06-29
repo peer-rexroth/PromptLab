@@ -126,6 +126,11 @@
   .header-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .tag-select { font-size: 12px; font-weight: 500; border: 0.5px solid var(--border); border-radius: 20px; padding: 3px 10px; background: var(--bg-2); color: var(--text); cursor: pointer; outline: none; font-family: var(--font); }
   .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .lock-btn { font-size: 12px; padding: 4px 10px; }
+  .lock-btn-on { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-text); }
+  .lock-btn-on:hover { background: var(--amber-bg); opacity: 0.85; }
+  .prompt-textarea[readonly] { background: var(--bg-2); cursor: default; color: var(--text-2); }
+  .prompt-name-input[readonly] { cursor: default; }
   .copy-footer { position: sticky; bottom: 0; background: var(--bg); border-top: 0.5px solid var(--border); padding: 10px 24px; display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; z-index: 10; }
 
   /* star button in header */
@@ -746,6 +751,7 @@ const DEFAULT_PROMPTS = [
     name: "Improve prompt v1.0",
     catId: "content",
     favorite: false,
+    locked: true,
     template: "## ROLE\nYou are an expert prompt engineer.\n\n## TASK\nAnalyze and rewrite the prompt provided by the user. Improve its structure, clarity, and completeness so it is ready to use as-is.\n\n## INSTRUCTIONS\n\n### Structure\n- Organize content in this order: context → task → constraints → output format\n- Use `##`, `###`, or `**` for hierarchy where appropriate\n- Use headers, bullet points, or numbered lists to aid readability\n- Keep each instruction atomic — one idea per line\n- Eliminate redundancy and tighten phrasing\n\n### Content\n- Make the objective explicit and unambiguous\n- Add any context the model needs to perform well\n- Define the target audience, role, or persona if relevant\n- Specify desired output format (length, tone, style)\n- Add constraints or edge case handling where needed\n- Include a concrete example if it reduces ambiguity\n\n### Formatting Rules\n- Do not use `---` as section separator\n- Do not add commentary, preamble, or explanation outside the two required output sections\n\n## OUTPUT FORMAT\n\n**1. Improved Prompt**\nThe fully rewritten prompt in a code block, ready to copy and use.\n\n**2. Change Log**\nA concise bullet list explaining each change and the reason for it.\n\n## INPUT\n",
     vars: {},
     lastEdited: YESTERDAY_NOON
@@ -755,6 +761,7 @@ const DEFAULT_PROMPTS = [
     name: "Create meeting minutes v1.0",
     catId: "engineering",
     favorite: true,
+    locked: true,
     template: "## ROLE\nYou are a professional meeting minutes writer.\n\n## CONTEXT\n- **Audience:** {{audience}}\n- **Meeting type:** {{meeting_type}}\n- **Detail level:** {{detail_level}}\n- **Tone:** {{tone}}\n\n## TASK\nTransform the input into polished, structured minutes.\n\n**Strict fidelity rule:** Base output exclusively on the provided input. Do not infer, assume, or introduce any information not explicitly stated in the input.\n\n## OUTPUT STRUCTURE\nProduce only the sections listed below, in this exact order, each with a bold heading:\n\n[[sections]]\n\n## SECTION FORMATTING RULES\n\n### Action Items\nRender as a markdown table with these exact columns:\n\n| Action Item | Owner | Due Date |\n|---|---|---|\n\n- Begin each action item with a verb (e.g., \"Send budget to finance team\")\n- One action item and one owner per row\n- Format due dates as `Mon DD` or `YYYY-MM-DD`\n- Leave a cell blank if the owner or due date is not stated — do not infer\n\n### Decisions\n- One decision per bullet point\n- State each decision in full using plain declarative sentences\n- Avoid hedging language — write \"The team decided\" not \"it was generally agreed\"\n\n### Discussion Points\n- One bullet per key point, summarized accurately and concisely\n- Omit tangential or off-topic remarks\n- Match depth to {{detail_level}}\n\n### Next Steps\n- One bullet per next step\n- Capture process- or project-level progress, not individual task assignments\n\n### All Other Sections\n- Use prose or bullet points suited to the content type\n- Match formality to {{tone}} and {{audience}}\n\n## PRE-OUTPUT CHECKLIST\nBefore writing the final output, verify:\n\n- [ ] All sections in [[sections]] are present and in the specified order\n- [ ] Action items table uses the exact three-column structure\n- [ ] No action item owner or due date has been inferred — blank if unstated\n- [ ] Every decision is stated explicitly and in full, without ambiguity\n- [ ] No content has been fabricated or assumed beyond the input\n- [ ] Language matches {{tone}} and is appropriate for {{audience}}\n\n## OUTPUT\nReturn only the meeting minutes, ready to share with {{audience}}. Do not include the checklist, preamble, or any meta-commentary.",
     vars: {
       audience:     { type:'option',      options:["Project team","Internal team","Senior management"], selected:"" },
@@ -770,6 +777,7 @@ const DEFAULT_PROMPTS = [
     name: "Create issue tree v1.0",
     catId: "other",
     favorite: false,
+    locked: true,
     template: "## ROLE\nYou are a structured problem-solving assistant specializing in issue tree frameworks used in management consulting, strategy, and root cause analysis.\n\n## OBJECTIVE\nBuild a **{{tree_depth}}** level issue tree for the problem statement below. The tree must be logically sound, consultant-grade, and ready for direct use in analysis or presentation.\n\n## DECOMPOSITION LOGIC\n- **Approach:** {{decomposition_approach}} \n- **MECE discipline:** {{mece_strictness}} — branches at every level must be mutually exclusive and collectively exhaustive\n- **Decompose across these dimensions where relevant:**\n  {{decomposition_dimensions}}\n\n## TREE STRUCTURE RULES\n- **Root node:** The core problem or question, stated precisely\n- **Branch nodes:** Each branch represents a {{branch_type}} of its parent\n- **Leaf nodes:** Each leaf contains {{leaf_node_content}}\n\n## NODE FORMAT\nFor every node, include:\n1. **Label** — {{label_style}}\n2. **Rationale** — One sentence explaining why this branch exists and what it contributes to the analysis\n3. **Priority** — {{priority_flag}} indicator: `High`, `Medium`, or `Low`\n\n## OUTPUT FORMAT\nRender the tree as {{output_format}}\n\n## TONE & AUDIENCE\n- **Tone:** {{tone}} \n- **Audience:** {{audience}} \n\n## ADDITIONAL CONSTRAINTS\n{{special_instructions}}\n\n## PROBLEM STATEMENT\n\n",
     vars: {
       tree_depth:               { type:'option', options:["1","2","3","4"], selected:"" },
@@ -792,6 +800,7 @@ const DEFAULT_PROMPTS = [
     name: "Translate text v1.0",
     catId: "content",
     favorite: true,
+    locked: true,
     template: "## ROLE\nYou are a professional translator with expertise in linguistics, cultural nuance, and domain-specific terminology.\n\n## CONTEXT\n- Target language: {{target_lang}}\n- Target audience: {{audience}}\n- Domain: {{domain}}\n- Formality level: {{formality}}\n- Source language: auto-detect\n\n**Terminology rules:**\n- Use industry-standard terminology for the specified domain\n- Preserve technical terms in the source language unless a well-established target-language equivalent exists\n- Never translate proper nouns, brand names, or technical identifiers unless explicitly instructed\n\n## TASK\n1. Detect the source language of the source text\n2. Translate the full source text into {{target_lang}}\n3. Deliver the output in the format specified below\n\n## LANGUAGE DETECTION RULES\n- If the source language is identifiable, state it before translating\n- If the source text contains multiple languages, detect and translate each segment individually\n- If detection confidence is low, prepend the output with `[detected: LANGUAGE — low confidence]`\n- If the source language cannot be determined at all, ask for clarification before proceeding\n\n## TRANSLATION RULES\n- Preserve the original meaning exactly — no omissions, additions, or inferences\n- Adapt idioms, expressions, and cultural references naturally into {{target_lang}} conventions\n- Maintain the original structure (paragraphs, lists, headings) unless target-language conventions require adjustment\n- Use consistent terminology throughout\n- Preserve active or passive voice as in the source unless {{target_lang}} norms require otherwise\n- Match the specified formality level: {{formality}}\n- Preserve the original tone (e.g., formal, casual, persuasive, neutral) — do not editorialize\n\n## OUTPUT FORMAT\nDeliver the translation using this format: **{{output_format}}**\n\nChoose the behavior based on the selected format:\n- `translation + detected language header` — Prepend one line `[detected: LANGUAGE]`, then the translation\n- `side-by-side` — Two columns: source paragraph on the left, translation on the right, aligned by paragraph\n- `translated text only` — Return the translation with no additional content\n- `markdown-formatted` — Preserve or convert structure into Markdown headings, lists, and bold\n- `plain text` — Strip all markup, headings, and bullet points from the output\n\n## QUALITY CHECKLIST\nBefore delivering, verify:\n- [ ] Source language is correctly identified\n- [ ] Translation reads naturally in {{target_lang}} — not word-for-word\n- [ ] Cultural references are appropriately adapted or annotated\n- [ ] Terminology is consistent with the specified domain\n- [ ] Formality and tone match the specified level\n- [ ] No source-language fragments remain in the output\n\n## INPUT\n",
     vars: {
       target_lang:   { type:'option', options:["English","German","Spanish","French"], selected:"" },
@@ -807,6 +816,7 @@ const DEFAULT_PROMPTS = [
     name: "Unify prompt tone, style, and terminology v1.0",
     catId: "content",
     favorite: false,
+    locked: true,
     template: "## ROLE\nYou are a prompt editor specializing in linguistic consistency.\n\n## TASK\nAnalyze the prompt provided in the INPUT section and revise it so that tone, voice, terminology, formality, and phrasing are coherent throughout — without changing the prompt's meaning, intent, or structure.\n\n## ANALYSIS PHASE\nBefore rewriting, audit the prompt across these five dimensions:\n\n### Dimension 1: Tone & Voice\n- Identify whether the register is consistently instructional, conversational, or formal\n- Flag person or mood shifts (e.g., second-person \"you\" vs. imperative \"do X\" vs. third-person \"the model should\")\n- Confirm the emotional register remains stable (neutral, warm, or authoritative)\n\n### Dimension 2: Terminology\n- Verify each concept is referred to by the same name throughout.\n- Flag inconsistent synonyms (e.g., \"user\" vs. \"customer\" vs. \"person\")\n- Flag technical vocabulary that is introduced but later abandoned\n\n### Dimension 3: Formality Level\n- Confirm sentence complexity remains consistent\n- Flag contractions used selectively rather than uniformly\n- Flag hedging phrases (\"try to\", \"you might\", \"feel free\") used inconsistently\n\n### Dimension 4: Tense & Modality\n- Flag present-tense imperatives mixed with unnecessary past or future tenses\n- Confirm modal verbs (must, should, can, may) are used with consistent intent and weight\n\n### Dimension 5: Structural Parallelism\n- Confirm list items follow a consistent grammatical pattern (all imperatives, all noun phrases, or all questions)\n- Confirm section headers follow the same style and capitalization convention\n\n## REVISION INSTRUCTIONS\nApply the following fixes in order:\n\n1. **Establish a dominant voice** — Identify the most frequently used voice and normalize all deviations to match it\n2. **Unify terminology** — Choose one term per concept and apply it throughout. Flag each substitution in the report\n3. **Normalize formality** — Set a single formality register and adjust all sentences to match\n4. **Align tense and modality** — Default to present-tense imperatives unless the prompt's logic requires otherwise\n5. **Enforce parallel structure** — Rewrite list items and headers so they follow identical grammatical patterns\n6. **Preserve intent** — Do not add, remove, or reorder instructions. Do not change examples unless they contain terminology inconsistencies\n\n## OUTPUT FORMAT\nReturn two sections in this order:\n\n### Section 1: Alignment Report\nA bulleted list of every inconsistency found, grouped by dimension. For each issue, state the original phrasing and the replacement.\n\nFormat each entry as:\n- **[Dimension]:** \"[original]\" → \"[revised]\" (reason)\n\nExamples:\n- **Terminology:** \"end user\" → \"user\" (also appeared as \"person\" and \"customer\")\n- **Tense:** \"The assistant will respond…\" → \"The assistant responds…\" (aligns with imperative voice)\n- **Parallelism:** Mixed imperatives and noun phrases in list → all converted to imperatives\n\n### Section 2: Revised Report\nThe full revised prompt with all inconsistencies resolved. Do not annotate or comment inside the revised prompt. Return it as a text block. \n\n## CONSTRAINTS\n- Do not rewrite for clarity, conciseness, or quality beyond what alignment requires\n- Do not add new instructions, examples, or context not present in the original\n- Do not alter proper nouns, technical names, or brand names\n- If the prompt uses intentional stylistic variation (e.g., a deliberate register shift for a specific section), flag it in the report but leave it unchanged\n\n## INPUT\n",
     vars: {},
     lastEdited: YESTERDAY_NOON
@@ -851,6 +861,7 @@ function load() {
         p.catId = m[p.tag] || 'other';
       }
       if (p.favorite === undefined) p.favorite = false;
+      if (p.locked  === undefined) p.locked  = false;
       // migrate vars without type
       if (p.vars) Object.values(p.vars).forEach(v => {
         if (!v.type) v.type = 'option';
@@ -948,7 +959,7 @@ function renderSidebar() {
         const starred = p.favorite;
         return `<div class="prompt-item${p.id===activeId?' active':''}" onclick="select(${p.id})" style="box-shadow:inset 3px 0 0 ${dot}">
           <div class="prompt-item-body">
-            <div class="prompt-item-name">${esc(p.name)}</div>
+            <div class="prompt-item-name">${esc(p.name)}${p.locked?'<i class="fa-solid fa-lock" style="font-size:9px;color:var(--text-3);margin-left:5px;vertical-align:middle"></i>':''}</div>
             <div class="prompt-item-preview">${esc(p.template.substring(0,50))}…</div>
           </div>
           <button class="star-btn${starred?' starred':''}" onclick="toggleFav(event,${p.id})"
@@ -965,6 +976,14 @@ function renderSidebar() {
   const shown = filtered.length;
   document.getElementById('sidebarCount').textContent =
     `${shown} of ${prompts.length} prompt${prompts.length!==1?'s':''} shown`;
+}
+
+// ── Lock ──────────────────────────────────────────────────────────────────────
+function toggleLock(id) {
+  const p = prompts.find(x => x.id === id);
+  if (!p) return;
+  p.locked = !p.locked;
+  save(); renderMain(); renderSidebar();
 }
 
 // ── Favorites ─────────────────────────────────────────────────────────────────
@@ -1063,27 +1082,26 @@ function renderMain() {
     if (v.type === 'instruction') {
       const items = v.options.map((o,i) => {
         const checked = (v.selected||[]).includes(o);
-        return `<div class="instr-item${checked?' checked':''}" draggable="true" data-opt="${escJs(o)}" data-varkey="${escJs(k)}" data-promptid="${p.id}" onclick="toggleInstr(${p.id},'${escJs(k)}','${escJs(o)}')">
+        return `<div class="instr-item${checked?' checked':''}" ${locked?'':'draggable="true"'} data-opt="${escJs(o)}" data-varkey="${escJs(k)}" data-promptid="${p.id}" onclick="toggleInstr(${p.id},'${escJs(k)}','${escJs(o)}')">
           <span class="instr-cb">${checked?'✓':''}</span>
           <span class="instr-item-text">${esc(o)}</span>
-          <span class="instr-item-actions">
+          ${locked?'':` <span class="instr-item-actions">
             <button class="instr-act-btn" onclick="event.stopPropagation();editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Edit">✎</button>
             <button class="instr-act-btn" onclick="event.stopPropagation();deleteInstrItem(${p.id},'${escJs(k)}','${escJs(o)}')" title="Remove" style="color:var(--red-text)">✕</button>
-          </span>
+          </span>`}
         </div>`;
       }).join('');
-      const selCount = (v.selected||[]).length;
       return `<div class="var-row var-row-instr" style="box-shadow:inset 3px 0 0 #1d9e75">
         <span class="var-name var-name-instr" title="${esc(k)}">${esc(k)}</span>
         <div>
           <div class="instr-list">${items||'<div style="font-size:12px;color:var(--text-3);padding:2px 0">No instructions yet.</div>'}</div>
-          <button class="btn-add-opt" style="margin-top:6px" onclick="addOption(${p.id},'${escJs(k)}')"><i class="fa-solid fa-plus" style="font-size:10px"></i> Instruction</button>
+          ${locked?'':` <button class="btn-add-opt" style="margin-top:6px" onclick="addOption(${p.id},'${escJs(k)}')"><i class="fa-solid fa-plus" style="font-size:10px"></i> Instruction</button>`}
         </div>
-        <div style="display:flex;gap:4px;flex-shrink:0;padding-top:2px">
+        ${locked?'<div></div>':`<div style="display:flex;gap:4px;flex-shrink:0;padding-top:2px">
           <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
             <i class="fa-solid fa-xmark"></i>
           </button>
-        </div>
+        </div>`}
       </div>`;
     }
     // text type
@@ -1091,22 +1109,22 @@ function renderMain() {
       return `<div class="var-row" style="box-shadow:inset 3px 0 0 var(--amber-text)">
         <span class="var-name var-name-text" title="${esc(k)}">${esc(k)}</span>
         <input class="var-text-input" type="text" value="${esc(v.value)}" placeholder="Type text…"
-          oninput="updateTextVar(${p.id},'${escJs(k)}',this.value)">
-        <div style="display:flex;gap:4px;flex-shrink:0">
+          oninput="updateTextVar(${p.id},'${escJs(k)}',this.value)"${locked?' readonly':''}>
+        ${locked?'<div></div>':`<div style="display:flex;gap:4px;flex-shrink:0">
           <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
             <i class="fa-solid fa-xmark"></i>
           </button>
-        </div>
+        </div>`}
       </div>`;
     }
     // default: option type
     return `<div class="var-row" style="box-shadow:inset 3px 0 0 var(--blue-border)">
       <span class="var-name" title="${esc(k)}">${esc(k)}</span>
       <div class="var-options">
-        ${v.options.map(o=>`<span class="option-pill${o===v.selected?' selected':''}" draggable="true" data-opt="${escJs(o)}" data-promptid="${p.id}" data-varkey="${escJs(k)}" onclick="selectOpt(${p.id},'${escJs(k)}','${escJs(o)}')" ondblclick="editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Double-click to edit">${esc(o)}</span>`).join('')}
-        <button class="btn-add-opt" onclick="addOption(${p.id},'${escJs(k)}')"><i class="fa-solid fa-plus" style="font-size:10px"></i> Option</button>
+        ${v.options.map(o=>`<span class="option-pill${o===v.selected?' selected':''}" ${locked?'':` draggable="true" data-opt="${escJs(o)}" data-promptid="${p.id}" data-varkey="${escJs(k)}"`} onclick="selectOpt(${p.id},'${escJs(k)}','${escJs(o)}')" ${locked?'':` ondblclick="editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Double-click to edit"`}>${esc(o)}</span>`).join('')}
+        ${locked?'':` <button class="btn-add-opt" onclick="addOption(${p.id},'${escJs(k)}')"><i class="fa-solid fa-plus" style="font-size:10px"></i> Option</button>`}
       </div>
-      <div style="display:flex;gap:4px;flex-shrink:0">
+      ${locked?'<div></div>':`<div style="display:flex;gap:4px;flex-shrink:0">
         <button class="btn btn-sm btn-danger" onclick="deleteSelectedOpt(${p.id},'${escJs(k)}')" title="Remove selected option"
           ${v.options.length<=1?'disabled style="opacity:0.35;cursor:not-allowed"':''}>
           <i class="fa-solid fa-trash-can"></i>
@@ -1114,17 +1132,18 @@ function renderMain() {
         <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
           <i class="fa-solid fa-xmark"></i>
         </button>
-      </div>
+      </div>`}
     </div>`;
   }).join('');
 
   const hcat = getCat(p.catId); const hdot = catDot(hcat);
+  const locked = !!p.locked;
   main.innerHTML = `
     <div class="main-header">
       <div style="width:10px;height:10px;border-radius:50%;background:${hdot};flex-shrink:0"></div>
-      <input class="prompt-name-input" value="${esc(p.name)}" oninput="updateName(${p.id},this.value)" placeholder="Prompt name…">
+      <input class="prompt-name-input" value="${esc(p.name)}" oninput="updateName(${p.id},this.value)" placeholder="Prompt name…"${locked?' readonly':''}>
       <div class="header-meta">
-        <select class="tag-select" onchange="updateCat(${p.id},this.value)">${catOptions}</select>
+        <select class="tag-select" onchange="updateCat(${p.id},this.value)"${locked?' disabled':''}>${catOptions}</select>
         <button id="headerStarBtn" class="star-btn-lg${p.favorite?' starred':''}"
           onclick="toggleFav(event,${p.id})"
           title="${p.favorite?'Remove from favorites':'Add to favorites'}">
@@ -1132,7 +1151,10 @@ function renderMain() {
         </button>
       </div>
       <div class="header-actions">
-        <button class="btn btn-sm" onclick="syncVars(${p.id})"><i class="fa-solid fa-rotate"></i> Sync</button>
+        ${locked?'':`<button class="btn btn-sm" onclick="syncVars(${p.id})"><i class="fa-solid fa-rotate"></i> Sync</button>`}
+        <button class="btn btn-sm lock-btn${locked?' lock-btn-on':''}" onclick="toggleLock(${p.id})" title="${locked?'Unlock to enable editing':'Lock to prevent editing'}">
+          <i class="fa-solid fa-${locked?'lock':'lock-open'}"></i>
+        </button>
         <button class="btn btn-sm" onclick="clonePrompt(${p.id})" title="Clone prompt"><i class="fa-regular fa-clone"></i></button>
         <button class="btn btn-sm btn-danger" onclick="deletePrompt(${p.id})"><i class="fa-solid fa-trash-can"></i></button>
         <button class="btn btn-primary btn-sm" onclick="copyFinal(${p.id})"><i class="fa-regular fa-copy"></i> Copy prompt</button>
@@ -1143,17 +1165,17 @@ function renderMain() {
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <span class="field-label" style="margin-bottom:0">Template</span>
-            <div style="display:flex;gap:3px">
+            ${locked?`<span style="font-size:11px;color:var(--amber-text)"><i class="fa-solid fa-lock" style="font-size:10px"></i> Read-only</span>`:`<div style="display:flex;gap:3px">
               <button id="undoBtn" class="btn btn-sm" onclick="undoTemplate(${p.id})" title="Undo (⌘Z)"${(()=>{const s=undoStacks.get(p.id);return s&&s.past.length?'':' disabled';})()}>
                 <i class="fa-solid fa-rotate-left" style="font-size:11px"></i>
               </button>
               <button id="redoBtn" class="btn btn-sm" onclick="redoTemplate(${p.id})" title="Redo (⌘⇧Z)"${(()=>{const s=undoStacks.get(p.id);return s&&s.future.length?'':' disabled';})()}>
                 <i class="fa-solid fa-rotate-right" style="font-size:11px"></i>
               </button>
-            </div>
+            </div>`}
           </div>
-          <textarea class="prompt-textarea" id="templateArea" oninput="updateTemplate(${p.id},this.value)">${esc(p.template)}</textarea>
-          <div class="hint">Use <code class="inline">{{name}}</code> for options, <code class="inline">[[name]]</code> for instruction lists, <code class="inline">((name))</code> for free text. Click <strong>Sync</strong> after editing.</div>
+          <textarea class="prompt-textarea" id="templateArea" oninput="updateTemplate(${p.id},this.value)"${locked?' readonly':''}>${esc(p.template)}</textarea>
+          ${locked?'':`<div class="hint">Use <code class="inline">{{name}}</code> for options, <code class="inline">[[name]]</code> for instruction lists, <code class="inline">((name))</code> for free text. Click <strong>Sync</strong> after editing.</div>`}
         </div>
         <div>
           <div class="preview-card">
@@ -1182,7 +1204,7 @@ function renderMain() {
         <div class="vars-card">
           <div class="vars-card-header">
             <span>Detected variables</span>
-            <button class="btn btn-sm" onclick="syncVars(${p.id})"><i class="fa-solid fa-rotate"></i> Sync</button>
+            ${locked?'':`<button class="btn btn-sm" onclick="syncVars(${p.id})"><i class="fa-solid fa-rotate"></i> Sync</button>`}
           </div>
           <div class="presets-section">
             <div class="presets-header">
@@ -1343,10 +1365,11 @@ function select(id) {
   if (p && !lastSyncedTemplates.has(id)) lastSyncedTemplates.set(id, p.template);
   save(); render();
 }
-function updateName(id,v)  { const p=prompts.find(q=>q.id===id); p.name=v; p.lastEdited=Date.now(); save(); renderSidebar(); }
-function updateCat(id,v)   { prompts.find(p=>p.id===id).catId=v; save(); renderSidebar(); }
+function updateName(id,v)  { const p=prompts.find(q=>q.id===id); if(p.locked) return; p.name=v; p.lastEdited=Date.now(); save(); renderSidebar(); }
+function updateCat(id,v)   { const p=prompts.find(q=>q.id===id); if(p.locked) return; p.catId=v; save(); renderSidebar(); }
 function updateTemplate(id, v) {
   const p = prompts.find(x => x.id === id);
+  if (p.locked) return;
   if (undoSessionId !== id || undoDebounce === null) { undoSessionStart = p.template; undoSessionId = id; }
   p.template = v;
   const pb = document.getElementById('previewBody');
