@@ -1309,6 +1309,7 @@ function renderMain() {
     `<option value="${esc(c.id)}"${c.id===p.catId?' selected':''}>${esc(c.name)}</option>`
   ).join('');
 
+  const locked = !!p.locked;
   const presetsHtml = (() => {
     if (!p.presets || p.presets.length === 0)
       return `<div class="no-presets">No presets yet — save the current values to reuse them later.</div>`;
@@ -1384,7 +1385,6 @@ function renderMain() {
   }).join('');
 
   const hcat = getCat(p.catId); const hdot = catDot(hcat);
-  const locked = !!p.locked;
   main.innerHTML = `
     <div class="main-header">
       <div style="width:10px;height:10px;border-radius:50%;background:${hdot};flex-shrink:0"></div>
