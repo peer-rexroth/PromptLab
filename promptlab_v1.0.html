@@ -59,6 +59,7 @@
   .topbar-brand .brand-lab { color: var(--text); font-weight: 600; }
   .topbar-actions { display: flex; gap: 8px; align-items: center; }
   .topbar-divider { width: 0.5px; height: 20px; background: var(--border-2); margin: 0 2px; }
+  .lib-dropdown { position: relative; display: inline-flex; }
 
   /* layout */
   .layout { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 52px); }
@@ -421,12 +422,23 @@
   <div class="topbar-actions">
     <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
     <div class="topbar-divider"></div>
-    <button class="btn btn-sm" onclick="exportLibrary()"><i class="fa-solid fa-download"></i> Export</button>
-    <button class="btn btn-sm" onclick="triggerImport()"><i class="fa-solid fa-upload"></i> Import</button>
+    <div class="lib-dropdown" id="libDropdown">
+      <button class="btn btn-sm" onclick="toggleLibMenu()"><i class="fa-solid fa-book"></i> Library <i class="fa-solid fa-chevron-down" style="font-size:9px;margin-left:1px"></i></button>
+      <div class="split-btn-menu" id="libMenu" style="right:0;left:auto">
+        <div class="split-btn-menu-item" onclick="exportLibrary();closeLibMenu()">
+          <i class="fa-solid fa-download split-btn-menu-icon"></i>
+          <div><div class="split-btn-menu-label">Export</div><div class="split-btn-menu-desc">Download library as .json</div></div>
+        </div>
+        <div class="split-btn-menu-item" onclick="triggerImport();closeLibMenu()">
+          <i class="fa-solid fa-upload split-btn-menu-icon"></i>
+          <div><div class="split-btn-menu-label">Import</div><div class="split-btn-menu-desc">Merge or replace from .json file</div></div>
+        </div>
+      </div>
+    </div>
     <div class="topbar-divider"></div>
     <div id="fileSyncIndicator" style="display:flex;align-items:center;gap:6px"></div>
     <div class="topbar-divider"></div>
-    <button class="btn btn-sm" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New Prompt</button>
+    <button class="btn btn-sm btn-primary" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New Prompt</button>
     <div class="topbar-divider"></div>
     <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
     <button id="themeBtn" class="btn btn-sm" onclick="toggleTheme()" title="Switch to dark mode"><i class="fa-solid fa-moon"></i></button>
@@ -2012,6 +2024,8 @@ function linkSplitBtnHtml() {
 }
 function toggleLinkMenu() { document.getElementById('linkMenu')?.classList.toggle('open'); }
 function closeLinkMenu()  { document.getElementById('linkMenu')?.classList.remove('open'); }
+function toggleLibMenu()  { document.getElementById('libMenu')?.classList.toggle('open'); }
+function closeLibMenu()   { document.getElementById('libMenu')?.classList.remove('open'); }
 
 async function createNewLinkedFile() {
   if (!window.showSaveFilePicker) { showToast('File linking requires Chrome or Edge', true); return; }
@@ -2158,7 +2172,10 @@ render();
 updateThemeBtn();
 initFileSync();
 
-document.addEventListener('click', e => { if (!e.target.closest('#linkSplitBtn')) closeLinkMenu(); });
+document.addEventListener('click', e => {
+  if (!e.target.closest('#linkSplitBtn')) closeLinkMenu();
+  if (!e.target.closest('#libDropdown')) closeLibMenu();
+});
 
 document.addEventListener('keydown', e => {
   if (document.activeElement?.id !== 'templateArea') return;
