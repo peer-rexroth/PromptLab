@@ -336,6 +336,18 @@
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.error { background: var(--red-text); }
 
+  /* text variable type */
+  .var-name-text { background: var(--amber-bg); color: var(--amber-text); }
+  .var-text-input {
+    width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius);
+    padding: 6px 10px; font-size: 13px; background: var(--bg-2); color: var(--text);
+    outline: none; font-family: var(--font);
+  }
+  .var-text-input:focus { border-color: var(--border-2); }
+  .var-highlight-text { background: var(--amber-bg); color: var(--amber-text); border-radius: 4px; padding: 1px 4px; font-weight: 500; font-size: 13px; }
+  .help-badge-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .onboarding-badge-amber { background: var(--amber-bg); color: var(--amber-text); }
+
   #fileInput { display: none; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -444,9 +456,16 @@
             <strong style="color:var(--text)">Instruction variable</strong> — multi-select checklist. Write <code style="font-family:var(--mono);font-size:11px">[[Instructions]]</code> in your template. After Sync, add bullet items and check any combination. All checked items are inserted as a bullet list (<code style="font-family:var(--mono);font-size:11px">• item</code>).
           </span>
         </div>
+        <div class="help-row">
+          <i class="fa-solid fa-keyboard"></i>
+          <span>
+            <span class="help-badge help-badge-amber">((name))</span>&nbsp;
+            <strong style="color:var(--text)">Text variable</strong> — free-text input. Write <code style="font-family:var(--mono);font-size:11px">((Topic))</code> in your template. After Sync, type any value directly into the text field. The typed value is inserted as-is.
+          </span>
+        </div>
         <div class="help-tip">
           <strong>Tip:</strong> After writing variables in the template, always click <strong>Sync</strong> — it reads the template and creates entries for any new variables it finds. Existing variables and their options are preserved.<br><br>
-          <strong>Escaping:</strong> Prefix any placeholder with a backslash to use it as literal text — e.g. <code style="font-family:var(--mono);font-size:11px">\{{name}}</code> is copied as <code style="font-family:var(--mono);font-size:11px">{{name}}</code> without being treated as a variable. In the preview, escaped placeholders appear dimmed and italic.
+          <strong>Escaping:</strong> Prefix any placeholder with a backslash to use it as literal text — e.g. <code style="font-family:var(--mono);font-size:11px">\{{name}}</code> is copied as <code style="font-family:var(--mono);font-size:11px">{{name}}</code> without being treated as a variable. Works for all three types. In the preview, escaped placeholders appear dimmed and italic.
         </div>
       </div>
 
@@ -805,7 +824,7 @@ function renderMain() {
             </div>
             <div class="onboarding-step-body">
               <div class="onboarding-step-title">Write your template</div>
-              <div class="onboarding-step-desc">Use <span class="onboarding-badge onboarding-badge-blue">{{variable}}</span> and <span class="onboarding-badge onboarding-badge-teal">[[instructions]]</span> as placeholders in your prompt text.</div>
+              <div class="onboarding-step-desc">Use <span class="onboarding-badge onboarding-badge-blue">{{variable}}</span>, <span class="onboarding-badge onboarding-badge-teal">[[instructions]]</span>, or <span class="onboarding-badge onboarding-badge-amber">((text))</span> as placeholders.</div>
             </div>
           </div>
           <div class="onboarding-step-arrow"><i class="fa-solid fa-chevron-down"></i></div>
@@ -870,6 +889,19 @@ function renderMain() {
         </div>
       </div>`;
     }
+    // text type
+    if (v.type === 'text') {
+      return `<div class="var-row">
+        <span class="var-name var-name-text" title="${esc(k)}">${esc(k)}</span>
+        <input class="var-text-input" type="text" value="${esc(v.value)}" placeholder="Type text…"
+          oninput="updateTextVar(${p.id},'${escJs(k)}',this.value)">
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>`;
+    }
     // default: option type
     return `<div class="var-row">
       <span class="var-name" title="${esc(k)}">${esc(k)}</span>
@@ -912,7 +944,7 @@ function renderMain() {
         <div>
           <span class="field-label">Template</span>
           <textarea class="prompt-textarea" id="templateArea" oninput="updateTemplate(${p.id},this.value)">${esc(p.template)}</textarea>
-          <div class="hint">Use <code class="inline">{{name}}</code> for single-select options, <code class="inline">[[name]]</code> for multi-select instruction lists. Click <strong>Sync</strong> after editing.</div>
+          <div class="hint">Use <code class="inline">{{name}}</code> for options, <code class="inline">[[name]]</code> for instruction lists, <code class="inline">((name))</code> for free text. Click <strong>Sync</strong> after editing.</div>
         </div>
         <div>
           <div class="preview-card">
@@ -931,7 +963,7 @@ function renderMain() {
             <span>Detected variables</span>
             <button class="btn btn-sm" onclick="syncVars(${p.id})"><i class="fa-solid fa-rotate"></i> Sync</button>
           </div>
-          ${varRows||`<div class="no-vars">No variables yet. Use <code class="inline">{{name}}</code> for options or <code class="inline">[[name]]</code> for instruction lists.</div>`}
+          ${varRows||`<div class="no-vars">No variables yet. Use <code class="inline">{{name}}</code>, <code class="inline">[[name]]</code>, or <code class="inline">((name))</code>.</div>`}
         </div>
       </div>
     </div>`;
@@ -1046,6 +1078,13 @@ function deleteSelectedOpt(id,k) {
   v.options = v.options.filter(o => o !== v.selected);
   v.selected = v.options[0];
   save(); renderMain();
+}
+function updateTextVar(id, k, val) {
+  const p = prompts.find(x => x.id === id);
+  p.vars[k].value = val;
+  const pb = document.getElementById('previewBody');
+  if (pb) pb.innerHTML = buildPreview(p);
+  save();
 }
 function toggleInstr(id,k,val) {
   const v = prompts.find(p=>p.id===id).vars[k];
@@ -1365,16 +1404,21 @@ function showToast(msg,isError=false) {
 function detectVars(template, existing={}) {
   const result = {};
   // strip escaped placeholders before scanning
-  const stripped = template.replace(/\\(\{\{[^}]+\}\}|\[\[[^\]]+\]\])/g, '');
+  const stripped = template.replace(/\\(\{\{[^}]+\}\}|\[\[[^\]]+\]\]|\(\([^)]+\)\))/g, '');
   // {{name}} = option type
   [...stripped.matchAll(/\{\{([^}]+)\}\}/g)].map(m=>m[1]).forEach(k => {
-    if (existing[k] && existing[k].type !== 'instruction') result[k] = existing[k];
+    if (existing[k] && existing[k].type === 'option') result[k] = existing[k];
     else if (!result[k]) result[k] = { type:'option', options:["Option 1"], selected:"Option 1" };
   });
   // [[name]] = instruction type
   [...stripped.matchAll(/\[\[([^\]]+)\]\]/g)].map(m=>m[1]).forEach(k => {
     if (existing[k] && existing[k].type === 'instruction') result[k] = existing[k];
     else if (!result[k]) result[k] = { type:'instruction', options:["Instruction 1"], selected:[] };
+  });
+  // ((name)) = free-text type
+  [...stripped.matchAll(/\(\(([^)]+)\)\)/g)].map(m=>m[1]).forEach(k => {
+    if (existing[k] && existing[k].type === 'text') result[k] = existing[k];
+    else if (!result[k]) result[k] = { type:'text', value:'' };
   });
   return result;
 }
@@ -1385,7 +1429,7 @@ function buildPreview(p) {
   const escaped = [];
   let t = p.template
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/\\(\{\{[^}]+\}\}|\[\[[^\]]+\]\])/g, (_, ph) => {
+    .replace(/\\(\{\{[^}]+\}\}|\[\[[^\]]+\]\]|\(\([^)]+\)\))/g, (_, ph) => {
       escaped.push(esc(ph));
       return TOKEN + (escaped.length - 1) + TOKEN;
     });
@@ -1396,6 +1440,11 @@ function buildPreview(p) {
         ? sel.map(s=>`• <span class="var-highlight">${esc(s)}</span>`).join('<br>')
         : `<span class="var-highlight" style="opacity:0.5">(no instructions selected)</span>`;
       t = t.replaceAll(`[[${k}]]`, html);
+    } else if (v.type === 'text') {
+      const disp = v.value
+        ? `<span class="var-highlight-text">${esc(v.value)}</span>`
+        : `<span class="var-highlight-text" style="opacity:0.5">(empty)</span>`;
+      t = t.replaceAll(`((${k}))`, disp);
     } else {
       t = t.replaceAll(`{{${k}}}`, `<span class="var-highlight">${esc(v.selected)}</span>`);
     }
@@ -1409,7 +1458,7 @@ function buildPreview(p) {
 function buildFinal(p) {
   const TOKEN = '\x00ESC\x00';
   const escaped = [];
-  let t = p.template.replace(/\\(\{\{[^}]+\}\}|\[\[[^\]]+\]\])/g, (_, ph) => {
+  let t = p.template.replace(/\\(\{\{[^}]+\}\}|\[\[[^\]]+\]\]|\(\([^)]+\)\))/g, (_, ph) => {
     escaped.push(ph);
     return TOKEN + (escaped.length - 1) + TOKEN;
   });
@@ -1417,6 +1466,8 @@ function buildFinal(p) {
     if (v.type === 'instruction') {
       const sel = sortByOptions(Array.isArray(v.selected) ? v.selected : [], v.options);
       t = t.replaceAll(`[[${k}]]`, sel.map(s=>`• ${s}`).join('\n'));
+    } else if (v.type === 'text') {
+      t = t.replaceAll(`((${k}))`, v.value);
     } else {
       t = t.replaceAll(`{{${k}}}`, v.selected);
     }
