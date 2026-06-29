@@ -1864,24 +1864,30 @@ async function linkFile() {
     });
     fileHandle = handle;
     try { await _fsPut(handle); } catch(_) {} // IDB failure is non-fatal; link still works for this session
-    // If the file already has valid library data, load from it instead of overwriting
-    try {
-      const text = await (await handle.getFile()).text();
-      if (text.trim()) {
-        const data = JSON.parse(text);
-        if (data.prompts && data.categories) {
-          prompts = data.prompts; categories = data.categories;
-          if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
-          if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ prompts, categories, activeId, filterCatId, filterFavs }));
-          render();
-          updateFileSyncUI();
-          showToast(`Loaded from ${handle.name} — auto-saving enabled`);
-          return;
-        }
+    // Check for existing content — never silently overwrite a non-empty file
+    let existingText = '';
+    try { existingText = await (await handle.getFile()).text(); } catch(_) {}
+    if (existingText.trim()) {
+      let data;
+      try { data = JSON.parse(existingText); } catch(_) {}
+      if (data && data.prompts && data.categories) {
+        // Valid library — load it
+        prompts = data.prompts; categories = data.categories;
+        if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
+        if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ prompts, categories, activeId, filterCatId, filterFavs }));
+        render(); updateFileSyncUI();
+        showToast(`Loaded from ${handle.name} — auto-saving enabled`);
+      } else {
+        // File has content but isn't a PromptLab library — refuse to overwrite
+        fileHandle = null;
+        showToast(`${handle.name} is not a PromptLab library — unlinked`, true);
       }
-    } catch(_) { /* new or empty file — fall through to write */ }
+      return;
+    }
+    // Empty file — write current library into it
     await fileSyncWrite({ prompts, categories, activeId, filterCatId, filterFavs });
+    updateFileSyncUI();
     showToast(`Linked — auto-saving to ${handle.name}`);
   } catch(e) {
     if (e.name !== 'AbortError') showToast('Could not link file', true);
