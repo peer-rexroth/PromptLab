@@ -1928,13 +1928,17 @@ async function linkFile() {
       let data;
       try { data = JSON.parse(existingText); } catch(_) {}
       if (data && data.prompts && data.categories) {
-        // Valid library — load it
-        prompts = data.prompts; categories = data.categories;
-        if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
-        if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ prompts, categories, activeId, filterCatId, filterFavs }));
-        render(); updateFileSyncUI();
-        showToast(`Loaded from ${handle.name} — auto-saving enabled`);
+        // Valid library — merge file into current app state
+        data.categories.forEach(ic => {
+          if (!categories.find(c => c.id === ic.id || c.name.toLowerCase() === ic.name.toLowerCase()))
+            categories.push(ic);
+        });
+        const keys = new Set(prompts.map(p => p.name + '||' + p.template));
+        const toAdd = data.prompts.filter(p => !keys.has(p.name + '||' + p.template));
+        toAdd.forEach(p => { p.id = p.id || Date.now() + Math.random(); p.favorite = p.favorite || false; prompts.unshift(p); });
+        if (!activeId && prompts.length) activeId = prompts[0].id;
+        save(); render(); updateFileSyncUI();
+        showToast(`Merged ${toAdd.length} prompt${toAdd.length !== 1 ? 's' : ''} from ${handle.name} — auto-saving enabled`);
       } else {
         // File has content but isn't a PromptLab library — refuse to overwrite
         fileHandle = null;
