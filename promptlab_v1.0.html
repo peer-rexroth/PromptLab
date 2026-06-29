@@ -737,7 +737,6 @@ const CAT_COLORS = [
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
-const YESTERDAY_NOON = (() => { const d = new Date(); d.setDate(d.getDate()-1); d.setHours(12,0,0,0); return d.getTime(); })();
 const DEFAULT_CATS = [
   { id:'engineering',       name:'Communication',        color:'blue'   },
   { id:'marketing',         name:'Productivity & Planning', color:'purple' },
@@ -747,79 +746,327 @@ const DEFAULT_CATS = [
 ];
 const DEFAULT_PROMPTS = [
   {
-    id: 1782640335571,
-    name: "Improve prompt v1.0",
-    catId: "content",
-    favorite: false,
-    locked: true,
-    template: "## ROLE\nYou are an expert prompt engineer.\n\n## TASK\nAnalyze and rewrite the prompt provided by the user. Improve its structure, clarity, and completeness so it is ready to use as-is.\n\n## INSTRUCTIONS\n\n### Structure\n- Organize content in this order: context → task → constraints → output format\n- Use `##`, `###`, or `**` for hierarchy where appropriate\n- Use headers, bullet points, or numbered lists to aid readability\n- Keep each instruction atomic — one idea per line\n- Eliminate redundancy and tighten phrasing\n\n### Content\n- Make the objective explicit and unambiguous\n- Add any context the model needs to perform well\n- Define the target audience, role, or persona if relevant\n- Specify desired output format (length, tone, style)\n- Add constraints or edge case handling where needed\n- Include a concrete example if it reduces ambiguity\n\n### Formatting Rules\n- Do not use `---` as section separator\n- Do not add commentary, preamble, or explanation outside the two required output sections\n\n## OUTPUT FORMAT\n\n**1. Improved Prompt**\nThe fully rewritten prompt in a code block, ready to copy and use.\n\n**2. Change Log**\nA concise bullet list explaining each change and the reason for it.\n\n## INPUT\n",
-    vars: {},
-    lastEdited: YESTERDAY_NOON
+    "id": 1782640335571,
+    "name": "Improve prompt v1.0",
+    "catId": "content",
+    "favorite": false,
+    "template": "## ROLE\nYou are an expert prompt engineer.\n\n## TASK\nAnalyze and rewrite the prompt provided by the user. Improve its structure, clarity, and completeness so it is ready to use as-is.\n\n## INSTRUCTIONS\n\n### Structure\n- Organize content in this order: context \u2192 task \u2192 constraints \u2192 output format\n- Use `##`, `###`, or `**` for hierarchy where appropriate\n- Use headers, bullet points, or numbered lists to aid readability\n- Keep each instruction atomic \u2014 one idea per line\n- Eliminate redundancy and tighten phrasing\n\n### Content\n- Make the objective explicit and unambiguous\n- Add any context the model needs to perform well\n- Define the target audience, role, or persona if relevant\n- Specify desired output format (length, tone, style)\n- Add constraints or edge case handling where needed\n- Include a concrete example if it reduces ambiguity\n\n### Formatting Rules\n- Do not use `---` as section separator\n- Do not add commentary, preamble, or explanation outside the two required output sections\n\n## OUTPUT FORMAT\n\n**1. Improved Prompt**\nThe fully rewritten prompt in a code block, ready to copy and use.\n\n**2. Change Log**\nA concise bullet list explaining each change and the reason for it.\n\n## INPUT\n",
+    "vars": {},
+    "lastEdited": 1782640800000,
+    "presets": [],
+    "versions": [],
+    "locked": false
   },
   {
-    id: 1782631824808,
-    name: "Create meeting minutes v1.0",
-    catId: "engineering",
-    favorite: true,
-    locked: true,
-    template: "## ROLE\nYou are a professional meeting minutes writer.\n\n## CONTEXT\n- **Audience:** {{audience}}\n- **Meeting type:** {{meeting_type}}\n- **Detail level:** {{detail_level}}\n- **Tone:** {{tone}}\n\n## TASK\nTransform the input into polished, structured minutes.\n\n**Strict fidelity rule:** Base output exclusively on the provided input. Do not infer, assume, or introduce any information not explicitly stated in the input.\n\n## OUTPUT STRUCTURE\nProduce only the sections listed below, in this exact order, each with a bold heading:\n\n[[sections]]\n\n## SECTION FORMATTING RULES\n\n### Action Items\nRender as a markdown table with these exact columns:\n\n| Action Item | Owner | Due Date |\n|---|---|---|\n\n- Begin each action item with a verb (e.g., \"Send budget to finance team\")\n- One action item and one owner per row\n- Format due dates as `Mon DD` or `YYYY-MM-DD`\n- Leave a cell blank if the owner or due date is not stated — do not infer\n\n### Decisions\n- One decision per bullet point\n- State each decision in full using plain declarative sentences\n- Avoid hedging language — write \"The team decided\" not \"it was generally agreed\"\n\n### Discussion Points\n- One bullet per key point, summarized accurately and concisely\n- Omit tangential or off-topic remarks\n- Match depth to {{detail_level}}\n\n### Next Steps\n- One bullet per next step\n- Capture process- or project-level progress, not individual task assignments\n\n### All Other Sections\n- Use prose or bullet points suited to the content type\n- Match formality to {{tone}} and {{audience}}\n\n## PRE-OUTPUT CHECKLIST\nBefore writing the final output, verify:\n\n- [ ] All sections in [[sections]] are present and in the specified order\n- [ ] Action items table uses the exact three-column structure\n- [ ] No action item owner or due date has been inferred — blank if unstated\n- [ ] Every decision is stated explicitly and in full, without ambiguity\n- [ ] No content has been fabricated or assumed beyond the input\n- [ ] Language matches {{tone}} and is appropriate for {{audience}}\n\n## OUTPUT\nReturn only the meeting minutes, ready to share with {{audience}}. Do not include the checklist, preamble, or any meta-commentary.",
-    vars: {
-      audience:     { type:'option',      options:["Project team","Internal team","Senior management"], selected:"" },
-      meeting_type: { type:'option',      options:["Status meeting","Project meeting","SteerCo","1:1","Workshop"], selected:"" },
-      detail_level: { type:'option',      options:["Summary only","Balanced","Detailed","High-level","Action-focused"], selected:"" },
-      tone:         { type:'option',      options:["Professional","Concise","Executive","Neutral"], selected:"" },
-      sections:     { type:'instruction', options:["Meeting Summary","Executive Summary","Meeting Attendees","Discussion Points","Decisions","Action Items","Open Points","Next Steps"], selected:[] }
+    "id": 1782631824808,
+    "name": "Create meeting minutes v1.0",
+    "catId": "engineering",
+    "favorite": true,
+    "template": "## ROLE\nYou are a professional meeting minutes writer.\n\n## CONTEXT\n- **Target audience:** {{audience}}\n- **Meeting type:** {{meeting_type}}\n- **Detail level:** {{detail_level}}\n- **Tone:** {{tone}}\n\n## TASK\nTransform the input into polished, structured minutes.\n\n**Strict fidelity rule:** Base output exclusively on the provided input. Do not infer, assume, or introduce any information not explicitly stated in the input.\n\n## OUTPUT STRUCTURE\nProduce only the sections listed below, in this exact order, each with a bold heading:\n\n[[sections]]\n\n## SECTION FORMATTING RULES\n\n### Action Items\nRender as a markdown table with these exact columns:\n\n| Action Item | Owner | Due Date |\n|---|---|---|\n\n- Begin each action item with a verb (e.g., \"Send budget to finance team\")\n- One action item and one owner per row\n- Format due dates as `Mon DD` or `YYYY-MM-DD`\n- Leave a cell blank if the owner or due date is not stated \u2014 do not infer\n\n### Decisions\n- One decision per bullet point\n- State each decision in full using plain declarative sentences\n- Avoid hedging language \u2014 write \"The team decided\" not \"it was generally agreed\"\n\n### Discussion Points\n- One bullet per key point, summarized accurately and concisely\n- Omit tangential or off-topic remarks\n- Match depth to {{detail_level}}\n\n### Next Steps\n- One bullet per next step\n- Capture process- or project-level progress, not individual task assignments\n\n### All Other Sections\n- Use prose or bullet points suited to the content type\n- Match formality to {{tone}} and {{audience}}\n\n## PRE-OUTPUT CHECKLIST\nBefore writing the final output, verify:\n\n- [ ] All sections in [[sections]] are present and in the specified order\n- [ ] Action items table uses the exact three-column structure\n- [ ] No action item owner or due date has been inferred \u2014 blank if unstated\n- [ ] Every decision is stated explicitly and in full, without ambiguity\n- [ ] No content has been fabricated or assumed beyond the input\n- [ ] Language matches {{tone}} and is appropriate for {{audience}}\n\n## OUTPUT\nReturn only the meeting minutes, ready to share with {{audience}}. Do not include the checklist, preamble, or any meta-commentary.",
+    "vars": {
+      "audience": {
+        "type": "option",
+        "options": [
+          "Project team",
+          "Internal team",
+          "Senior management"
+        ],
+        "selected": ""
+      },
+      "meeting_type": {
+        "type": "option",
+        "options": [
+          "Status meeting",
+          "Project meeting",
+          "SteerCo",
+          "1:1",
+          "Workshop"
+        ],
+        "selected": ""
+      },
+      "detail_level": {
+        "type": "option",
+        "options": [
+          "Summary only",
+          "Balanced",
+          "Detailed",
+          "High-level",
+          "Action-focused"
+        ],
+        "selected": ""
+      },
+      "tone": {
+        "type": "option",
+        "options": [
+          "Professional",
+          "Concise",
+          "Executive",
+          "Neutral"
+        ],
+        "selected": ""
+      },
+      "sections": {
+        "type": "instruction",
+        "options": [
+          "Meeting Summary",
+          "Executive Summary",
+          "Meeting Attendees",
+          "Discussion Points",
+          "Decisions",
+          "Action Items",
+          "Open Points",
+          "Next Steps"
+        ],
+        "selected": []
+      }
     },
-    lastEdited: YESTERDAY_NOON
+    "lastEdited": 1782761929240,
+    "presets": [
+      {
+        "name": "Clear",
+        "values": {
+          "audience": "",
+          "meeting_type": "",
+          "detail_level": "",
+          "tone": "",
+          "sections": []
+        }
+      }
+    ],
+    "versions": [],
+    "locked": false
   },
   {
-    id: 1782591594332,
-    name: "Create issue tree v1.0",
-    catId: "other",
-    favorite: false,
-    locked: true,
-    template: "## ROLE\nYou are a structured problem-solving assistant specializing in issue tree frameworks used in management consulting, strategy, and root cause analysis.\n\n## OBJECTIVE\nBuild a **{{tree_depth}}** level issue tree for the problem statement below. The tree must be logically sound, consultant-grade, and ready for direct use in analysis or presentation.\n\n## DECOMPOSITION LOGIC\n- **Approach:** {{decomposition_approach}} \n- **MECE discipline:** {{mece_strictness}} — branches at every level must be mutually exclusive and collectively exhaustive\n- **Decompose across these dimensions where relevant:**\n  {{decomposition_dimensions}}\n\n## TREE STRUCTURE RULES\n- **Root node:** The core problem or question, stated precisely\n- **Branch nodes:** Each branch represents a {{branch_type}} of its parent\n- **Leaf nodes:** Each leaf contains {{leaf_node_content}}\n\n## NODE FORMAT\nFor every node, include:\n1. **Label** — {{label_style}}\n2. **Rationale** — One sentence explaining why this branch exists and what it contributes to the analysis\n3. **Priority** — {{priority_flag}} indicator: `High`, `Medium`, or `Low`\n\n## OUTPUT FORMAT\nRender the tree as {{output_format}}\n\n## TONE & AUDIENCE\n- **Tone:** {{tone}} \n- **Audience:** {{audience}} \n\n## ADDITIONAL CONSTRAINTS\n{{special_instructions}}\n\n## PROBLEM STATEMENT\n\n",
-    vars: {
-      tree_depth:               { type:'option', options:["1","2","3","4"], selected:"" },
-      decomposition_approach:   { type:'option', options:["Hypothesis-driven","Component-based","Cause-effect"], selected:"" },
-      mece_strictness:          { type:'option', options:["Strict","Balanced","Flexible"], selected:"" },
-      decomposition_dimensions: { type:'option', options:["People / Process / Technology","Internal / External","Short-term / Long-term","Strategic / Operational / Financial","Revenue / Cost","Porter's Five Forces","Customer journey stages","Balanced Scorecard"], selected:"" },
-      branch_type:              { type:'option', options:["Hypothesis","Component","Driver"], selected:"" },
-      leaf_node_content:        { type:'option', options:["Testable hypothesis","Specific action","Data request"], selected:"" },
-      label_style:              { type:'option', options:["Concise noun phrase","Action verb","Question form"], selected:"" },
-      priority_flag:            { type:'option', options:["Impact × Feasibility","Urgency × Importance"], selected:"" },
-      output_format:            { type:'option', options:["Nested bullet list","Markdown table"], selected:"" },
-      tone:                     { type:'option', options:["Analytical and precise","Neutral / Objective","Executive-facing"], selected:"" },
-      audience:                 { type:'option', options:["Internal team","Senior managment","External client"], selected:"" },
-      special_instructions:     { type:'option', options:["None"], selected:"" }
+    "id": 1782591594332,
+    "name": "Create issue tree v1.0",
+    "catId": "other",
+    "favorite": false,
+    "template": "## ROLE\nYou are a structured problem-solving assistant specializing in issue tree frameworks used in management consulting, strategy, and root cause analysis.\n\n## OBJECTIVE\nBuild a **{{tree_depth}}** level issue tree for the problem statement below. The tree must be logically sound, consultant-grade, and ready for direct use in analysis or presentation.\n\n## DECOMPOSITION LOGIC\n- **Approach:** {{decomposition_approach}} \n- **MECE discipline:** {{mece_strictness}} \u2014 branches at every level must be mutually exclusive and collectively exhaustive\n- **Decompose across these dimensions where relevant:**\n  {{decomposition_dimensions}}\n\n## TREE STRUCTURE RULES\n- **Root node:** The core problem or question, stated precisely\n- **Branch nodes:** Each branch represents a {{branch_type}} of its parent\n- **Leaf nodes:** Each leaf contains {{leaf_node_content}}\n\n## NODE FORMAT\nFor every node, include:\n1. **Label** \u2014 {{label_style}}\n2. **Rationale** \u2014 One sentence explaining why this branch exists and what it contributes to the analysis\n3. **Priority** \u2014 {{priority_flag}} indicator: `High`, `Medium`, or `Low`\n\n## OUTPUT FORMAT\nRender the tree as {{output_format}}\n\n## TONE & AUDIENCE\n- **Tone:** {{tone}} \n- **Audience:** {{audience}} \n\n## ADDITIONAL CONSTRAINTS\n{{special_instructions}}\n\n## PROBLEM STATEMENT\n((problem_statement))\n\n",
+    "vars": {
+      "tree_depth": {
+        "type": "option",
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "selected": ""
+      },
+      "decomposition_approach": {
+        "type": "option",
+        "options": [
+          "Hypothesis-driven",
+          "Component-based",
+          "Cause-effect"
+        ],
+        "selected": ""
+      },
+      "mece_strictness": {
+        "type": "option",
+        "options": [
+          "Strict",
+          "Balanced",
+          "Flexible"
+        ],
+        "selected": ""
+      },
+      "decomposition_dimensions": {
+        "type": "option",
+        "options": [
+          "People / Process / Technology",
+          "Internal / External",
+          "Short-term / Long-term",
+          "Strategic / Operational / Financial",
+          "Revenue / Cost",
+          "Porter's Five Forces",
+          "Customer journey stages",
+          "Balanced Scorecard"
+        ],
+        "selected": ""
+      },
+      "branch_type": {
+        "type": "option",
+        "options": [
+          "Hypothesis",
+          "Component",
+          "Driver"
+        ],
+        "selected": ""
+      },
+      "leaf_node_content": {
+        "type": "option",
+        "options": [
+          "Testable hypothesis",
+          "Specific action",
+          "Data request"
+        ],
+        "selected": ""
+      },
+      "label_style": {
+        "type": "option",
+        "options": [
+          "Concise noun phrase",
+          "Action verb",
+          "Question form"
+        ],
+        "selected": ""
+      },
+      "priority_flag": {
+        "type": "option",
+        "options": [
+          "Impact \u00d7 Feasibility",
+          "Urgency \u00d7 Importance"
+        ],
+        "selected": ""
+      },
+      "output_format": {
+        "type": "option",
+        "options": [
+          "Nested bullet list",
+          "Markdown table"
+        ],
+        "selected": ""
+      },
+      "tone": {
+        "type": "option",
+        "options": [
+          "Analytical and precise",
+          "Neutral / Objective",
+          "Executive-facing"
+        ],
+        "selected": ""
+      },
+      "audience": {
+        "type": "option",
+        "options": [
+          "Internal team",
+          "Senior managment",
+          "External client"
+        ],
+        "selected": ""
+      },
+      "special_instructions": {
+        "type": "option",
+        "options": [
+          "None"
+        ],
+        "selected": ""
+      },
+      "problem_statement": {
+        "type": "text",
+        "value": ""
+      }
     },
-    lastEdited: YESTERDAY_NOON
+    "lastEdited": 1782761221304,
+    "presets": [
+      {
+        "name": "Clear",
+        "values": {
+          "tree_depth": "",
+          "decomposition_approach": "",
+          "mece_strictness": "",
+          "decomposition_dimensions": "",
+          "branch_type": "",
+          "leaf_node_content": "",
+          "label_style": "",
+          "priority_flag": "",
+          "output_format": "",
+          "tone": "",
+          "audience": "",
+          "special_instructions": ""
+        }
+      }
+    ],
+    "versions": [],
+    "locked": false
   },
   {
-    id: 1782587856121,
-    name: "Translate text v1.0",
-    catId: "content",
-    favorite: true,
-    locked: true,
-    template: "## ROLE\nYou are a professional translator with expertise in linguistics, cultural nuance, and domain-specific terminology.\n\n## CONTEXT\n- Target language: {{target_lang}}\n- Target audience: {{audience}}\n- Domain: {{domain}}\n- Formality level: {{formality}}\n- Source language: auto-detect\n\n**Terminology rules:**\n- Use industry-standard terminology for the specified domain\n- Preserve technical terms in the source language unless a well-established target-language equivalent exists\n- Never translate proper nouns, brand names, or technical identifiers unless explicitly instructed\n\n## TASK\n1. Detect the source language of the source text\n2. Translate the full source text into {{target_lang}}\n3. Deliver the output in the format specified below\n\n## LANGUAGE DETECTION RULES\n- If the source language is identifiable, state it before translating\n- If the source text contains multiple languages, detect and translate each segment individually\n- If detection confidence is low, prepend the output with `[detected: LANGUAGE — low confidence]`\n- If the source language cannot be determined at all, ask for clarification before proceeding\n\n## TRANSLATION RULES\n- Preserve the original meaning exactly — no omissions, additions, or inferences\n- Adapt idioms, expressions, and cultural references naturally into {{target_lang}} conventions\n- Maintain the original structure (paragraphs, lists, headings) unless target-language conventions require adjustment\n- Use consistent terminology throughout\n- Preserve active or passive voice as in the source unless {{target_lang}} norms require otherwise\n- Match the specified formality level: {{formality}}\n- Preserve the original tone (e.g., formal, casual, persuasive, neutral) — do not editorialize\n\n## OUTPUT FORMAT\nDeliver the translation using this format: **{{output_format}}**\n\nChoose the behavior based on the selected format:\n- `translation + detected language header` — Prepend one line `[detected: LANGUAGE]`, then the translation\n- `side-by-side` — Two columns: source paragraph on the left, translation on the right, aligned by paragraph\n- `translated text only` — Return the translation with no additional content\n- `markdown-formatted` — Preserve or convert structure into Markdown headings, lists, and bold\n- `plain text` — Strip all markup, headings, and bullet points from the output\n\n## QUALITY CHECKLIST\nBefore delivering, verify:\n- [ ] Source language is correctly identified\n- [ ] Translation reads naturally in {{target_lang}} — not word-for-word\n- [ ] Cultural references are appropriately adapted or annotated\n- [ ] Terminology is consistent with the specified domain\n- [ ] Formality and tone match the specified level\n- [ ] No source-language fragments remain in the output\n\n## INPUT\n",
-    vars: {
-      target_lang:   { type:'option', options:["English","German","Spanish","French"], selected:"" },
-      audience:      { type:'option', options:["General audience","Business stakeholders","Senior management","Clients / External customers","Technical experts"], selected:"" },
-      domain:        { type:'option', options:["Multi-Domain / Hybrid","Business & Corporate","Technical & IT","Product & Customer","Sales & Marketing"], selected:"" },
-      formality:     { type:'option', options:["Neutral","Formal","Informal / Casual"], selected:"" },
-      output_format: { type:'option', options:["Side-by-side","Translated text only","Markdown-formatted","Plain text"], selected:"" }
+    "id": 1782587856121,
+    "name": "Translate text v1.0",
+    "catId": "content",
+    "favorite": true,
+    "template": "## ROLE\nYou are a professional translator with expertise in linguistics, cultural nuance, and domain-specific terminology.\n\n## CONTEXT\n- **Target language:** {{target_language}}\n- **Target audience:** {{audience}}\n- **Domain:** {{domain}}\n- **Formality level:** {{formality}}\n- **Source language:** auto-detect\n\n**Terminology rules:**\n- Use industry-standard terminology for the specified domain\n- Preserve technical terms in the source language unless a well-established target-language equivalent exists\n- Never translate proper nouns, brand names, or technical identifiers unless explicitly instructed\n\n## TASK\n1. Detect the source language of the source text\n2. Translate the full source text into {{target_language}}\n3. Deliver the output in the format specified below\n\n## LANGUAGE DETECTION RULES\n- If the source language is identifiable, state it before translating\n- If the source text contains multiple languages, detect and translate each segment individually\n- If detection confidence is low, prepend the output with `[detected: LANGUAGE \u2014 low confidence]`\n- If the source language cannot be determined at all, ask for clarification before proceeding\n\n## TRANSLATION RULES\n- Preserve the original meaning exactly \u2014 no omissions, additions, or inferences\n- Adapt idioms, expressions, and cultural references naturally into {{target_language}} conventions\n- Maintain the original structure (paragraphs, lists, headings) unless target-language conventions require adjustment\n- Use consistent terminology throughout\n- Preserve active or passive voice as in the source unless {{target_language}} norms require otherwise\n- Match the specified formality level: {{formality}}\n- Preserve the original tone (e.g., formal, casual, persuasive, neutral) \u2014 do not editorialize\n\n## OUTPUT FORMAT\nDeliver the translation using this format: **{{output_format}}**\n\nChoose the behavior based on the selected format:\n- `translation + detected language header` \u2014 Prepend one line `[detected: LANGUAGE]`, then the translation\n- `side-by-side` \u2014 Two columns: source paragraph on the left, translation on the right, aligned by paragraph\n- `translated text only` \u2014 Return the translation with no additional content\n- `markdown-formatted` \u2014 Preserve or convert structure into Markdown headings, lists, and bold\n- `plain text` \u2014 Strip all markup, headings, and bullet points from the output\n\n## QUALITY CHECKLIST\nBefore delivering, verify:\n- [ ] Source language is correctly identified\n- [ ] Translation reads naturally in {{target_language}} \u2014 not word-for-word\n- [ ] Cultural references are appropriately adapted or annotated\n- [ ] Terminology is consistent with the specified domain\n- [ ] Formality and tone match the specified level\n- [ ] No source-language fragments remain in the output\n\n## INPUT\n",
+    "vars": {
+      "target_language": {
+        "type": "option",
+        "options": [
+          "English",
+          "German",
+          "Spanish",
+          "French"
+        ],
+        "selected": ""
+      },
+      "audience": {
+        "type": "option",
+        "options": [
+          "General audience",
+          "Business stakeholders",
+          "Senior management",
+          "Clients / External customers",
+          "Technical experts"
+        ],
+        "selected": ""
+      },
+      "domain": {
+        "type": "option",
+        "options": [
+          "Multi-Domain / Hybrid",
+          "Business & Corporate",
+          "Technical & IT",
+          "Product & Customer",
+          "Sales & Marketing"
+        ],
+        "selected": ""
+      },
+      "formality": {
+        "type": "option",
+        "options": [
+          "Neutral",
+          "Formal",
+          "Informal / Casual"
+        ],
+        "selected": ""
+      },
+      "output_format": {
+        "type": "option",
+        "options": [
+          "Side-by-side",
+          "Translated text only",
+          "Markdown-formatted",
+          "Plain text"
+        ],
+        "selected": ""
+      }
     },
-    lastEdited: YESTERDAY_NOON
+    "lastEdited": 1782762537968,
+    "presets": [
+      {
+        "name": "Clear",
+        "values": {
+          "target_lang": "",
+          "audience": "",
+          "domain": "",
+          "formality": "",
+          "output_format": ""
+        }
+      }
+    ],
+    "versions": [],
+    "locked": false
   },
   {
-    id: 1782583967756,
-    name: "Unify prompt tone, style, and terminology v1.0",
-    catId: "content",
-    favorite: false,
-    locked: true,
-    template: "## ROLE\nYou are a prompt editor specializing in linguistic consistency.\n\n## TASK\nAnalyze the prompt provided in the INPUT section and revise it so that tone, voice, terminology, formality, and phrasing are coherent throughout — without changing the prompt's meaning, intent, or structure.\n\n## ANALYSIS PHASE\nBefore rewriting, audit the prompt across these five dimensions:\n\n### Dimension 1: Tone & Voice\n- Identify whether the register is consistently instructional, conversational, or formal\n- Flag person or mood shifts (e.g., second-person \"you\" vs. imperative \"do X\" vs. third-person \"the model should\")\n- Confirm the emotional register remains stable (neutral, warm, or authoritative)\n\n### Dimension 2: Terminology\n- Verify each concept is referred to by the same name throughout.\n- Flag inconsistent synonyms (e.g., \"user\" vs. \"customer\" vs. \"person\")\n- Flag technical vocabulary that is introduced but later abandoned\n\n### Dimension 3: Formality Level\n- Confirm sentence complexity remains consistent\n- Flag contractions used selectively rather than uniformly\n- Flag hedging phrases (\"try to\", \"you might\", \"feel free\") used inconsistently\n\n### Dimension 4: Tense & Modality\n- Flag present-tense imperatives mixed with unnecessary past or future tenses\n- Confirm modal verbs (must, should, can, may) are used with consistent intent and weight\n\n### Dimension 5: Structural Parallelism\n- Confirm list items follow a consistent grammatical pattern (all imperatives, all noun phrases, or all questions)\n- Confirm section headers follow the same style and capitalization convention\n\n## REVISION INSTRUCTIONS\nApply the following fixes in order:\n\n1. **Establish a dominant voice** — Identify the most frequently used voice and normalize all deviations to match it\n2. **Unify terminology** — Choose one term per concept and apply it throughout. Flag each substitution in the report\n3. **Normalize formality** — Set a single formality register and adjust all sentences to match\n4. **Align tense and modality** — Default to present-tense imperatives unless the prompt's logic requires otherwise\n5. **Enforce parallel structure** — Rewrite list items and headers so they follow identical grammatical patterns\n6. **Preserve intent** — Do not add, remove, or reorder instructions. Do not change examples unless they contain terminology inconsistencies\n\n## OUTPUT FORMAT\nReturn two sections in this order:\n\n### Section 1: Alignment Report\nA bulleted list of every inconsistency found, grouped by dimension. For each issue, state the original phrasing and the replacement.\n\nFormat each entry as:\n- **[Dimension]:** \"[original]\" → \"[revised]\" (reason)\n\nExamples:\n- **Terminology:** \"end user\" → \"user\" (also appeared as \"person\" and \"customer\")\n- **Tense:** \"The assistant will respond…\" → \"The assistant responds…\" (aligns with imperative voice)\n- **Parallelism:** Mixed imperatives and noun phrases in list → all converted to imperatives\n\n### Section 2: Revised Report\nThe full revised prompt with all inconsistencies resolved. Do not annotate or comment inside the revised prompt. Return it as a text block. \n\n## CONSTRAINTS\n- Do not rewrite for clarity, conciseness, or quality beyond what alignment requires\n- Do not add new instructions, examples, or context not present in the original\n- Do not alter proper nouns, technical names, or brand names\n- If the prompt uses intentional stylistic variation (e.g., a deliberate register shift for a specific section), flag it in the report but leave it unchanged\n\n## INPUT\n",
-    vars: {},
-    lastEdited: YESTERDAY_NOON
+    "id": 1782583967756,
+    "name": "Unify prompt tone, style, and terminology v1.0",
+    "catId": "content",
+    "favorite": false,
+    "template": "## ROLE\nYou are a prompt editor specializing in linguistic consistency.\n\n## TASK\nAnalyze the prompt provided in the INPUT section and revise it so that tone, voice, terminology, formality, and phrasing are coherent throughout \u2014 without changing the prompt's meaning, intent, or structure.\n\n## ANALYSIS PHASE\nBefore rewriting, audit the prompt across these five dimensions:\n\n### Dimension 1: Tone & Voice\n- Identify whether the register is consistently instructional, conversational, or formal\n- Flag person or mood shifts (e.g., second-person \"you\" vs. imperative \"do X\" vs. third-person \"the model should\")\n- Confirm the emotional register remains stable (neutral, warm, or authoritative)\n\n### Dimension 2: Terminology\n- Verify each concept is referred to by the same name throughout.\n- Flag inconsistent synonyms (e.g., \"user\" vs. \"customer\" vs. \"person\")\n- Flag technical vocabulary that is introduced but later abandoned\n\n### Dimension 3: Formality Level\n- Confirm sentence complexity remains consistent\n- Flag contractions used selectively rather than uniformly\n- Flag hedging phrases (\"try to\", \"you might\", \"feel free\") used inconsistently\n\n### Dimension 4: Tense & Modality\n- Flag present-tense imperatives mixed with unnecessary past or future tenses\n- Confirm modal verbs (must, should, can, may) are used with consistent intent and weight\n\n### Dimension 5: Structural Parallelism\n- Confirm list items follow a consistent grammatical pattern (all imperatives, all noun phrases, or all questions)\n- Confirm section headers follow the same style and capitalization convention\n\n## REVISION INSTRUCTIONS\nApply the following fixes in order:\n\n1. **Establish a dominant voice** \u2014 Identify the most frequently used voice and normalize all deviations to match it\n2. **Unify terminology** \u2014 Choose one term per concept and apply it throughout. Flag each substitution in the report\n3. **Normalize formality** \u2014 Set a single formality register and adjust all sentences to match\n4. **Align tense and modality** \u2014 Default to present-tense imperatives unless the prompt's logic requires otherwise\n5. **Enforce parallel structure** \u2014 Rewrite list items and headers so they follow identical grammatical patterns\n6. **Preserve intent** \u2014 Do not add, remove, or reorder instructions. Do not change examples unless they contain terminology inconsistencies\n\n## OUTPUT FORMAT\nReturn two sections in this order:\n\n### Section 1: Alignment Report\nA bulleted list of every inconsistency found, grouped by dimension. For each issue, state the original phrasing and the replacement.\n\nFormat each entry as:\n- **[Dimension]:** \"[original]\" \u2192 \"[revised]\" (reason)\n\nExamples:\n- **Terminology:** \"end user\" \u2192 \"user\" (also appeared as \"person\" and \"customer\")\n- **Tense:** \"The assistant will respond\u2026\" \u2192 \"The assistant responds\u2026\" (aligns with imperative voice)\n- **Parallelism:** Mixed imperatives and noun phrases in list \u2192 all converted to imperatives\n\n### Section 2: Revised Report\nThe full revised prompt with all inconsistencies resolved. Do not annotate or comment inside the revised prompt. Return it as a text block. \n\n## CONSTRAINTS\n- Do not rewrite for clarity, conciseness, or quality beyond what alignment requires\n- Do not add new instructions, examples, or context not present in the original\n- Do not alter proper nouns, technical names, or brand names\n- If the prompt uses intentional stylistic variation (e.g., a deliberate register shift for a specific section), flag it in the report but leave it unchanged\n\n## INPUT\n",
+    "vars": {},
+    "lastEdited": 1782763072117,
+    "presets": [],
+    "versions": [],
+    "locked": true
   }
 ];
 
