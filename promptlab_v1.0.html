@@ -1037,11 +1037,14 @@ function renderMain() {
           </div>
         </div>
         <div class="version-section">
-          <div class="version-toggle" onclick="toggleVersionHistory()">
-            <i class="fa-solid fa-clock-rotate-left" style="font-size:11px"></i>
-            <span>Version history</span>
-            <span style="color:var(--text-3)">(${(p.versions||[]).length} saved)</span>
-            <i class="fa-solid fa-chevron-${showVersionHistory?'up':'down'}" style="font-size:10px;margin-left:auto"></i>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="version-toggle" onclick="toggleVersionHistory()" style="flex:1">
+              <i class="fa-solid fa-clock-rotate-left" style="font-size:11px"></i>
+              <span>Version history</span>
+              <span style="color:var(--text-3)">(${(p.versions||[]).length} saved)</span>
+              <i class="fa-solid fa-chevron-${showVersionHistory?'up':'down'}" style="font-size:10px;margin-left:auto"></i>
+            </div>
+            ${(p.versions||[]).length ? `<button class="btn btn-sm" onclick="clearVersionHistory(${p.id})" title="Clear version history" style="flex-shrink:0"><i class="fa-solid fa-trash-can" style="font-size:10px"></i></button>` : ''}
           </div>
           ${showVersionHistory ? `<div class="version-list">${buildVersionList(p)}</div>` : ''}
         </div>
@@ -1324,6 +1327,12 @@ function restoreVersion(id, idx) {
 }
 function toggleVersionHistory() { showVersionHistory = !showVersionHistory; renderMain(); }
 function toggleVersionDiff(idx) { expandedVersionIdx = expandedVersionIdx === idx ? -1 : idx; renderMain(); }
+function clearVersionHistory(id) {
+  const p = prompts.find(x => x.id === id); if (!p) return;
+  p.versions = [];
+  expandedVersionIdx = -1;
+  save(); renderMain();
+}
 function timeAgo(ts) {
   const s = Math.floor((Date.now() - ts) / 1000);
   if (s < 60) return 'just now';
