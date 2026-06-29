@@ -1856,12 +1856,14 @@ async function _clearFileLink() {
 }
 
 async function linkFile() {
-  if (!window.showSaveFilePicker) { showToast('File linking requires Chrome or Edge', true); return; }
+  if (!window.showOpenFilePicker) { showToast('File linking requires Chrome or Edge', true); return; }
   try {
-    const handle = await window.showSaveFilePicker({
-      suggestedName: 'promptlab-library.json',
-      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+    const [handle] = await window.showOpenFilePicker({
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+      multiple: false
     });
+    const perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { showToast('Write permission denied', true); return; }
     fileHandle = handle;
     try { await _fsPut(handle); } catch(_) {} // IDB failure is non-fatal; link still works for this session
     // Check for existing content — never silently overwrite a non-empty file
@@ -1919,7 +1921,7 @@ async function reconnectFile() {
 function updateFileSyncUI() {
   const el = document.getElementById('fileSyncIndicator');
   if (!el) return;
-  if (!window.showSaveFilePicker) { el.style.display = 'none'; return; }
+  if (!window.showOpenFilePicker) { el.style.display = 'none'; return; }
   if (!fileHandle) {
     el.innerHTML = `<button class="btn btn-sm" onclick="linkFile()" title="Link to a local file — auto-saves after every change"><i class="fa-solid fa-link"></i> Link file</button>`;
     return;
@@ -1942,7 +1944,7 @@ function updateFileSyncUI() {
 }
 
 async function initFileSync() {
-  if (!window.showSaveFilePicker) return;
+  if (!window.showOpenFilePicker) return;
   updateFileSyncUI();
   try {
     const handle = await _fsGet();
