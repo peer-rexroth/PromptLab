@@ -475,6 +475,15 @@
     </div>
     <div style="height:0.5px;background:var(--border)"></div>
     <div class="import-options">
+      <div id="fileSyncReconnectOption" class="import-option" style="display:none" onclick="closeFileSyncModal();reconnectFile()">
+        <div style="width:34px;height:34px;border-radius:8px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="fa-solid fa-rotate-right" style="color:var(--teal-text);font-size:15px"></i>
+        </div>
+        <div class="import-option-text">
+          <strong id="fileSyncReconnectLabel">Resume sync</strong>
+          <span>Reconnect to restore auto-saving</span>
+        </div>
+      </div>
       <div class="import-option" onclick="closeFileSyncModal();linkFile()">
         <div style="width:34px;height:34px;border-radius:8px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <i class="fa-solid fa-folder-open" style="color:var(--blue-text);font-size:15px"></i>
@@ -494,7 +503,7 @@
         </div>
       </div>
     </div>
-    <div style="display:flex;align-items:flex-start;gap:8px;background:var(--amber-bg);border-radius:var(--radius);padding:10px 12px">
+    <div id="fileSyncWarning" style="display:flex;align-items:flex-start;gap:8px;background:var(--amber-bg);border-radius:var(--radius);padding:10px 12px">
       <i class="fa-solid fa-triangle-exclamation" style="color:var(--amber-text);font-size:13px;margin-top:2px;flex-shrink:0"></i>
       <span style="font-size:12px;color:var(--amber-text);line-height:1.55">Without a linked file, your library is stored in browser storage and <strong>will be lost if you clear browsing data</strong>.</span>
     </div>
@@ -1852,7 +1861,20 @@ function toggleTheme() {
   updateThemeBtn();
   save(); // persists to localStorage + linked file
 }
-function openFileSyncModal()  { document.getElementById('fileSyncModalBg').classList.add('open'); }
+function openFileSyncModal(reconnectHandle) {
+  const ro = document.getElementById('fileSyncReconnectOption');
+  const rl = document.getElementById('fileSyncReconnectLabel');
+  const warn = document.getElementById('fileSyncWarning');
+  if (reconnectHandle) {
+    ro.style.display = 'flex';
+    rl.textContent = `Resume sync with ${reconnectHandle.name}`;
+    warn.style.display = 'none';
+  } else {
+    ro.style.display = 'none';
+    warn.style.display = 'flex';
+  }
+  document.getElementById('fileSyncModalBg').classList.add('open');
+}
 function closeFileSyncModal() { document.getElementById('fileSyncModalBg').classList.remove('open'); }
 function openHelp()  { document.getElementById('helpModalBg').classList.add('open'); }
 function closeHelp() { document.getElementById('helpModalBg').classList.remove('open'); }
@@ -2159,6 +2181,8 @@ async function initFileSync() {
           render();
         }
       } catch(_) { /* read failed — keep localStorage data */ }
+    } else {
+      openFileSyncModal(handle);
     }
     updateFileSyncUI();
   } catch(e) {
