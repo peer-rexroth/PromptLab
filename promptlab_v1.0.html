@@ -376,6 +376,22 @@
   .preset-chip-drag-left  { box-shadow: -3px 0 0 var(--blue-border); }
   .preset-chip-drag-right { box-shadow:  3px 0 0 var(--blue-border); }
 
+  /* version history */
+  .version-section { margin-top: 10px; }
+  .version-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; color: var(--text-2); font-size: 12px; font-weight: 500; padding: 2px 0; }
+  .version-toggle:hover { color: var(--text); }
+  .version-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .version-row { border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .version-row-header { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: var(--bg-2); cursor: pointer; gap: 8px; }
+  .version-row-header:hover { background: var(--bg-3); }
+  .version-meta { font-size: 12px; color: var(--text-2); flex: 1; }
+  .diff-view { padding: 8px 10px; font-family: var(--mono); font-size: 11px; line-height: 1.6; max-height: 220px; overflow-y: auto; background: var(--bg); border-top: 0.5px solid var(--border); }
+  .diff-line { white-space: pre-wrap; word-break: break-all; padding: 0 2px; border-radius: 2px; }
+  .diff-same { color: var(--text-3); }
+  .diff-add { background: var(--green-bg); color: var(--green-text); }
+  .diff-del { background: var(--red-bg); color: var(--red-text); }
+  .no-versions { font-size: 12px; color: var(--text-3); margin-top: 8px; }
+
   #fileInput { display: none; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -682,6 +698,10 @@ const STORAGE_KEY = "promptlab-v4";
 let prompts = [], categories = [];
 let activeId = null, filterCatId = null, filterFavs = false;
 let modalTarget = null, pendingImportData = null, newCatColor = 'blue';
+const undoStacks = new Map(); // promptId → { past: string[], future: string[] }
+const lastSyncedTemplates = new Map(); // promptId → template string at last Sync
+let undoDebounce = null, undoSessionStart = null, undoSessionId = null;
+let showVersionHistory = false, expandedVersionIdx = -1;
 
 // ── Persistence ───────────────────────────────────────────────────────────────
 function load() {
@@ -711,6 +731,7 @@ function load() {
         if (!v.type) v.type = 'option';
       });
       if (!p.presets) p.presets = [];
+      if (!p.versions) p.versions = [];
       if (p.presets.length === 0 && p.vars && Object.keys(p.vars).length > 0) {
         const clearValues = {};
         Object.entries(p.vars).forEach(([k, v]) => { clearValues[k] = v.type === 'instruction' ? [] : ''; });
@@ -992,7 +1013,17 @@ function renderMain() {
     <div class="editor-area">
       <div class="editor-col-left">
         <div>
-          <span class="field-label">Template</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <span class="field-label" style="margin-bottom:0">Template</span>
+            <div style="display:flex;gap:3px">
+              <button id="undoBtn" class="btn btn-sm" onclick="undoTemplate(${p.id})" title="Undo (⌘Z)"${(()=>{const s=undoStacks.get(p.id);return s&&s.past.length?'':' disabled';})()}>
+                <i class="fa-solid fa-rotate-left" style="font-size:11px"></i>
+              </button>
+              <button id="redoBtn" class="btn btn-sm" onclick="redoTemplate(${p.id})" title="Redo (⌘⇧Z)"${(()=>{const s=undoStacks.get(p.id);return s&&s.future.length?'':' disabled';})()}>
+                <i class="fa-solid fa-rotate-right" style="font-size:11px"></i>
+              </button>
+            </div>
+          </div>
           <textarea class="prompt-textarea" id="templateArea" oninput="updateTemplate(${p.id},this.value)">${esc(p.template)}</textarea>
           <div class="hint">Use <code class="inline">{{name}}</code> for options, <code class="inline">[[name]]</code> for instruction lists, <code class="inline">((name))</code> for free text. Click <strong>Sync</strong> after editing.</div>
         </div>
@@ -1004,6 +1035,15 @@ function renderMain() {
             </div>
             <div class="preview-body" id="previewBody">${buildPreview(p)}</div>
           </div>
+        </div>
+        <div class="version-section">
+          <div class="version-toggle" onclick="toggleVersionHistory()">
+            <i class="fa-solid fa-clock-rotate-left" style="font-size:11px"></i>
+            <span>Version history</span>
+            <span style="color:var(--text-3)">(${(p.versions||[]).length} saved)</span>
+            <i class="fa-solid fa-chevron-${showVersionHistory?'up':'down'}" style="font-size:10px;margin-left:auto"></i>
+          </div>
+          ${showVersionHistory ? `<div class="version-list">${buildVersionList(p)}</div>` : ''}
         </div>
       </div>
       <div class="editor-col-right">
@@ -1163,15 +1203,41 @@ function initPillDragDrop() {
 }
 
 // ── Prompt actions ────────────────────────────────────────────────────────────
-function select(id)        { activeId=id; save(); render(); }
+function select(id) {
+  activeId = id;
+  const p = prompts.find(x => x.id === id);
+  if (p && !lastSyncedTemplates.has(id)) lastSyncedTemplates.set(id, p.template);
+  save(); render();
+}
 function updateName(id,v)  { prompts.find(p=>p.id===id).name=v; save(); renderSidebar(); }
 function updateCat(id,v)   { prompts.find(p=>p.id===id).catId=v; save(); renderSidebar(); }
-function updateTemplate(id,v) {
-  const p=prompts.find(x=>x.id===id); p.template=v;
-  const pb=document.getElementById('previewBody');
-  if(pb) pb.innerHTML=buildPreview(p); save();
+function updateTemplate(id, v) {
+  const p = prompts.find(x => x.id === id);
+  if (undoSessionId !== id || undoDebounce === null) { undoSessionStart = p.template; undoSessionId = id; }
+  p.template = v;
+  const pb = document.getElementById('previewBody');
+  if (pb) pb.innerHTML = buildPreview(p);
+  save();
+  clearTimeout(undoDebounce);
+  undoDebounce = setTimeout(() => {
+    undoDebounce = null;
+    if (undoSessionStart !== null && undoSessionStart !== v) {
+      const s = getUndoStack(id);
+      s.past.push(undoSessionStart);
+      if (s.past.length > 50) s.past.shift();
+      s.future = [];
+      updateUndoUI(id);
+    }
+    undoSessionStart = null;
+  }, 1000);
 }
-function syncVars(id) { const p=prompts.find(x=>x.id===id); p.vars=detectVars(p.template,p.vars); save(); renderMain(); }
+function syncVars(id) {
+  snapshotVersion(id);
+  const p = prompts.find(x => x.id === id);
+  p.vars = detectVars(p.template, p.vars);
+  lastSyncedTemplates.set(id, p.template);
+  save(); renderMain();
+}
 function selectOpt(id,k,v) { prompts.find(p=>p.id===id).vars[k].selected=v; save(); renderMain(); }
 function deleteVar(id,k)   { delete prompts.find(p=>p.id===id).vars[k]; save(); renderMain(); }
 function deleteSelectedOpt(id,k) {
@@ -1201,6 +1267,105 @@ function deleteInstrItem(id,k,val) {
   v.options = v.options.filter(o=>o!==val);
   if (Array.isArray(v.selected)) v.selected = v.selected.filter(x=>x!==val);
   save(); renderMain();
+}
+
+// ── Undo / Redo ───────────────────────────────────────────────────────────────
+function getUndoStack(id) {
+  if (!undoStacks.has(id)) undoStacks.set(id, { past: [], future: [] });
+  return undoStacks.get(id);
+}
+function updateUndoUI(id) {
+  const s = undoStacks.get(id);
+  const ub = document.getElementById('undoBtn'), rb = document.getElementById('redoBtn');
+  if (ub) ub.disabled = !s || !s.past.length;
+  if (rb) rb.disabled = !s || !s.future.length;
+}
+function applyTemplateUndo(id, val) {
+  const p = prompts.find(x => x.id === id);
+  p.template = val;
+  const ta = document.getElementById('templateArea'); if (ta) ta.value = val;
+  const pb = document.getElementById('previewBody'); if (pb) pb.innerHTML = buildPreview(p);
+  save(); updateUndoUI(id);
+}
+function undoTemplate(id) {
+  const s = getUndoStack(id); if (!s.past.length) return;
+  const p = prompts.find(x => x.id === id);
+  s.future.push(p.template); if (s.future.length > 50) s.future.shift();
+  applyTemplateUndo(id, s.past.pop());
+}
+function redoTemplate(id) {
+  const s = getUndoStack(id); if (!s.future.length) return;
+  const p = prompts.find(x => x.id === id);
+  s.past.push(p.template); if (s.past.length > 50) s.past.shift();
+  applyTemplateUndo(id, s.future.pop());
+}
+
+// ── Version history ───────────────────────────────────────────────────────────
+function snapshotVersion(id) {
+  const p = prompts.find(x => x.id === id); if (!p) return;
+  if (!p.versions) p.versions = [];
+  const prev = lastSyncedTemplates.get(id);
+  // Save the previous stable (pre-edit) state, not the current one
+  if (prev === undefined || prev === p.template) return;
+  if (p.versions.length && p.versions[0].template === prev) return;
+  p.versions.unshift({ template: prev, savedAt: Date.now() });
+  if (p.versions.length > 3) p.versions.pop();
+}
+function restoreVersion(id, idx) {
+  const p = prompts.find(x => x.id === id);
+  const v = p.versions[idx]; if (!v) return;
+  snapshotVersion(id);
+  p.template = v.template;
+  p.vars = detectVars(p.template, p.vars);
+  lastSyncedTemplates.set(id, v.template);
+  expandedVersionIdx = -1;
+  save(); renderMain();
+  showToast('Version restored');
+}
+function toggleVersionHistory() { showVersionHistory = !showVersionHistory; renderMain(); }
+function toggleVersionDiff(idx) { expandedVersionIdx = expandedVersionIdx === idx ? -1 : idx; renderMain(); }
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return new Date(ts).toLocaleDateString();
+}
+function renderDiff(oldText, newText) {
+  const al = oldText.split('\n'), bl = newText.split('\n');
+  const m = al.length, n = bl.length;
+  const dp = Array.from({length:m+1},()=>new Array(n+1).fill(0));
+  for (let i=1;i<=m;i++) for (let j=1;j<=n;j++)
+    dp[i][j] = al[i-1]===bl[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j],dp[i][j-1]);
+  const diff=[]; let i=m, j=n;
+  while (i>0||j>0) {
+    if (i>0&&j>0&&al[i-1]===bl[j-1]) { diff.unshift({t:'same',l:al[i-1]}); i--;j--; }
+    else if (j>0&&(i===0||dp[i][j-1]>=dp[i-1][j])) { diff.unshift({t:'add',l:bl[j-1]}); j--; }
+    else { diff.unshift({t:'del',l:al[i-1]}); i--; }
+  }
+  return diff.map(({t,l})=>
+    `<div class="diff-line diff-${t==='same'?'same':t==='add'?'add':'del'}">${esc(t==='add'?'+ ':t==='del'?'- ':' ')}${esc(l)}</div>`
+  ).join('');
+}
+function buildVersionList(p) {
+  if (!p.versions || !p.versions.length)
+    return `<div class="no-versions">No versions yet — versions are saved automatically each time you click Sync.</div>`;
+  return p.versions.map((v, idx) => {
+    const isOpen = expandedVersionIdx === idx;
+    const vNum = p.versions.length - idx;
+    return `<div class="version-row">
+      <div class="version-row-header" onclick="toggleVersionDiff(${idx})">
+        <span class="version-meta">v${vNum} &nbsp;·&nbsp; ${timeAgo(v.savedAt)}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn btn-sm" onclick="event.stopPropagation();restoreVersion(${p.id},${idx})" title="Restore this version">
+            <i class="fa-solid fa-clock-rotate-left" style="font-size:10px"></i> Restore
+          </button>
+          <i class="fa-solid fa-chevron-${isOpen?'up':'down'}" style="font-size:10px;color:var(--text-3)"></i>
+        </div>
+      </div>
+      ${isOpen ? `<div class="diff-view">${renderDiff(v.template, p.template)}</div>` : ''}
+    </div>`;
+  }).join('');
 }
 
 function savePreset(id) {
@@ -1252,7 +1417,8 @@ function newPrompt() {
   prompts.unshift({ id, name:"New Prompt", catId:defaultCat, favorite: filterFavs,
     template:"Write a {{style}} text about {{topic}}.",
     vars:{ style:{options:["short","detailed","creative"],selected:"short"}, topic:{options:["my topic"],selected:"my topic"} },
-    presets: [{ name: 'Clear', values: { style: '', topic: '' } }]
+    presets: [{ name: 'Clear', values: { style: '', topic: '' } }],
+    versions: []
   });
   activeId=id; save(); render();
   setTimeout(()=>document.querySelector('.prompt-name-input')?.focus(),50);
@@ -1792,6 +1958,14 @@ load();
 activeId = null;
 render();
 initFileSync();
+
+document.addEventListener('keydown', e => {
+  if (document.activeElement?.id !== 'templateArea') return;
+  if (!(e.metaKey || e.ctrlKey)) return;
+  if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undoTemplate(activeId); }
+  else if (e.key === 'z' && e.shiftKey) { e.preventDefault(); redoTemplate(activeId); }
+  else if (e.key === 'y') { e.preventDefault(); redoTemplate(activeId); }
+});
 </script>
 </body>
 </html>
