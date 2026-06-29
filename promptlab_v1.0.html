@@ -119,6 +119,8 @@
 
   /* main */
   .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; background: var(--bg-2); }
+  @keyframes main-fade-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+  .main-fade { animation: main-fade-in 0.16s ease; }
   .main-header { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
   .prompt-name-input { font-size: 17px; font-weight: 500; border: none; background: transparent; color: var(--text); outline: none; flex: 1; font-family: var(--font); min-width: 0; }
   .header-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -315,7 +317,7 @@
   .btn-onboarding:hover { opacity: 0.82; }
 
   /* modal */
-  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items: center; justify-content: center; z-index: 200; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.25); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 200; }
   .modal-bg.open { display: flex; }
   .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border-2); padding: 22px; width: 380px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
   .modal h3 { font-size: 15px; font-weight: 500; }
@@ -858,7 +860,8 @@ function renderFilterStrip() {
     const col = colorOf(c.color);
     const dot = catDot(c);
     const style = active ? `background:${col.bg};color:${col.text};border-color:${dot}` : '';
-    return `<span class="f-chip${active?' active':''}" style="${style}" onclick="setFilter('${c.id}',false)">
+    const dim = count === 0 && !active ? 'opacity:0.45;font-style:italic' : '';
+    return `<span class="f-chip${active?' active':''}" style="${style};${dim}" onclick="setFilter('${c.id}',false)">
       <span class="chip-dot" style="background:${dot}"></span>${esc(c.name)} <span style="opacity:0.6">${count}</span>
     </span>`;
   }).join('');
@@ -943,6 +946,7 @@ function toggleFav(e, id) {
 function renderMain() {
   const p = prompts.find(x => x.id === activeId);
   const main = document.getElementById('mainArea');
+  main.classList.remove('main-fade'); void main.offsetWidth; main.classList.add('main-fade');
   if (!p) {
     main.innerHTML = `<div class="onboarding">
       <div class="onboarding-card">
