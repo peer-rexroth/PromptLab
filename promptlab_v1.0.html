@@ -1856,15 +1856,19 @@ async function _clearFileLink() {
 }
 
 async function linkFile() {
-  if (!window.showSaveFilePicker) { showToast('File linking requires Chrome or Edge', true); return; }
+  if (!window.showOpenFilePicker) { showToast('File linking requires Chrome or Edge', true); return; }
   try {
-    const handle = await window.showSaveFilePicker({
-      suggestedName: 'promptlab-library.json',
-      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+    // Use showOpenFilePicker so the OS never truncates an existing file.
+    // showSaveFilePicker truncates on macOS before we can read the content.
+    const [handle] = await window.showOpenFilePicker({
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+      multiple: false
     });
+    const perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { showToast('Write permission denied', true); return; }
     fileHandle = handle;
-    try { await _fsPut(handle); } catch(_) {} // IDB failure is non-fatal; link still works for this session
-    // If the file already has valid library data, load from it instead of overwriting
+    try { await _fsPut(handle); } catch(_) {} // IDB failure is non-fatal
+    // Load from existing file if it contains a valid library
     try {
       const text = await (await handle.getFile()).text();
       if (text.trim()) {
@@ -1880,8 +1884,9 @@ async function linkFile() {
           return;
         }
       }
-    } catch(_) { /* new or empty file — fall through to write */ }
+    } catch(_) { /* empty or non-library file — fall through to write */ }
     await fileSyncWrite({ prompts, categories, activeId, filterCatId, filterFavs });
+    updateFileSyncUI();
     showToast(`Linked — auto-saving to ${handle.name}`);
   } catch(e) {
     if (e.name !== 'AbortError') showToast('Could not link file', true);
@@ -1913,9 +1918,9 @@ async function reconnectFile() {
 function updateFileSyncUI() {
   const el = document.getElementById('fileSyncIndicator');
   if (!el) return;
-  if (!window.showSaveFilePicker) { el.style.display = 'none'; return; }
+  if (!window.showOpenFilePicker) { el.style.display = 'none'; return; }
   if (!fileHandle) {
-    el.innerHTML = `<button class="btn btn-sm" onclick="linkFile()" title="Link to a local file — auto-saves after every change"><i class="fa-solid fa-link"></i> Link file</button>`;
+    el.innerHTML = `<button class="btn btn-sm" onclick="linkFile()" title="Link a local .json file — loads its contents, then auto-saves after every change"><i class="fa-solid fa-link"></i> Link file</button>`;
     return;
   }
   fileHandle.queryPermission({ mode: 'readwrite' }).then(perm => {
@@ -1936,7 +1941,7 @@ function updateFileSyncUI() {
 }
 
 async function initFileSync() {
-  if (!window.showSaveFilePicker) return;
+  if (!window.showOpenFilePicker) return;
   updateFileSyncUI();
   try {
     const handle = await _fsGet();
