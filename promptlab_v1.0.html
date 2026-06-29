@@ -1491,7 +1491,7 @@ async function linkFile() {
       types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
     });
     fileHandle = handle;
-    await _fsPut(handle);
+    try { await _fsPut(handle); } catch(_) {} // IDB failure is non-fatal; link still works for this session
     // If the file already has valid library data, load from it instead of overwriting
     try {
       const text = await (await handle.getFile()).text();
