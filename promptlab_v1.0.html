@@ -349,7 +349,7 @@
   .onboarding-badge-amber { background: var(--amber-bg); color: var(--amber-text); }
 
   /* presets */
-  .presets-section { border-top: 0.5px solid var(--border); padding: 10px 12px 8px; }
+  .presets-section { border-bottom: 0.5px solid var(--border); padding: 10px 12px 8px; }
   .presets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .presets-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
   .preset-chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -706,6 +706,11 @@ function load() {
         if (!v.type) v.type = 'option';
       });
       if (!p.presets) p.presets = [];
+      if (p.presets.length === 0 && p.vars && Object.keys(p.vars).length > 0) {
+        const clearValues = {};
+        Object.entries(p.vars).forEach(([k, v]) => { clearValues[k] = v.type === 'instruction' ? [] : ''; });
+        p.presets.unshift({ name: 'Clear', values: clearValues });
+      }
     });
   } catch(e) {
     categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
@@ -999,7 +1004,6 @@ function renderMain() {
             <span>Detected variables</span>
             <button class="btn btn-sm" onclick="syncVars(${p.id})"><i class="fa-solid fa-rotate"></i> Sync</button>
           </div>
-          ${varRows||`<div class="no-vars">No variables yet. Use <code class="inline">{{name}}</code>, <code class="inline">[[name]]</code>, or <code class="inline">((name))</code>.</div>`}
           <div class="presets-section">
             <div class="presets-header">
               <span class="presets-label">Presets</span>
@@ -1009,6 +1013,7 @@ function renderMain() {
             </div>
             ${presetsHtml}
           </div>
+          ${varRows||`<div class="no-vars">No variables yet. Use <code class="inline">{{name}}</code>, <code class="inline">[[name]]</code>, or <code class="inline">((name))</code>.</div>`}
         </div>
       </div>
     </div>`;
@@ -1195,7 +1200,7 @@ function newPrompt() {
   prompts.unshift({ id, name:"New Prompt", catId:defaultCat, favorite: filterFavs,
     template:"Write a {{style}} text about {{topic}}.",
     vars:{ style:{options:["short","detailed","creative"],selected:"short"}, topic:{options:["my topic"],selected:"my topic"} },
-    presets: []
+    presets: [{ name: 'Clear', values: { style: '', topic: '' } }]
   });
   activeId=id; save(); render();
   setTimeout(()=>document.querySelector('.prompt-name-input')?.focus(),50);
