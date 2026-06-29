@@ -348,6 +348,29 @@
   .help-badge-amber { background: var(--amber-bg); color: var(--amber-text); }
   .onboarding-badge-amber { background: var(--amber-bg); color: var(--amber-text); }
 
+  /* presets */
+  .presets-section { border-top: 0.5px solid var(--border); padding: 10px 12px 8px; }
+  .presets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .presets-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+  .preset-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .preset-chip {
+    display: inline-flex; align-items: center;
+    background: var(--bg-2); border: 0.5px solid var(--border);
+    border-radius: 20px; padding: 3px 4px 3px 10px;
+    font-size: 12px; color: var(--text); transition: border-color 0.1s;
+    max-width: 180px;
+  }
+  .preset-chip:hover { border-color: var(--border-2); }
+  .preset-chip-name { cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .preset-chip-del {
+    flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%; margin-left: 4px;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-3); font-size: 11px; padding: 0; line-height: 1;
+  }
+  .preset-chip-del:hover { background: var(--red-bg); color: var(--red-text); }
+  .no-presets { font-size: 12px; color: var(--text-3); }
+
   #fileInput { display: none; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -682,6 +705,7 @@ function load() {
       if (p.vars) Object.values(p.vars).forEach(v => {
         if (!v.type) v.type = 'option';
       });
+      if (!p.presets) p.presets = [];
     });
   } catch(e) {
     categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
@@ -862,6 +886,18 @@ function renderMain() {
     `<option value="${esc(c.id)}"${c.id===p.catId?' selected':''}>${esc(c.name)}</option>`
   ).join('');
 
+  const presetsHtml = (() => {
+    if (!p.presets || p.presets.length === 0)
+      return `<div class="no-presets">No presets yet — save the current values to reuse them later.</div>`;
+    return `<div class="preset-chips">${p.presets.map(pr =>
+      `<span class="preset-chip" title="${esc(pr.name)}">
+        <span class="preset-chip-name" onclick="applyPreset(${p.id},'${escJs(pr.name)}')">${esc(pr.name)}</span>
+        <button class="preset-chip-del" onclick="deletePreset(${p.id},'${escJs(pr.name)}')" title="Delete preset"><i class="fa-solid fa-xmark"></i></button>
+      </span>`
+    ).join('')}</div>`;
+  })();
+  const hasVars = Object.keys(p.vars).length > 0;
+
   const varRows = Object.entries(p.vars).map(([k,v]) => {
     if (v.type === 'instruction') {
       const items = v.options.map((o,i) => {
@@ -964,6 +1000,15 @@ function renderMain() {
             <button class="btn btn-sm" onclick="syncVars(${p.id})"><i class="fa-solid fa-rotate"></i> Sync</button>
           </div>
           ${varRows||`<div class="no-vars">No variables yet. Use <code class="inline">{{name}}</code>, <code class="inline">[[name]]</code>, or <code class="inline">((name))</code>.</div>`}
+          <div class="presets-section">
+            <div class="presets-header">
+              <span class="presets-label">Presets</span>
+              <button class="btn btn-sm" onclick="savePreset(${p.id})"${!hasVars?' disabled style="opacity:0.4;cursor:not-allowed"':''}>
+                <i class="fa-regular fa-bookmark"></i> Save preset
+              </button>
+            </div>
+            ${presetsHtml}
+          </div>
         </div>
       </div>
     </div>`;
@@ -1101,12 +1146,56 @@ function deleteInstrItem(id,k,val) {
   save(); renderMain();
 }
 
+function savePreset(id) {
+  const p = prompts.find(x => x.id === id);
+  if (!Object.keys(p.vars).length) return;
+  const name = window.prompt('Name this preset:');
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (!p.presets) p.presets = [];
+  const values = {};
+  Object.entries(p.vars).forEach(([k, v]) => {
+    if (v.type === 'option') values[k] = v.selected;
+    else if (v.type === 'instruction') values[k] = [...(v.selected || [])];
+    else if (v.type === 'text') values[k] = v.value;
+  });
+  const existing = p.presets.findIndex(x => x.name === trimmed);
+  if (existing >= 0) {
+    if (!confirm(`Replace existing preset "${trimmed}"?`)) return;
+    p.presets[existing].values = values;
+  } else {
+    p.presets.push({ name: trimmed, values });
+  }
+  save(); renderMain();
+  showToast(`Preset "${trimmed}" saved`);
+}
+function applyPreset(id, name) {
+  const p = prompts.find(x => x.id === id);
+  const preset = p.presets?.find(x => x.name === name);
+  if (!preset) return;
+  Object.entries(preset.values).forEach(([k, val]) => {
+    if (!p.vars[k]) return;
+    const v = p.vars[k];
+    if (v.type === 'option') v.selected = val;
+    else if (v.type === 'instruction') v.selected = Array.isArray(val) ? [...val] : [];
+    else if (v.type === 'text') v.value = val;
+  });
+  save(); renderMain();
+  showToast(`"${name}" applied`);
+}
+function deletePreset(id, name) {
+  const p = prompts.find(x => x.id === id);
+  p.presets = (p.presets || []).filter(x => x.name !== name);
+  save(); renderMain();
+}
+
 function newPrompt() {
   const id = Date.now();
   const defaultCat = (filterCatId && categories.find(c=>c.id===filterCatId)) ? filterCatId : (categories[0]?.id||'other');
   prompts.unshift({ id, name:"New Prompt", catId:defaultCat, favorite: filterFavs,
     template:"Write a {{style}} text about {{topic}}.",
-    vars:{ style:{options:["short","detailed","creative"],selected:"short"}, topic:{options:["my topic"],selected:"my topic"} }
+    vars:{ style:{options:["short","detailed","creative"],selected:"short"}, topic:{options:["my topic"],selected:"my topic"} },
+    presets: []
   });
   activeId=id; save(); render();
   setTimeout(()=>document.querySelector('.prompt-name-input')?.focus(),50);
