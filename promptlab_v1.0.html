@@ -1652,34 +1652,49 @@ function handleFileImport(event) {
   reader.readAsText(file);
 }
 function closeImportModal() { document.getElementById('importModalBg').classList.remove('open'); pendingImportData=null; }
+// Shared merge helper: name-based dedup + last-write-wins + cleans up existing duplicates
+function mergePrompts(incoming) {
+  // Remove any existing duplicates (keep newest by lastEdited)
+  const best = new Map();
+  prompts.forEach(p => {
+    const ex = best.get(p.name);
+    if (!ex || (p.lastEdited || 0) >= (ex.lastEdited || 0)) best.set(p.name, p);
+  });
+  const keepIds = new Set([...best.values()].map(p => p.id));
+  prompts = prompts.filter(p => keepIds.has(p.id));
+
+  // Merge incoming
+  let added = 0, updated = 0;
+  const appByName = new Map(prompts.map(p => [p.name, p]));
+  incoming.forEach(fp => {
+    const appP = appByName.get(fp.name);
+    if (!appP) {
+      fp.id = fp.id || Date.now() + Math.random(); fp.favorite = fp.favorite || false;
+      prompts.unshift(fp); added++;
+    } else if ((fp.lastEdited || 0) > (appP.lastEdited || 0)) {
+      Object.assign(appP, fp, { id: appP.id }); updated++;
+    }
+  });
+  if (!activeId && prompts.length) activeId = prompts[0].id;
+  return { added, updated };
+}
+
 function confirmImport() {
   if(!pendingImportData) return;
   const mode=document.querySelector('input[name="importMode"]:checked').value;
-  const {prompts:imp,categories:impCats}=pendingImportData; let count=0;
+  const {prompts:imp,categories:impCats}=pendingImportData;
   impCats.forEach(ic=>{ if(!categories.find(c=>c.id===ic.id||c.name.toLowerCase()===ic.name.toLowerCase())) categories.push(ic); });
   if(mode==='replace') {
     prompts=imp.map(p=>({...p,id:p.id||Date.now()+Math.random(),favorite:p.favorite||false}));
-    count=prompts.length; activeId=prompts[0]?.id??null;
+    const count=prompts.length; activeId=prompts[0]?.id??null;
+    closeImportModal(); save(); render();
+    showToast(`Imported ${count} prompt${count!==1?'s':''}`);
   } else {
-    let updated = 0;
-    const appByName = new Map(prompts.map(p => [p.name, p]));
-    imp.forEach(fp => {
-      const appP = appByName.get(fp.name);
-      if (!appP) {
-        fp.id = Date.now() + Math.random(); fp.favorite = fp.favorite || false;
-        prompts.unshift(fp); count++;
-      } else if ((fp.lastEdited || 0) > (appP.lastEdited || 0)) {
-        Object.assign(appP, fp, { id: appP.id }); updated++;
-      }
-    });
-    if (!activeId && prompts.length) activeId = prompts[0].id;
-    const parts = []; if (count) parts.push(`${count} added`); if (updated) parts.push(`${updated} updated`);
+    const {added,updated} = mergePrompts(imp);
+    const parts=[]; if(added) parts.push(`${added} added`); if(updated) parts.push(`${updated} updated`);
     closeImportModal(); save(); render();
     showToast(`Imported — ${parts.length ? parts.join(', ') : 'nothing new'}`);
-    return;
   }
-  closeImportModal(); save(); render();
-  showToast(`Imported ${count} prompt${count!==1?'s':''}`);
 }
 
 // ── Add / edit variable option modal ─────────────────────────────────────────
@@ -1960,22 +1975,9 @@ async function linkFile() {
           if (!categories.find(c => c.id === ic.id || c.name.toLowerCase() === ic.name.toLowerCase()))
             categories.push(ic);
         });
-        let added = 0, updated = 0;
-        const appByKey = new Map(prompts.map(p => [p.name + '||' + p.template, p]));
-        data.prompts.forEach(fp => {
-          const key = fp.name + '||' + fp.template;
-          const appP = appByKey.get(key);
-          if (!appP) {
-            fp.id = fp.id || Date.now() + Math.random();
-            fp.favorite = fp.favorite || false;
-            prompts.unshift(fp); added++;
-          } else if ((fp.lastEdited || 0) > (appP.lastEdited || 0)) {
-            Object.assign(appP, fp, { id: appP.id }); updated++;
-          }
-        });
-        if (!activeId && prompts.length) activeId = prompts[0].id;
+        const {added, updated} = mergePrompts(data.prompts);
         save(); render(); updateFileSyncUI();
-        const parts = []; if (added) parts.push(`${added} added`); if (updated) parts.push(`${updated} updated`);
+        const parts=[]; if(added) parts.push(`${added} added`); if(updated) parts.push(`${updated} updated`);
         showToast(`Merged from ${handle.name} — ${parts.length ? parts.join(', ') : 'nothing new'} — auto-saving enabled`);
       } else {
         // File has content but isn't a PromptLab library — refuse to overwrite
