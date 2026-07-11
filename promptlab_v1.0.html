@@ -382,6 +382,7 @@
     max-width: 180px;
   }
   .preset-chip:hover { border-color: var(--border-2); }
+  .preset-chip-active { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); font-weight: 500; }
   .preset-chip-fixed { padding: 3px 10px; }
   .preset-chip-name { cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
   .preset-chip-del {
@@ -1333,7 +1334,8 @@ function renderMain() {
       return `<div class="no-presets">No presets yet — save the current values to reuse them later.</div>`;
     return `<div class="preset-chips">${p.presets.map((pr, idx) => {
       const fixed = idx === 0 && pr.name === 'Clear';
-      return `<span class="preset-chip${fixed ? ' preset-chip-fixed' : ' preset-chip-draggable'}"
+      const active = presetMatchesCurrent(p, pr, fixed);
+      return `<span class="preset-chip${fixed ? ' preset-chip-fixed' : ' preset-chip-draggable'}${active ? ' preset-chip-active' : ''}"
         ${fixed ? '' : 'draggable="true"'}
         data-presetname="${escJs(pr.name)}" data-promptid="${p.id}" data-fixed="${fixed}"
         title="${esc(pr.name)}">
@@ -1710,7 +1712,20 @@ function updateTextVar(id, k, val) {
   p.vars[k].value = val;
   const pb = document.getElementById('previewBody');
   if (pb) pb.innerHTML = buildPreview(p);
+  refreshPresetHighlight(id);
   save();
+}
+function refreshPresetHighlight(id) {
+  const p = prompts.find(x => x.id === id);
+  if (!p || !p.presets) return;
+  document.querySelectorAll(`.preset-chip[data-promptid="${id}"]`).forEach(chip => {
+    const name = chip.dataset.presetname;
+    const idx = p.presets.findIndex(pr => pr.name === name);
+    if (idx < 0) return;
+    const pr = p.presets[idx];
+    const fixed = idx === 0 && pr.name === 'Clear';
+    chip.classList.toggle('preset-chip-active', presetMatchesCurrent(p, pr, fixed));
+  });
 }
 function toggleInstr(id,k,val) {
   const v = prompts.find(p=>p.id===id).vars[k];
@@ -1855,6 +1870,32 @@ function savePreset(id) {
   }
   save(); renderMain();
   showToast(`Preset "${trimmed}" saved`);
+}
+function presetMatchesCurrent(p, preset, isClear) {
+  const keys = Object.keys(p.vars || {});
+  if (isClear) {
+    return keys.every(k => {
+      const v = p.vars[k];
+      if (v.type === 'option') return v.selected === '';
+      if (v.type === 'instruction') return !v.selected || v.selected.length === 0;
+      if (v.type === 'text') return !v.value;
+      return true;
+    });
+  }
+  const presetKeys = Object.keys(preset.values);
+  if (presetKeys.length !== keys.length) return false;
+  return presetKeys.every(k => {
+    const v = p.vars[k];
+    if (!v) return false;
+    const val = preset.values[k];
+    if (v.type === 'option') return v.selected === val;
+    if (v.type === 'instruction') {
+      const a = v.selected || [], b = val || [];
+      return a.length === b.length && a.every(x => b.includes(x));
+    }
+    if (v.type === 'text') return (v.value || '') === (val || '');
+    return false;
+  });
 }
 function applyPreset(id, name) {
   const p = prompts.find(x => x.id === id);
