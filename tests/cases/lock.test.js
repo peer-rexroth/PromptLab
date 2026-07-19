@@ -1,0 +1,27 @@
+// toggleLock() and the locked-prompt edit guards.
+// makeUnlockedPrompt() is defined in sync-vars.test.js (shared eval scope).
+
+test('toggleLock flips the locked flag', function () {
+  const p = makeUnlockedPrompt({ locked: false });
+  toggleLock(p.id);
+  assertTrue(p.locked);
+  toggleLock(p.id);
+  assertFalse(p.locked);
+});
+
+test('updateName is a no-op on a locked prompt', function () {
+  const p = makeUnlockedPrompt({ locked: true, name: 'Original' });
+  updateName(p.id, 'Changed');
+  assertEqual(p.name, 'Original');
+});
+
+test('updateCat is a no-op on a locked prompt', function () {
+  const p = makeUnlockedPrompt({ locked: true, catId: categories[0].id });
+  updateCat(p.id, categories[1].id);
+  assertEqual(p.catId, categories[0].id);
+});
+
+test('a default bundled prompt loads locked', function () {
+  // CLAUDE.md: "The bundled default prompts are locked on first load."
+  assertTrue(prompts[0].locked);
+});

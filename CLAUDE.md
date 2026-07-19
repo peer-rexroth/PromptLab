@@ -14,6 +14,16 @@ A plain `file://` open of `promptlab.html` works fine for quick checks, but PWA 
 
 `manifest.json` and `sw.js` live alongside `promptlab.html`. `icons/icon.svg` is the source artwork (reused from the app's existing favicon/apple-touch-icon design); `icons/icon-180.png`, `icon-192.png`, `icon-512.png` are rendered from it for apple-touch-icon and manifest icons respectively — regenerate them with `qlmanage -t -s <size> -o icons icons/icon.svg` if the source SVG changes. `sw.js` precaches the app shell (HTML, manifest, icons, Font Awesome CSS/fonts) on install, network-first for the page navigation and cache-first for everything else; bump `CACHE_NAME` when the shell's contents change so old caches get evicted. Registration is gated on `location.protocol !== 'file:'` near the end of the `<script>` block, matching the http-only requirement above.
 
+## Tests
+
+There's no lint config, but there is a test suite at `tests/`: extract the inline `<script>` block, mock just enough of the DOM (`document.getElementById` returning cached fake elements with a settable `innerHTML`, plus `localStorage`, `navigator`, `window`, `confirm`, `location`) and `eval()` the real code in a headless JS engine (`osascript -l JavaScript` — JavaScriptCore, no Node install needed).
+
+Run it with `./tests/run.sh` (optionally `./tests/run.sh someSubstring` to run only tests whose name contains that substring). No install step.
+
+Add a test by dropping a `tests/cases/*.test.js` file with `test('description', function(){ ... })` calls — see existing files for the pattern. All app code plus every `tests/cases/*.test.js` file get concatenated and `eval()`'d *together* in one call, which is why a test can read/reassign `prompts`, `categories`, `activeId`, and the other top-level `let` state directly by bare name, and call any of the app's real functions — they're all sharing the same eval'd lexical scope. `tests/harness.js` calls `resetState()` (clears `localStorage` and re-runs the real `load()`, which reseeds `DEFAULT_CATS`/`DEFAULT_PROMPTS`) and clears the fake DOM before every test, so tests never see state left over from another test — write fixtures at the top of each test rather than relying on run order. `makeUnlockedPrompt()` (defined in `sync-vars.test.js`) is the shared fixture helper for tests that need an editable (non-locked) prompt, since the bundled defaults all load locked. Helper functions declared at a test file's top level are visible to every other test file too (same shared scope), so keep helper names distinctive enough not to collide across files.
+
+Timers (`setTimeout`) are no-op in the harness rather than firing immediately, for deterministic tests — this means `updateTemplate`'s 1s undo-stack debounce never fires during a test. `undo-redo.test.js` seeds the undo/redo stacks directly instead of relying on the debounce, and exercises the real `undoTemplate`/`redoTemplate`/`applyTemplateUndo` functions on that seeded state.
+
 ## Architecture
 
 The file has three logical sections in order: CSS styles, HTML structure, and a `<script>` block containing all application logic (~1500+ lines of vanilla JS).
