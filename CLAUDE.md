@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-PromptLab is a single-file, zero-dependency HTML application — the entire app (HTML, CSS, JavaScript) lives in `promptlab_v1.0.html`. There is no build step, no package manager, and no server. Open the file directly in a browser to run it.
+PromptLab is a single-file, zero-dependency HTML application — the entire app (HTML, CSS, JavaScript) lives in `promptlab.html`. There is no build step, no package manager, and no server. Open the file directly in a browser to run it.
 
 ## Architecture
 
