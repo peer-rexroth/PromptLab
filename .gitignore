@@ -1,0 +1,4 @@
+.claude/
+.promptlab-server.pid
+.promptlab-server.log
+.DS_Store

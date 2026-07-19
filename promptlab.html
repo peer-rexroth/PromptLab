@@ -9,9 +9,9 @@
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1e1e1c" media="(prefers-color-scheme: dark)">
 <title>PromptLab</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzFhMWExOCIvPgogIDxyZWN0IHg9IjYiIHk9IjgiIHdpZHRoPSIxMyIgaGVpZ2h0PSIyLjUiIHJ4PSIxLjI1IiBmaWxsPSIjZmZmZmZmIi8+CiAgPHJlY3QgeD0iNiIgeT0iMTMiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyLjUiIHJ4PSIxLjI1IiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIwLjUiLz4KICA8cmVjdCB4PSI2IiB5PSIxOCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjIuNSIgcng9IjEuMjUiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuNSIvPgogIDxjaXJjbGUgY3g9IjIzIiBjeT0iMjIiIHI9IjUiIGZpbGw9IiMzNzhhZGQiLz4KICA8cmVjdCB4PSIyMiIgeT0iMTkuNSIgd2lkdGg9IjIiIGhlaWdodD0iNSIgcng9IjEiIGZpbGw9IndoaXRlIi8+CiAgPHJlY3QgeD0iMjAuNSIgeT0iMjEiIHdpZHRoPSI1IiBoZWlnaHQ9IjIiIHJ4PSIxIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=">
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj4KICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWExYTE4Ii8+CiAgPHJlY3QgeD0iMzQiIHk9IjQ1IiB3aWR0aD0iNzMiIGhlaWdodD0iMTQiIHJ4PSI3IiBmaWxsPSIjZmZmZmZmIi8+CiAgPHJlY3QgeD0iMzQiIHk9Ijc0IiB3aWR0aD0iMTEyIiBoZWlnaHQ9IjE0IiByeD0iNyIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC41Ii8+CiAgPHJlY3QgeD0iMzQiIHk9IjEwMyIgd2lkdGg9IjkwIiBoZWlnaHQ9IjE0IiByeD0iNyIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC41Ii8+CiAgPGNpcmNsZSBjeD0iMTMwIiBjeT0iMTI0IiByPSIyOCIgZmlsbD0iIzM3OGFkZCIvPgogIDxyZWN0IHg9IjEyMiIgeT0iMTEwIiB3aWR0aD0iMTYiIGhlaWdodD0iMjgiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPgogIDxyZWN0IHg9IjExNSIgeT0iMTE2IiB3aWR0aD0iMzAiIGhlaWdodD0iMTYiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=">
-<link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;PromptLab&quot;,&quot;short_name&quot;:&quot;PromptLab&quot;,&quot;start_url&quot;:&quot;./promptlab.html&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%231a1a18&quot;,&quot;theme_color&quot;:&quot;%231a1a18&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj4KICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWExYTE4Ii8+CiAgPHJlY3QgeD0iMzQiIHk9IjQ1IiB3aWR0aD0iNzMiIGhlaWdodD0iMTQiIHJ4PSI3IiBmaWxsPSIjZmZmZmZmIi8+CiAgPHJlY3QgeD0iMzQiIHk9Ijc0IiB3aWR0aD0iMTEyIiBoZWlnaHQ9IjE0IiByeD0iNyIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC41Ii8+CiAgPHJlY3QgeD0iMzQiIHk9IjEwMyIgd2lkdGg9IjkwIiBoZWlnaHQ9IjE0IiByeD0iNyIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC41Ii8+CiAgPGNpcmNsZSBjeD0iMTMwIiBjeT0iMTI0IiByPSIyOCIgZmlsbD0iIzM3OGFkZCIvPgogIDxyZWN0IHg9IjEyMiIgeT0iMTEwIiB3aWR0aD0iMTYiIGhlaWdodD0iMjgiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPgogIDxyZWN0IHg9IjExNSIgeT0iMTE2IiB3aWR0aD0iMzAiIGhlaWdodD0iMTYiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=&quot;,&quot;sizes&quot;:&quot;any&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -2671,6 +2671,10 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'z' && e.shiftKey) { e.preventDefault(); redoTemplate(activeId); }
   else if (e.key === 'y') { e.preventDefault(); redoTemplate(activeId); }
 });
+
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 </script>
 </body>
 </html>

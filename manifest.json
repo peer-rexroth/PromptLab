@@ -1,0 +1,25 @@
+{
+  "name": "PromptLab",
+  "short_name": "PromptLab",
+  "description": "A local prompt management tool — store reusable AI prompts with fill-in variables, categories, and one-click copy.",
+  "start_url": "./promptlab.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1a1a18",
+  "theme_color": "#1a1a18",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
