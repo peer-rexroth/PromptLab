@@ -94,7 +94,7 @@ The app uses direct DOM re-renders (no virtual DOM or framework). Every state mu
 
 ### Modals
 
-Eight modals share a common `.modal-bg` pattern (add `.open` class to show, remove to hide):
+Nine modals share a common `.modal-bg` pattern (add `.open` class to show, remove to hide):
 - `modalBg` — add/edit a variable option
 - `catModalBg` — category manager
 - `importModalBg` — import confirmation
@@ -103,6 +103,7 @@ Eight modals share a common `.modal-bg` pattern (add `.open` class to show, remo
 - `shortcutsModalBg` — keyboard shortcuts reference
 - `fileSyncModalBg` — File System Access API sync setup
 - `backupsModalBg` — restore a local daily backup (see "Local backups" below)
+- `themeModalBg` — pick a color scheme (see "Theme and color scheme" above)
 
 ### Drag-and-drop
 
@@ -128,9 +129,17 @@ Per-prompt undo stacks are kept in `undoStacks` (a `Map<id, { past, future }>`).
 
 `save()` writes to both `localStorage` and, if a `fileHandle` is set, the linked JSON file via the File System Access API. The handle is persisted across page loads in IndexedDB (`promptlab-fs`). `fileSyncWrite` / `fileSyncRead` handle the async file I/O. The sync indicator in the topbar shows the linked filename.
 
-### Theme
+### Theme and color scheme
 
-`currentTheme` (`'light'` | `'dark'`) is stored in both `localStorage` (key `"promptlab-theme"`) and the main data blob. `toggleTheme()` flips it and updates `data-theme` on `<html>`, which switches the CSS variable set.
+Two independent axes control appearance: `data-theme` (`light`/`dark`, toggled by the moon/sun button — `currentTheme`, stored in `localStorage["promptlab-theme"]` and the main data blob, unchanged since before schemes existed) and `data-scheme` (picked from the palette-icon button's theme modal — `colorScheme`, stored in `localStorage["promptlab-scheme"]` and the main data blob). Each scheme defines its own light *and* dark CSS variable pair, so the two axes combine freely — e.g. `[data-scheme="dracula"][data-theme="dark"]`.
+
+- **`THEME_SCHEMES`** (near `CAT_COLORS`, top of the `<script>` block) is the single source of truth for which schemes exist — each entry has `id`, `name`, `desc`, and `swatches` (three hex values shown as dots in the picker). `id` must exactly match a `[data-scheme="..."]` selector; nothing enforces this automatically except `tests/cases/theme.test.js`'s "every entry has a matching CSS selector" test, which will fail loudly on a typo but won't catch a selector that exists with no matching `THEME_SCHEMES` entry (a harmless orphan, not a crash).
+- **`:root, html[data-scheme="standard"]`** and the bare `html[data-theme="dark"]` block are the original, untouched palette — this is what renders when `data-scheme` is absent entirely, so it must stay exactly as-is. Every other scheme is defined as `html[data-scheme="x"] { ... }` (light) and `html[data-scheme="x"][data-theme="dark"] { ... }` (dark) — the dark block's extra attribute selector always wins on specificity over the bare `html[data-theme="dark"]`, so block order in the file doesn't matter for correctness.
+- PromptLab's `:root` has three Standard-only accent slots (`--coral-bg`/`--coral-text`, `--pink-bg`/`--pink-text`, `--star`/`--star-bg`) with no equivalent token in any of the four ported schemes' source palettes (they don't exist in mytasks' scheme system either, which only has blue/teal/amber/red/green/purple). They're deliberately left undeclared in every non-Standard scheme block, so CSS falls back to `:root`'s/the bare dark block's values for those specific properties regardless of which scheme is active — those three category-color pairs and the favorite-star color simply don't re-theme.
+- Each scheme has its own one-off "signature" rule scoped near its variable block: Modern restyles `.sidebar-footer` into a solid-blue status bar (mirroring VS Code's most recognizable UI element); Dracula adds a purple glow to `.topbar-brand i`; GitHub and GitHub Dimmed both turn `.btn-primary` into GitHub's solid green.
+- **Accuracy convention**: when a scheme claims to replicate a real product's theme (VS Code, GitHub, Dracula, etc.), the actual token values were verified against the real source (fetched from `microsoft/vscode`'s theme JSON, `draculatheme.com/spec`, and `@primer/primitives`) rather than reconstructed from memory — see the comment above each scheme's variable block for exactly what's a real spec value vs. this app's own derivation (e.g. neither GitHub palette has an official teal token, so that slot is an approximation).
+
+`setColorScheme(scheme)` updates state + `data-scheme` + `localStorage`, re-renders the picker, and calls `save()`. `applyThemeFromData(d)` (used by `linkFile()`/`reconnectFile()`/`initFileSync()` when adopting a linked file's data) applies `theme` and `colorScheme` independently of each other — a payload with only one of the two still applies that one, rather than an early return on the other being absent.
 
 ## Key functions reference
 
@@ -153,6 +162,8 @@ Per-prompt undo stacks are kept in `undoStacks` (a `Map<id, { past, future }>`).
 | `exportLibrary()` / `downloadLibrary(cats, proms, filename)` | Download a library as `.json` (version 4 format); `exportLibrary()` is the user-facing action, `downloadLibrary()` is the reusable primitive it and the pre-replace backup both call |
 | `confirmImport()` | Merge or replace library from a parsed import file |
 | `toggleTheme()` | Switch between light and dark mode |
+| `setColorScheme(id)` | Switch the color scheme (Standard/Modern/Dracula/GitHub/GitHub Dimmed) |
+| `applyThemeFromData(d)` | Apply `theme`/`colorScheme` from a linked-file payload, independently of each other |
 | `fileSyncWrite(data)` / `fileSyncRead()` | Write/read the linked JSON file via File System Access API |
 | `maybeSnapshotBackup()` | Take a rolling daily local backup snapshot; called from `save()` |
 | `getBackups()` / `restoreBackup(date)` | Read local backups; roll the library back to one, after confirmation |

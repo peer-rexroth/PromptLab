@@ -16,7 +16,21 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
+  /* ── Theme system ──────────────────────────────────────────────────────────
+     Two independent axes: data-theme (light/dark, toggled by the moon/sun
+     button) and data-scheme (standard/modern/dracula/github/githubdimmed,
+     picked from the palette-icon button's theme modal). Each scheme defines
+     its own light+dark pair. "Standard" is the app's original, untouched
+     palette — :root and the bare html[data-theme="dark"] block below are it,
+     so an app with no data-scheme attribute (or scheme=standard) looks
+     exactly as it always has. A scheme's dark block wins via higher selector
+     specificity ([data-scheme="x"][data-theme="dark"] beats the bare
+     [data-theme="dark"]), so block order here doesn't matter for correctness.
+     coral/pink/star are Standard-only accents with no equivalent token in
+     the other schemes' source palettes, so they're deliberately left out of
+     every other scheme's block — CSS falls back to :root's/the bare dark
+     block's values for those specific properties on every scheme. */
+  :root, html[data-scheme="standard"] {
     --bg: #ffffff; --bg-2: #f5f5f3; --bg-3: #ededea;
     --text: #1a1a18; --text-2: #6b6b66; --text-3: #a0a09a;
     --border: rgba(0,0,0,0.10); --border-2: rgba(0,0,0,0.18);
@@ -47,6 +61,132 @@
     --pink-bg: #4b1528; --pink-text: #ed93b1;
     --star: #fac775; --star-bg: #412402;
   }
+
+  /* Modern: VS Code's actual Dark Modern / Light Modern themes — its
+     dark-graphite/light-gray neutrals and accent blue (#005fb8 light,
+     #3794ff/#0078d4 dark), plus semantic red/amber/cyan/purple/green rather
+     than approximations (values fetched directly from microsoft/vscode's
+     extensions/theme-defaults/themes/light_modern.json, not memory).
+     Signature: the sidebar footer becomes a status bar — VS Code's most
+     recognizable single UI element. */
+  html[data-scheme="modern"] {
+    --bg: #ffffff; --bg-2: #f8f8f8; --bg-3: #e8e8e8;
+    --text: #3b3b3b; --text-2: #3b3b3b; --text-3: #8a8a8a;
+    --border: rgba(59,59,59,0.12); --border-2: rgba(59,59,59,0.24);
+    --blue-bg: #e3edf7; --blue-text: #005fb8; --blue-border: #6ba0d6;
+    --teal-bg: #dcf0f5; --teal-text: #0598bc;
+    --amber-bg: #faf0d0; --amber-text: #bf8803;
+    --red-bg: #fbe7e6; --red-text: #cd3131;
+    --green-bg: #e2f0e0; --green-text: #388a34;
+    --purple-bg: #f5e0fa; --purple-text: #af00db;
+  }
+  html[data-scheme="modern"][data-theme="dark"] {
+    --bg: #1f1f1f; --bg-2: #181818; --bg-3: #2a2d2e;
+    --text: #cccccc; --text-2: #9d9d9d; --text-3: #6a6a6a;
+    --border: rgba(204,204,204,0.10); --border-2: rgba(204,204,204,0.20);
+    --blue-bg: #0d2d4a; --blue-text: #3794ff; --blue-border: #0078d4;
+    --teal-bg: #0d2e38; --teal-text: #29b8db;
+    --amber-bg: #3a3010; --amber-text: #cca700;
+    --red-bg: #4a1414; --red-text: #f14c4c;
+    --green-bg: #1c3320; --green-text: #89d185;
+    --purple-bg: #2e2036; --purple-text: #c586c0;
+  }
+  html[data-scheme="modern"] .sidebar-footer {
+    background: var(--blue-text); color: #fff; text-align: left; font-family: var(--mono); border-top: none;
+  }
+
+  /* Dracula: the official palette, not an approximation — #282a36 with
+     #6272a4 comments, #bd93f9 purple, #ff79c6 pink, #8be9fd cyan, #50fa7b
+     green, #ff5555 red. Light mode is Alucard, Dracula Pro's own official
+     light theme (draculatheme.com/spec) — also the real spec values, not an
+     invented companion. Signature: a soft purple glow on the brand icon, a
+     small nod to the palette's neon-on-dark character. */
+  html[data-scheme="dracula"] {
+    --bg: #fffbeb; --bg-2: #f5efd7; --bg-3: #cfcfde;
+    --text: #1f1f1f; --text-2: #6c664b; --text-3: #a39d7a;
+    --border: rgba(31,31,31,0.12); --border-2: rgba(31,31,31,0.24);
+    --blue-bg: #e7e0f7; --blue-text: #644ac9; --blue-border: #a68fd9;
+    --teal-bg: #d8f0f3; --teal-text: #036a96;
+    --amber-bg: #f5e2ce; --amber-text: #a34d14;
+    --red-bg: #fbe2df; --red-text: #cb3a2a;
+    --green-bg: #dcf0d8; --green-text: #14710a;
+    --purple-bg: #f7dce8; --purple-text: #a3144d;
+  }
+  html[data-scheme="dracula"][data-theme="dark"] {
+    --bg: #282a36; --bg-2: #21222c; --bg-3: #44475a;
+    --text: #f8f8f2; --text-2: #6272a4; --text-3: #4d5673;
+    --border: rgba(248,248,242,0.10); --border-2: rgba(248,248,242,0.22);
+    --blue-bg: #3a3355; --blue-text: #bd93f9; --blue-border: #9d7ee8;
+    --teal-bg: #1c3a42; --teal-text: #8be9fd;
+    --amber-bg: #4a3820; --amber-text: #ffb86c;
+    --red-bg: #47272a; --red-text: #ff5555;
+    --green-bg: #1c3a26; --green-text: #50fa7b;
+    --purple-bg: #4a2740; --purple-text: #ff79c6;
+  }
+  html[data-scheme="dracula"] .topbar-brand i { text-shadow: 0 0 8px var(--blue-text); }
+
+  /* GitHub: Primer's actual semantic colors — #0969da/#4493f8 accent blue,
+     #1a7f37/#3fb950 success green, #cf222e/#f85149 danger red, #8250df/
+     #a371f7 "merged" purple, #9a6700/#d29922 attention amber. GitHub's
+     semantic palette has no named teal, so that slot is an approximation
+     from Primer's broader scale, not a literal token. Signature: the
+     primary button becomes GitHub's solid green — its most recognizable
+     single UI element ("Merge pull request", "New", etc). */
+  html[data-scheme="github"] {
+    --bg: #ffffff; --bg-2: #f6f8fa; --bg-3: #eaeef2;
+    --text: #1f2328; --text-2: #656d76; --text-3: #8c959f;
+    --border: rgba(31,35,40,0.12); --border-2: rgba(31,35,40,0.24);
+    --blue-bg: #ddf4ff; --blue-text: #0969da; --blue-border: #54aeff;
+    --teal-bg: #daf1f1; --teal-text: #1b7c83;
+    --amber-bg: #fff8c5; --amber-text: #9a6700;
+    --red-bg: #ffebe9; --red-text: #cf222e;
+    --green-bg: #dafbe1; --green-text: #1a7f37;
+    --purple-bg: #fbefff; --purple-text: #8250df;
+  }
+  html[data-scheme="github"][data-theme="dark"] {
+    --bg: #0d1117; --bg-2: #161b22; --bg-3: #21262d;
+    --text: #e6edf3; --text-2: #9198a1; --text-3: #6e7681;
+    --border: rgba(230,237,243,0.10); --border-2: rgba(230,237,243,0.20);
+    --blue-bg: #0c2d6b; --blue-text: #4493f8; --blue-border: #1f6feb;
+    --teal-bg: #0d2d32; --teal-text: #39c5cf;
+    --amber-bg: #3b2900; --amber-text: #d29922;
+    --red-bg: #3c1618; --red-text: #f85149;
+    --green-bg: #14261d; --green-text: #3fb950;
+    --purple-bg: #2e2140; --purple-text: #a371f7;
+  }
+  html[data-scheme="github"] .btn-primary { background: var(--green-text); border-color: var(--green-text); }
+
+  /* GitHub Dimmed: GitHub Dark Dimmed's real compiled values (fetched from
+     @primer/primitives directly — canvas #212830, canvas-muted #262c36,
+     fg #d1d7e0/#9198a1, accent #478be6, danger #e5534b, attention #c69026,
+     success #57ab5a). Notably NOT the same background as GitHub Dark
+     Default's near-black #0d1117 — that's the whole point of "dimmed".
+     Light mode reuses GitHub Light Default exactly, unchanged from the
+     regular GitHub scheme above. Same signature (solid green primary
+     button) and teal caveat as GitHub. */
+  html[data-scheme="githubdimmed"] {
+    --bg: #ffffff; --bg-2: #f6f8fa; --bg-3: #eaeef2;
+    --text: #1f2328; --text-2: #656d76; --text-3: #8c959f;
+    --border: rgba(31,35,40,0.12); --border-2: rgba(31,35,40,0.24);
+    --blue-bg: #ddf4ff; --blue-text: #0969da; --blue-border: #54aeff;
+    --teal-bg: #daf1f1; --teal-text: #1b7c83;
+    --amber-bg: #fff8c5; --amber-text: #9a6700;
+    --red-bg: #ffebe9; --red-text: #cf222e;
+    --green-bg: #dafbe1; --green-text: #1a7f37;
+    --purple-bg: #fbefff; --purple-text: #8250df;
+  }
+  html[data-scheme="githubdimmed"][data-theme="dark"] {
+    --bg: #212830; --bg-2: #262c36; --bg-3: #2d3640;
+    --text: #d1d7e0; --text-2: #9198a1; --text-3: #6b7280;
+    --border: rgba(209,215,224,0.10); --border-2: rgba(209,215,224,0.20);
+    --blue-bg: #16324f; --blue-text: #478be6; --blue-border: #6ba3ea;
+    --teal-bg: #163338; --teal-text: #4cb6c4;
+    --amber-bg: #3a2e14; --amber-text: #c69026;
+    --red-bg: #3d211d; --red-text: #e5534b;
+    --green-bg: #1c3320; --green-text: #57ab5a;
+    --purple-bg: #2e2246; --purple-text: #986ee2;
+  }
+  html[data-scheme="githubdimmed"] .btn-primary { background: var(--green-text); border-color: var(--green-text); }
 
   html, body { height: 100%; }
   body { font-family: var(--font); background: var(--bg-2); color: var(--text); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; min-height: 100vh; }
@@ -401,6 +541,19 @@
   .backup-row-date { font-size: 13px; font-weight: 600; }
   .backup-row-desc { font-size: 12px; color: var(--text-2); margin-top: 1px; }
 
+  /* theme (color scheme) picker */
+  .theme-options { display: flex; flex-direction: column; gap: 10px; }
+  .theme-option { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius); border: 0.5px solid var(--border-2); cursor: pointer; }
+  .theme-option:hover { background: var(--bg-2); }
+  .theme-option.selected { border-color: var(--blue-border); box-shadow: 0 0 0 1px var(--blue-border); }
+  .theme-option-swatches { display: flex; gap: 3px; flex-shrink: 0; }
+  .theme-option-swatch { width: 16px; height: 16px; border-radius: 50%; border: 0.5px solid var(--border-2); }
+  .theme-option-body { flex: 1; min-width: 0; }
+  .theme-option-name { font-size: 13px; font-weight: 600; }
+  .theme-option-desc { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+  .theme-option-check { color: var(--blue-text); font-size: 15px; opacity: 0; flex-shrink: 0; }
+  .theme-option.selected .theme-option-check { opacity: 1; }
+
   /* split link button */
   .split-btn { display: inline-flex; position: relative; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: visible; }
   .split-btn-main { display: flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--bg-2); color: var(--text); font-size: 12px; font-family: var(--font); border: none; border-radius: var(--radius) 0 0 var(--radius); cursor: pointer; white-space: nowrap; }
@@ -475,6 +628,7 @@
     <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
     <div class="topbar-divider"></div>
     <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
+    <button class="btn btn-sm" onclick="openThemeModal()" title="Color scheme"><i class="fa-solid fa-palette"></i></button>
     <button id="themeBtn" class="btn btn-sm" onclick="toggleTheme()" title="Switch to dark mode"><i class="fa-solid fa-moon"></i></button>
     <button class="btn btn-sm" onclick="openShortcuts()" title="Keyboard shortcuts (?)"><i class="fa-solid fa-keyboard"></i></button>
     <button class="btn btn-sm" onclick="openHelp()" title="Help"><i class="fa-regular fa-circle-question"></i></button>
@@ -743,6 +897,15 @@
   </div>
 </div>
 
+<!-- Theme modal -->
+<div class="modal-bg" id="themeModalBg" onclick="if(event.target===this)closeThemeModal()">
+  <div class="modal" style="width:400px">
+    <h3>Color scheme</h3>
+    <div class="theme-options" id="themeOptions"></div>
+    <div class="modal-actions"><button class="btn btn-primary" onclick="closeThemeModal()">Done</button></div>
+  </div>
+</div>
+
 <!-- Color popover (for editing category color) -->
 <div class="color-popover" id="colorPopover"></div>
 
@@ -762,6 +925,14 @@ const CAT_COLORS = [
   { name:'pink',   bg:'#fbeaf0', text:'#72243e', dot:'#d4537e' },
   { name:'green',  bg:'#eaf3de', text:'#3b6d11', dot:'#639922' },
   { name:'red',    bg:'#fcebeb', text:'#a32d2d', dot:'#e24b4a' },
+];
+
+const THEME_SCHEMES = [
+  { id: 'standard', name: 'Standard', desc: 'Neutral gray and white, with one blue accent.', swatches: ['#f5f5f3', '#0c447c', '#a32d2d'] },
+  { id: 'modern', name: 'Modern', desc: 'Clean graphite and white, with a confident accent blue.', swatches: ['#f8f8f8', '#005fb8', '#cd3131'] },
+  { id: 'dracula', name: 'Dracula', desc: 'Deep purple-gray, lit by vivid pink, cyan and green.', swatches: ['#f8f8f2', '#7c4dd9', '#cb3a2a'] },
+  { id: 'github', name: 'GitHub', desc: 'Crisp neutral gray-white, with a solid green action button.', swatches: ['#f6f8fa', '#0969da', '#cf222e'] },
+  { id: 'githubdimmed', name: 'GitHub Dimmed', desc: 'The same crisp palette, dimmed to a softer graphite.', swatches: ['#f6f8fa', '#478be6', '#e5534b'] }
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
@@ -1101,6 +1272,7 @@ const DEFAULT_PROMPTS = [
 // ── State ─────────────────────────────────────────────────────────────────────
 const STORAGE_KEY = "promptlab-v4";
 const THEME_KEY = "promptlab-theme";
+const SCHEME_KEY = "promptlab-scheme";
 const BACKUPS_KEY = "promptlab-backups";
 const MAX_BACKUPS = 7;
 let prompts = [], categories = [];
@@ -1112,8 +1284,10 @@ let prompts = [], categories = [];
 let deletedPromptIds = [], deletedCategoryIds = [];
 let activeId = null, filterCatId = null, filterFavs = false;
 let currentTheme = 'light';
-// Apply saved theme immediately to avoid flash
+let colorScheme = 'standard';
+// Apply saved theme/scheme immediately to avoid flash
 (function(){ const t=localStorage.getItem(THEME_KEY); if(t){currentTheme=t;document.documentElement.setAttribute('data-theme',t);} })();
+(function(){ const s=localStorage.getItem(SCHEME_KEY); if(s && THEME_SCHEMES.some(x=>x.id===s)){colorScheme=s;} document.documentElement.setAttribute('data-scheme', colorScheme); })();
 let modalTarget = null, pendingImportData = null, newCatColor = 'blue';
 const undoStacks = new Map(); // promptId → { past: string[], future: string[] }
 const lastSyncedTemplates = new Map(); // promptId → template string at last Sync
@@ -1164,6 +1338,7 @@ function load() {
       filterCatId = d.filterCatId || null;
       filterFavs  = d.filterFavs  || false;
       if (d.theme) { currentTheme = d.theme; document.documentElement.setAttribute('data-theme', d.theme); localStorage.setItem(THEME_KEY, d.theme); }
+      if (d.colorScheme && THEME_SCHEMES.some(s => s.id === d.colorScheme)) { colorScheme = d.colorScheme; document.documentElement.setAttribute('data-scheme', d.colorScheme); localStorage.setItem(SCHEME_KEY, d.colorScheme); }
     } else {
       categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
       prompts    = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
@@ -1179,7 +1354,7 @@ function load() {
   }
 }
 function save() {
-  const data = { prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, theme: currentTheme };
+  const data = { prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, theme: currentTheme, colorScheme };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   if (fileHandle) fileSyncWrite(data).catch(() => {});
   maybeSnapshotBackup();
@@ -2390,6 +2565,7 @@ document.addEventListener('keydown', e=>{
   if(document.getElementById('helpModalBg').classList.contains('open'))       { if(e.key==='Escape') closeHelp(); return; }
   if(document.getElementById('aboutModalBg').classList.contains('open'))      { if(e.key==='Escape') closeAbout(); return; }
   if(document.getElementById('backupsModalBg').classList.contains('open'))    { if(e.key==='Escape') closeBackupsModal(); return; }
+  if(document.getElementById('themeModalBg').classList.contains('open'))      { if(e.key==='Escape') closeThemeModal(); return; }
   // ? to show shortcuts (not when typing)
   if(e.key==='?' && !inInput && !e.metaKey && !e.ctrlKey) { openShortcuts(); return; }
   // sidebar keyboard navigation (also works when search input is focused)
@@ -2420,11 +2596,18 @@ document.addEventListener('keydown', e=>{
 
 // ── Help ──────────────────────────────────────────────────────────────────────
 function applyThemeFromData(d) {
-  if (!d || !d.theme) return;
-  currentTheme = d.theme;
-  document.documentElement.setAttribute('data-theme', d.theme);
-  localStorage.setItem(THEME_KEY, d.theme);
-  updateThemeBtn();
+  if (!d) return;
+  if (d.theme) {
+    currentTheme = d.theme;
+    document.documentElement.setAttribute('data-theme', d.theme);
+    localStorage.setItem(THEME_KEY, d.theme);
+    updateThemeBtn();
+  }
+  if (d.colorScheme && THEME_SCHEMES.some(s => s.id === d.colorScheme)) {
+    colorScheme = d.colorScheme;
+    document.documentElement.setAttribute('data-scheme', d.colorScheme);
+    localStorage.setItem(SCHEME_KEY, d.colorScheme);
+  }
 }
 function updateThemeBtn() {
   const btn = document.getElementById('themeBtn'); if (!btn) return;
@@ -2439,6 +2622,27 @@ function toggleTheme() {
   localStorage.setItem(THEME_KEY, next);
   updateThemeBtn();
   save(); // persists to localStorage + linked file
+}
+function renderThemeModal() {
+  document.getElementById('themeOptions').innerHTML = THEME_SCHEMES.map(s => `
+    <div class="theme-option ${s.id===colorScheme?'selected':''}" onclick="setColorScheme('${s.id}')">
+      <div class="theme-option-swatches">${s.swatches.map(c=>`<div class="theme-option-swatch" style="background:${c}"></div>`).join('')}</div>
+      <div class="theme-option-body">
+        <div class="theme-option-name">${s.name}</div>
+        <div class="theme-option-desc">${s.desc}</div>
+      </div>
+      <i class="fa-solid fa-check theme-option-check"></i>
+    </div>
+  `).join('');
+}
+function openThemeModal() { renderThemeModal(); document.getElementById('themeModalBg').classList.add('open'); }
+function closeThemeModal() { document.getElementById('themeModalBg').classList.remove('open'); }
+function setColorScheme(scheme) {
+  colorScheme = scheme;
+  document.documentElement.setAttribute('data-scheme', scheme);
+  localStorage.setItem(SCHEME_KEY, scheme);
+  renderThemeModal();
+  save();
 }
 function openFileSyncModal(reconnectHandle) {
   const ro = document.getElementById('fileSyncReconnectOption');
@@ -2671,7 +2875,7 @@ async function createNewLinkedFile() {
     });
     fileHandle = handle;
     try { await _fsPut(handle); } catch(_) {}
-    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs });
+    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, theme: currentTheme, colorScheme });
     updateFileSyncUI();
     showToast(`Linked — auto-saving to ${handle.name}`);
   } catch(e) {
@@ -2713,7 +2917,7 @@ async function linkFile() {
       return;
     }
     // Empty file — write current library into it
-    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs });
+    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, theme: currentTheme, colorScheme });
     updateFileSyncUI();
     showToast(`Linked — auto-saving to ${handle.name}`);
   } catch(e) {
