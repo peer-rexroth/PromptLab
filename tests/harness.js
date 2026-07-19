@@ -102,13 +102,19 @@ async function run(argv) {
     querySelectorAll() { return []; },
     addEventListener() {}, removeEventListener() {}
   };
-  globalThis.window = {
-    matchMedia() { return { matches: false }; },
-    addEventListener() {}, removeEventListener() {},
-    // Mocked by tests that need a specific typed value; default 'Preset' keeps
-    // savePreset() tests working without every test having to set this.
-    prompt() { return globalThis.__promptReturn !== undefined ? globalThis.__promptReturn : 'Preset'; }
-  };
+  // A function (not a plain object literal) so each call — once at setup,
+  // then again before every test — produces a fresh window with no leftover
+  // per-test additions (e.g. a test-mocked showOpenFilePicker).
+  function makeFakeWindow() {
+    return {
+      matchMedia() { return { matches: false }; },
+      addEventListener() {}, removeEventListener() {},
+      // Mocked by tests that need a specific typed value; default 'Preset' keeps
+      // savePreset() tests working without every test having to set this.
+      prompt() { return globalThis.__promptReturn !== undefined ? globalThis.__promptReturn : 'Preset'; }
+    };
+  }
+  globalThis.window = makeFakeWindow();
   // Mocked by tests that need to simulate Cancel; default true (OK) matches
   // the common case so most tests don't have to set this.
   globalThis.confirm = function () { return globalThis.__confirmReturn !== undefined ? globalThis.__confirmReturn : true; };
@@ -198,6 +204,7 @@ async function run(argv) {
       resetState();
       elCache.clear();
       document.documentElement = makeFakeElement();
+      globalThis.window = makeFakeWindow();
       await t.fn();
       pass++;
       console.log('  ok  ' + t.name);

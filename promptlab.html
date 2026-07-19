@@ -1094,6 +1094,31 @@ let showVersionHistory = false, expandedVersionIdx = -1;
 let sidebarFiltered = [], sidebarFocusIdx = -1;
 
 // ── Persistence ───────────────────────────────────────────────────────────────
+// Schema defaults/migration for prompts, shared by every place that assigns
+// `prompts`/`categories` from an external source (load() from localStorage,
+// import in both modes, and each File System Access sync path) — so a
+// library saved by an older version of the app, or edited outside it,
+// always ends up with a complete, current-shape prompt object instead of
+// crashing later on a missing field (e.g. renderMain() assumes p.vars exists).
+function normalizePrompts() {
+  const tagMap = { Marketing:'marketing', Engineering:'engineering', Content:'content', Other:'other' };
+  prompts.forEach(p => {
+    if (p.tag && !p.catId) p.catId = tagMap[p.tag] || 'other';
+    if (!categories.find(c => c.id === p.catId)) p.catId = categories[0]?.id ?? p.catId;
+    if (p.favorite === undefined) p.favorite = false;
+    if (p.locked  === undefined) p.locked  = false;
+    if (!p.vars) p.vars = {};
+    Object.values(p.vars).forEach(v => { if (!v.type) v.type = 'option'; });
+    if (!p.presets) p.presets = [];
+    if (!p.versions) p.versions = [];
+    if (!p.lastEdited) p.lastEdited = Date.now();
+    if (p.presets.length === 0 && Object.keys(p.vars).length > 0) {
+      const clearValues = {};
+      Object.entries(p.vars).forEach(([k, v]) => { clearValues[k] = v.type === 'instruction' ? [] : ''; });
+      p.presets.unshift({ name: 'Clear', values: clearValues });
+    }
+  });
+}
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -1110,27 +1135,7 @@ function load() {
       prompts    = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
       activeId   = prompts[0]?.id ?? null;
     }
-    // migrate old tag-based prompts
-    prompts.forEach(p => {
-      if (p.tag && !p.catId) {
-        const m = {Marketing:'marketing',Engineering:'engineering',Content:'content',Other:'other'};
-        p.catId = m[p.tag] || 'other';
-      }
-      if (p.favorite === undefined) p.favorite = false;
-      if (p.locked  === undefined) p.locked  = false;
-      // migrate vars without type
-      if (p.vars) Object.values(p.vars).forEach(v => {
-        if (!v.type) v.type = 'option';
-      });
-      if (!p.presets) p.presets = [];
-      if (!p.versions) p.versions = [];
-      if (!p.lastEdited) p.lastEdited = Date.now();
-      if (p.presets.length === 0 && p.vars && Object.keys(p.vars).length > 0) {
-        const clearValues = {};
-        Object.entries(p.vars).forEach(([k, v]) => { clearValues[k] = v.type === 'instruction' ? [] : ''; });
-        p.presets.unshift({ name: 'Clear', values: clearValues });
-      }
-    });
+    normalizePrompts();
   } catch(e) {
     categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
     prompts    = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
@@ -2104,11 +2109,14 @@ function deleteCategory(id) {
 }
 
 // ── Export ────────────────────────────────────────────────────────────────────
-function exportLibrary() {
-  const blob=new Blob([JSON.stringify({version:4,exported:new Date().toISOString(),categories,prompts},null,2)],{type:'application/json'});
+function downloadLibrary(cats, proms, filename) {
+  const blob=new Blob([JSON.stringify({version:4,exported:new Date().toISOString(),categories:cats,prompts:proms},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a');
-  a.href=url; a.download=`prompt-library-${new Date().toISOString().slice(0,10)}.json`;
+  a.href=url; a.download=filename;
   a.click(); URL.revokeObjectURL(url);
+}
+function exportLibrary() {
+  downloadLibrary(categories, prompts, `prompt-library-${new Date().toISOString().slice(0,10)}.json`);
   showToast(`Exported ${prompts.length} prompt${prompts.length!==1?'s':''}`);
 }
 
@@ -2164,12 +2172,16 @@ function confirmImport() {
   const {prompts:imp,categories:impCats}=pendingImportData;
   impCats.forEach(ic=>{ if(!categories.find(c=>c.id===ic.id||c.name.toLowerCase()===ic.name.toLowerCase())) categories.push(ic); });
   if(mode==='replace') {
+    // Replace is destructive — back up what's about to be overwritten first.
+    downloadLibrary(categories, prompts, `prompt-library-backup-before-replace-${new Date().toISOString().slice(0,10)}.json`);
     prompts=imp.map(p=>({...p,id:p.id||Date.now()+Math.random(),favorite:p.favorite||false}));
+    normalizePrompts();
     const count=prompts.length; activeId=prompts[0]?.id??null;
     closeImportModal(); save(); render();
-    showToast(`Imported ${count} prompt${count!==1?'s':''}`);
+    showToast(`Backed up previous library, then imported ${count} prompt${count!==1?'s':''}`);
   } else {
     const {added,updated} = mergePrompts(imp);
+    normalizePrompts();
     const parts=[]; if(added) parts.push(`${added} added`); if(updated) parts.push(`${updated} updated`);
     closeImportModal(); save(); render();
     showToast(`Imported — ${parts.length ? parts.join(', ') : 'nothing new'}`);
@@ -2553,6 +2565,7 @@ async function linkFile() {
         });
         applyThemeFromData(data);
         const {added, updated} = mergePrompts(data.prompts);
+        normalizePrompts();
         save(); render(); updateFileSyncUI();
         const parts=[]; if(added) parts.push(`${added} added`); if(updated) parts.push(`${updated} updated`);
         showToast(`Merged from ${handle.name} — ${parts.length ? parts.join(', ') : 'nothing new'} — auto-saving enabled`);
@@ -2587,6 +2600,7 @@ async function reconnectFile() {
       prompts = data.prompts; categories = data.categories;
       if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
       if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
+      normalizePrompts();
       applyThemeFromData(data);
       render();
     }
@@ -2635,6 +2649,7 @@ async function initFileSync() {
           prompts = data.prompts; categories = data.categories;
           if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
           if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
+          normalizePrompts();
           applyThemeFromData(data);
           render();
         }

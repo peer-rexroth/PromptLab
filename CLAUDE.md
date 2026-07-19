@@ -133,7 +133,8 @@ Per-prompt undo stacks are kept in `undoStacks` (a `Map<id, { past, future }>`).
 
 | Function | Purpose |
 |---|---|
-| `load()` / `save()` | Read/write localStorage (and linked file if set); `load()` also runs data migrations |
+| `load()` / `save()` | Read/write localStorage (and linked file if set); `load()` calls `normalizePrompts()` |
+| `normalizePrompts()` | Schema defaults/migration for `prompts` — see "Data integrity" below |
 | `detectVars(template, existing)` | Parse `{{}}`, `[[]]`, `(())` placeholders from a template string |
 | `buildPreview(p)` | Build highlighted HTML preview with substituted vars |
 | `buildFinal(p)` | Build plain-text output for clipboard copy |
@@ -144,7 +145,7 @@ Per-prompt undo stacks are kept in `undoStacks` (a `Map<id, { past, future }>`).
 | `savePreset(id)` / `applyPreset(id, name)` / `deletePreset(id, name)` | Manage variable presets |
 | `undoTemplate(id)` / `redoTemplate(id)` | Walk the per-prompt undo stack |
 | `copyFinal(id)` | Copy finished prompt text to clipboard |
-| `exportLibrary()` | Download library as `.json` (version 4 format) |
+| `exportLibrary()` / `downloadLibrary(cats, proms, filename)` | Download a library as `.json` (version 4 format); `exportLibrary()` is the user-facing action, `downloadLibrary()` is the reusable primitive it and the pre-replace backup both call |
 | `confirmImport()` | Merge or replace library from a parsed import file |
 | `toggleTheme()` | Switch between light and dark mode |
 | `fileSyncWrite(data)` / `fileSyncRead()` | Write/read the linked JSON file via File System Access API |
@@ -155,4 +156,12 @@ Export produces a version-4 JSON file:
 ```json
 { "version": 4, "exported": "<ISO date>", "categories": [...], "prompts": [...] }
 ```
-Import accepts both the version-4 format and legacy formats (bare array of prompts). Merge deduplicates by `name + template` concatenation.
+Import accepts both the version-4 format and legacy formats (bare array of prompts). `mergePrompts()` (the merge-mode helper, also used by `linkFile()`'s first-link merge) dedups by prompt **name**, keeping whichever copy has the newer `lastEdited`, then merges the incoming list in the same way — not by content hash, so two unrelated prompts that happen to share a name will collide.
+
+Replacing the library via import (`confirmImport()`'s "replace" mode) is destructive, so it auto-downloads the current library as `prompt-library-backup-before-replace-<date>.json` before overwriting — the same `downloadLibrary()` primitive `exportLibrary()` uses.
+
+## Data integrity
+
+`normalizePrompts()` (promptlab.html, right before `load()`) is the single source of truth for prompt schema defaults/migration: tag→category backfill, an orphaned `catId` reassigned to the first available category, `favorite`/`locked`/`vars`/`presets`/`versions`/`lastEdited` backfilled, var `type` defaulted to `'option'`, and a `Clear` preset generated for prompts that have vars but no presets yet.
+
+Every place that assigns `prompts`/`categories` from an external source calls it, not just `load()` — **if you add another data-loading path, route it through `normalizePrompts()` too**, or you'll reintroduce the exact bug class this fixed (a library saved by an older version, or hand-edited outside the app, missing a field that a render function assumes exists — e.g. `renderMain()`'s `Object.keys(p.vars)` used to crash outright on a prompt with no `vars` field at all). The current call sites: `load()`, both branches of `confirmImport()`, `linkFile()`'s merge-on-first-link branch, `reconnectFile()`, and `initFileSync()`.
