@@ -192,13 +192,13 @@
   body { font-family: var(--font); background: var(--bg-2); color: var(--text); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; min-height: 100vh; }
 
   /* topbar */
-  .topbar { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 0 20px; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .topbar-left { display: flex; align-items: center; gap: 16px; }
-  /* Sidebar content is inset 12px from the viewport edge (.sidebar-search's
-     padding); the topbar is inset 20px (.topbar's padding). Pulling New
-     Prompt left by that 8px difference lines its left edge up with the
-     search field directly below it. */
-  .topbar-left .btn-primary { margin-left: -8px; }
+  .topbar { background: var(--bg); border-bottom: 0.5px solid var(--border); height: 52px; display: flex; align-items: center; flex-shrink: 0; }
+  /* Mirrors the sidebar/main split below: a column exactly as wide as
+     .sidebar (268px) for the brand, then a column with the same left
+     padding as .main-header (24px) for everything else — so New Prompt's
+     left edge lines up with the Prompt Name field's, not an arbitrary offset. */
+  .topbar-brand-col { width: 268px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; padding-left: 20px; }
+  .topbar-main-col { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; padding: 0 20px 0 24px; }
   .topbar-brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 400; letter-spacing: -0.01em; }
   .topbar-brand i { color: var(--blue-text); font-size: 20px; }
   .topbar-brand .brand-prompt { color: var(--text-2); font-weight: 400; }
@@ -604,43 +604,45 @@
 <body>
 
 <div class="topbar">
-  <div class="topbar-left">
-    <button class="btn btn-sm btn-primary" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New Prompt</button>
+  <div class="topbar-brand-col">
     <div class="topbar-brand">
       <i class="fa-solid fa-flask"></i>
       <span><span class="brand-prompt">Prompt</span><span class="brand-lab">Lab</span></span>
     </div>
   </div>
-  <div class="topbar-actions">
-    <div id="fileSyncIndicator" style="display:flex;align-items:center;gap:6px"></div>
-    <div class="topbar-divider"></div>
-    <div class="lib-dropdown" id="libDropdown">
-      <button class="btn btn-sm" onclick="toggleLibMenu()"><i class="fa-solid fa-database"></i> Data <i class="fa-solid fa-chevron-down" style="font-size:9px;margin-left:1px"></i></button>
-      <div class="split-btn-menu" id="libMenu" style="right:0;left:auto">
-        <div class="split-btn-menu-item" onclick="exportLibrary();closeLibMenu()">
-          <i class="fa-solid fa-download split-btn-menu-icon"></i>
-          <div><div class="split-btn-menu-label">Export</div><div class="split-btn-menu-desc">Download library as .json</div></div>
-        </div>
-        <div class="split-btn-menu-item" onclick="triggerImport();closeLibMenu()">
-          <i class="fa-solid fa-upload split-btn-menu-icon"></i>
-          <div><div class="split-btn-menu-label">Import</div><div class="split-btn-menu-desc">Merge or replace from .json file</div></div>
-        </div>
-        <div class="split-btn-menu-item" onclick="openBackupsModal();closeLibMenu()">
-          <i class="fa-solid fa-clock-rotate-left split-btn-menu-icon"></i>
-          <div><div class="split-btn-menu-label">Backups</div><div class="split-btn-menu-desc">Restore an automatic daily snapshot</div></div>
+  <div class="topbar-main-col">
+    <button class="btn btn-sm btn-primary" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New Prompt</button>
+    <div class="topbar-actions">
+      <div id="fileSyncIndicator" style="display:flex;align-items:center;gap:6px"></div>
+      <div class="topbar-divider"></div>
+      <div class="lib-dropdown" id="libDropdown">
+        <button class="btn btn-sm" onclick="toggleLibMenu()"><i class="fa-solid fa-database"></i> Data <i class="fa-solid fa-chevron-down" style="font-size:9px;margin-left:1px"></i></button>
+        <div class="split-btn-menu" id="libMenu" style="right:0;left:auto">
+          <div class="split-btn-menu-item" onclick="exportLibrary();closeLibMenu()">
+            <i class="fa-solid fa-download split-btn-menu-icon"></i>
+            <div><div class="split-btn-menu-label">Export</div><div class="split-btn-menu-desc">Download library as .json</div></div>
+          </div>
+          <div class="split-btn-menu-item" onclick="triggerImport();closeLibMenu()">
+            <i class="fa-solid fa-upload split-btn-menu-icon"></i>
+            <div><div class="split-btn-menu-label">Import</div><div class="split-btn-menu-desc">Merge or replace from .json file</div></div>
+          </div>
+          <div class="split-btn-menu-item" onclick="openBackupsModal();closeLibMenu()">
+            <i class="fa-solid fa-clock-rotate-left split-btn-menu-icon"></i>
+            <div><div class="split-btn-menu-label">Backups</div><div class="split-btn-menu-desc">Restore an automatic daily snapshot</div></div>
+          </div>
         </div>
       </div>
+      <div class="topbar-divider"></div>
+      <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
+      <div class="topbar-divider"></div>
+      <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
+      <button class="btn btn-sm" onclick="openShortcuts()" title="Keyboard shortcuts (?)"><i class="fa-solid fa-keyboard"></i></button>
+      <button class="btn btn-sm" onclick="openThemeModal()" title="Color scheme"><i class="fa-solid fa-palette"></i></button>
+      <button class="btn btn-sm" onclick="toggleTheme()" title="Toggle theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
+      <button class="btn btn-sm" onclick="openHelp()" title="Help"><i class="fa-regular fa-circle-question"></i></button>
+      <button class="btn btn-sm" onclick="openAbout()" title="About"><i class="fa-solid fa-circle-info"></i></button>
+      <input type="file" id="fileInput" accept=".json" onchange="handleFileImport(event)">
     </div>
-    <div class="topbar-divider"></div>
-    <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
-    <div class="topbar-divider"></div>
-    <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
-    <button class="btn btn-sm" onclick="openShortcuts()" title="Keyboard shortcuts (?)"><i class="fa-solid fa-keyboard"></i></button>
-    <button class="btn btn-sm" onclick="openThemeModal()" title="Color scheme"><i class="fa-solid fa-palette"></i></button>
-    <button class="btn btn-sm" onclick="toggleTheme()" title="Toggle theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
-    <button class="btn btn-sm" onclick="openHelp()" title="Help"><i class="fa-regular fa-circle-question"></i></button>
-    <button class="btn btn-sm" onclick="openAbout()" title="About"><i class="fa-solid fa-circle-info"></i></button>
-    <input type="file" id="fileInput" accept=".json" onchange="handleFileImport(event)">
   </div>
 </div>
 
