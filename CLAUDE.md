@@ -92,7 +92,7 @@ The app uses direct DOM re-renders (no virtual DOM or framework). Every state mu
 
 ### Modals
 
-Seven modals share a common `.modal-bg` pattern (add `.open` class to show, remove to hide):
+Eight modals share a common `.modal-bg` pattern (add `.open` class to show, remove to hide):
 - `modalBg` — add/edit a variable option
 - `catModalBg` — category manager
 - `importModalBg` — import confirmation
@@ -100,6 +100,7 @@ Seven modals share a common `.modal-bg` pattern (add `.open` class to show, remo
 - `aboutModalBg` — about screen
 - `shortcutsModalBg` — keyboard shortcuts reference
 - `fileSyncModalBg` — File System Access API sync setup
+- `backupsModalBg` — restore a local daily backup (see "Local backups" below)
 
 ### Drag-and-drop
 
@@ -149,6 +150,8 @@ Per-prompt undo stacks are kept in `undoStacks` (a `Map<id, { past, future }>`).
 | `confirmImport()` | Merge or replace library from a parsed import file |
 | `toggleTheme()` | Switch between light and dark mode |
 | `fileSyncWrite(data)` / `fileSyncRead()` | Write/read the linked JSON file via File System Access API |
+| `maybeSnapshotBackup()` | Take a rolling daily local backup snapshot; called from `save()` |
+| `getBackups()` / `restoreBackup(date)` | Read local backups; roll the library back to one, after confirmation |
 
 ## Import/export format
 
@@ -159,6 +162,12 @@ Export produces a version-4 JSON file:
 Import accepts both the version-4 format and legacy formats (bare array of prompts). `mergePrompts()` (the merge-mode helper, also used by `linkFile()`'s first-link merge) dedups by prompt **name**, keeping whichever copy has the newer `lastEdited`, then merges the incoming list in the same way — not by content hash, so two unrelated prompts that happen to share a name will collide.
 
 Replacing the library via import (`confirmImport()`'s "replace" mode) is destructive, so it auto-downloads the current library as `prompt-library-backup-before-replace-<date>.json` before overwriting — the same `downloadLibrary()` primitive `exportLibrary()` uses.
+
+## Local backups
+
+`save()` calls `maybeSnapshotBackup()` on every save, which takes at most one rolling snapshot per calendar day (keyed by `todayStr()`) and stores it in `localStorage["promptlab-backups"]`, keeping the last `MAX_BACKUPS` (7) days — a local safety net distinct from the linked-file sync, which mirrors live state rather than preserving history. A backup taken earlier in the day is *not* refreshed by later saves that same day — `maybeSnapshotBackup()` short-circuits once today's entry exists, so it captures state as of the first save of the day, not the latest.
+
+The "Data → Backups" modal (`openBackupsModal()`/`renderBackupsModal()`) lists snapshots newest-first with a Restore button. `restoreBackup(date)` downloads a safety backup of the *current* library first (same `downloadLibrary()` primitive as the pre-replace-import backup), then overwrites `categories`/`prompts` from the snapshot, runs them through `normalizePrompts()`, and resets `activeId` if it no longer points at a surviving prompt.
 
 ## Data integrity
 

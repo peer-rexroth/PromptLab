@@ -394,6 +394,13 @@
   .preset-chip-del:hover { background: var(--red-bg); color: var(--red-text); }
   .no-presets { font-size: 12px; color: var(--text-3); }
 
+  /* backups */
+  .backups-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+  .backups-empty { font-size: 13px; color: var(--text-2); padding: 8px 2px; line-height: 1.5; }
+  .backup-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: var(--radius); border: 0.5px solid var(--border-2); }
+  .backup-row-date { font-size: 13px; font-weight: 600; }
+  .backup-row-desc { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+
   /* split link button */
   .split-btn { display: inline-flex; position: relative; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: visible; }
   .split-btn-main { display: flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--bg-2); color: var(--text); font-size: 12px; font-family: var(--font); border: none; border-radius: var(--radius) 0 0 var(--radius); cursor: pointer; white-space: nowrap; }
@@ -446,7 +453,7 @@
     <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
     <div class="topbar-divider"></div>
     <div class="lib-dropdown" id="libDropdown">
-      <button class="btn btn-sm" onclick="toggleLibMenu()"><i class="fa-solid fa-book"></i> Library <i class="fa-solid fa-chevron-down" style="font-size:9px;margin-left:1px"></i></button>
+      <button class="btn btn-sm" onclick="toggleLibMenu()"><i class="fa-solid fa-database"></i> Data <i class="fa-solid fa-chevron-down" style="font-size:9px;margin-left:1px"></i></button>
       <div class="split-btn-menu" id="libMenu" style="right:0;left:auto">
         <div class="split-btn-menu-item" onclick="exportLibrary();closeLibMenu()">
           <i class="fa-solid fa-download split-btn-menu-icon"></i>
@@ -455,6 +462,10 @@
         <div class="split-btn-menu-item" onclick="triggerImport();closeLibMenu()">
           <i class="fa-solid fa-upload split-btn-menu-icon"></i>
           <div><div class="split-btn-menu-label">Import</div><div class="split-btn-menu-desc">Merge or replace from .json file</div></div>
+        </div>
+        <div class="split-btn-menu-item" onclick="openBackupsModal();closeLibMenu()">
+          <i class="fa-solid fa-clock-rotate-left split-btn-menu-icon"></i>
+          <div><div class="split-btn-menu-label">Backups</div><div class="split-btn-menu-desc">Restore an automatic daily snapshot</div></div>
         </div>
       </div>
     </div>
@@ -720,6 +731,15 @@
       <button class="btn" onclick="closeImportModal()">Cancel</button>
       <button class="btn btn-primary" onclick="confirmImport()">Import</button>
     </div>
+  </div>
+</div>
+
+<!-- Backups modal -->
+<div class="modal-bg" id="backupsModalBg" onclick="if(event.target===this)closeBackupsModal()">
+  <div class="modal" style="width:400px">
+    <h3>Backups</h3>
+    <div class="backups-list" id="backupsList"></div>
+    <div class="modal-actions"><button class="btn btn-primary" onclick="closeBackupsModal()">Done</button></div>
   </div>
 </div>
 
@@ -1081,6 +1101,8 @@ const DEFAULT_PROMPTS = [
 // ── State ─────────────────────────────────────────────────────────────────────
 const STORAGE_KEY = "promptlab-v4";
 const THEME_KEY = "promptlab-theme";
+const BACKUPS_KEY = "promptlab-backups";
+const MAX_BACKUPS = 7;
 let prompts = [], categories = [];
 let activeId = null, filterCatId = null, filterFavs = false;
 let currentTheme = 'light';
@@ -1146,6 +1168,31 @@ function save() {
   const data = { prompts, categories, activeId, filterCatId, filterFavs, theme: currentTheme };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   if (fileHandle) fileSyncWrite(data).catch(() => {});
+  maybeSnapshotBackup();
+}
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function fmtDate(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+function getBackups() {
+  try { return JSON.parse(localStorage.getItem(BACKUPS_KEY)) || []; }
+  catch(e) { return []; }
+}
+// Takes at most one rolling snapshot per calendar day, keeping the last
+// MAX_BACKUPS days — a local safety net distinct from the linked-file sync,
+// which mirrors live state rather than preserving history. Never lets a
+// storage error (e.g. quota) interrupt the actual save.
+function maybeSnapshotBackup() {
+  try {
+    const backups = getBackups();
+    const today = todayStr();
+    if (backups.length && backups[backups.length - 1].date === today) return;
+    backups.push({ date: today, savedAt: Date.now(), categories, prompts });
+    while (backups.length > MAX_BACKUPS) backups.shift();
+    localStorage.setItem(BACKUPS_KEY, JSON.stringify(backups));
+  } catch(e) { /* backups are a bonus, not a requirement for save() to succeed */ }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -2120,6 +2167,40 @@ function exportLibrary() {
   showToast(`Exported ${prompts.length} prompt${prompts.length!==1?'s':''}`);
 }
 
+// ── Backups ───────────────────────────────────────────────────────────────────
+function openBackupsModal() { renderBackupsModal(); document.getElementById('backupsModalBg').classList.add('open'); }
+function closeBackupsModal() { document.getElementById('backupsModalBg').classList.remove('open'); }
+function renderBackupsModal() {
+  const backups = getBackups();
+  const el = document.getElementById('backupsList');
+  if (backups.length === 0) {
+    el.innerHTML = `<div class="backups-empty">No backups yet — one is taken automatically the first time you save each day, kept for the last ${MAX_BACKUPS} days.</div>`;
+    return;
+  }
+  el.innerHTML = backups.slice().reverse().map(b => `
+    <div class="backup-row">
+      <div class="backup-row-info">
+        <div class="backup-row-date">${fmtDate(b.date)}</div>
+        <div class="backup-row-desc">${(b.prompts||[]).length} prompt${(b.prompts||[]).length===1?'':'s'}</div>
+      </div>
+      <button class="btn btn-sm" onclick="restoreBackup('${b.date}')">Restore</button>
+    </div>
+  `).join('');
+}
+function restoreBackup(date) {
+  const backups = getBackups();
+  const b = backups.find(x => x.date === date);
+  if (!b) return;
+  if (!confirm(`Restore the backup from ${fmtDate(date)}? This replaces your current library with that snapshot. Your current library will be backed up to a file first.`)) return;
+  downloadLibrary(categories, prompts, `prompt-library-backup-before-restore-${todayStr()}.json`);
+  categories = b.categories || JSON.parse(JSON.stringify(DEFAULT_CATS));
+  prompts = b.prompts || [];
+  normalizePrompts();
+  if (!prompts.find(p => p.id === activeId)) activeId = prompts[0]?.id ?? null;
+  closeBackupsModal(); save(); render();
+  showToast(`Restored backup from ${fmtDate(date)}`);
+}
+
 // ── Import ────────────────────────────────────────────────────────────────────
 function triggerImport() { document.getElementById('fileInput').value=''; document.getElementById('fileInput').click(); }
 function handleFileImport(event) {
@@ -2251,6 +2332,7 @@ document.addEventListener('keydown', e=>{
   if(document.getElementById('importModalBg').classList.contains('open'))     { if(e.key==='Escape') closeImportModal(); return; }
   if(document.getElementById('helpModalBg').classList.contains('open'))       { if(e.key==='Escape') closeHelp(); return; }
   if(document.getElementById('aboutModalBg').classList.contains('open'))      { if(e.key==='Escape') closeAbout(); return; }
+  if(document.getElementById('backupsModalBg').classList.contains('open'))    { if(e.key==='Escape') closeBackupsModal(); return; }
   // ? to show shortcuts (not when typing)
   if(e.key==='?' && !inInput && !e.metaKey && !e.ctrlKey) { openShortcuts(); return; }
   // sidebar keyboard navigation (also works when search input is focused)
