@@ -15,9 +15,16 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
+  // cache.addAll() is all-or-nothing — one failed request (a CDN hiccup, an
+  // extension blocking cdnjs, a slow connection) would reject the whole
+  // install and leave the service worker never activated, silently
+  // disabling offline support entirely. Cache each entry independently so a
+  // single failure only loses that one resource instead of all of them.
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      .then((cache) => Promise.all(APP_SHELL.map((url) =>
+        cache.add(url).catch((err) => console.warn('promptlab sw: failed to precache', url, err))
+      )))
       .then(() => self.skipWaiting())
   );
 });
