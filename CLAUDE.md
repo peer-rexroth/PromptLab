@@ -14,6 +14,8 @@ A plain `file://` open of `promptlab.html` works fine for quick checks, but PWA 
 
 `manifest.json` and `sw.js` live alongside `promptlab.html`. `icons/icon.svg` is the source artwork (reused from the app's existing favicon/apple-touch-icon design); `icons/icon-180.png`, `icon-192.png`, `icon-512.png` are rendered from it for apple-touch-icon and manifest icons respectively — regenerate them with `qlmanage -t -s <size> -o icons icons/icon.svg` if the source SVG changes. `sw.js` precaches the app shell (HTML, manifest, icons, Font Awesome CSS/fonts) on install, network-first for the page navigation and cache-first for everything else; bump `CACHE_NAME` when the shell's contents change so old caches get evicted. Registration is gated on `location.protocol !== 'file:'` near the end of the `<script>` block, matching the http-only requirement above.
 
+The install handler caches each `APP_SHELL` entry independently (`cache.add(url).catch(...)` per resource) rather than a single `cache.addAll()` — `addAll()` is all-or-nothing, so one failed request (a CDN hiccup, an ad-blocker on cdnjs) would reject the whole install and leave the service worker never activated, silently disabling offline support entirely.
+
 ## Tests
 
 There's no lint config, but there is a test suite at `tests/`: extract the inline `<script>` block, mock just enough of the DOM (`document.getElementById` returning cached fake elements with a settable `innerHTML`, plus `localStorage`, `navigator`, `window`, `confirm`, `location`) and `eval()` the real code in a headless JS engine (`osascript -l JavaScript` — JavaScriptCore, no Node install needed).
@@ -136,6 +138,8 @@ Per-prompt undo stacks are kept in `undoStacks` (a `Map<id, { past, future }>`).
 |---|---|
 | `load()` / `save()` | Read/write localStorage (and linked file if set); `load()` calls `normalizePrompts()` |
 | `normalizePrompts()` | Schema defaults/migration for `prompts` — see "Data integrity" below |
+| `tombstone(list, id)` / `untombstone(list, id)` | Record/clear a deletion marker — see "Deletion tombstones" below |
+| `mergePrompts(incoming, incomingDeleted?)` / `mergeCategories(incoming, incomingDeleted?)` | Tombstone-aware additive merge, shared by every merge-mode entry point |
 | `detectVars(template, existing)` | Parse `{{}}`, `[[]]`, `(())` placeholders from a template string |
 | `buildPreview(p)` | Build highlighted HTML preview with substituted vars |
 | `buildFinal(p)` | Build plain-text output for clipboard copy |
@@ -159,7 +163,7 @@ Export produces a version-4 JSON file:
 ```json
 { "version": 4, "exported": "<ISO date>", "categories": [...], "prompts": [...] }
 ```
-Import accepts both the version-4 format and legacy formats (bare array of prompts). `mergePrompts()` (the merge-mode helper, also used by `linkFile()`'s first-link merge) dedups by prompt **name**, keeping whichever copy has the newer `lastEdited`, then merges the incoming list in the same way — not by content hash, so two unrelated prompts that happen to share a name will collide.
+Import accepts both the version-4 format and legacy formats (bare array of prompts). `mergePrompts()` (the merge-mode helper, also used by `linkFile()`'s first-link merge, `reconnectFile()`, and `initFileSync()`) dedups by prompt **name**, keeping whichever copy has the newer `lastEdited`, then merges the incoming list in the same way — not by content hash, so two unrelated prompts that happen to share a name will collide. It's also tombstone-aware — see "Deletion tombstones" below.
 
 Replacing the library via import (`confirmImport()`'s "replace" mode) is destructive, so it auto-downloads the current library as `prompt-library-backup-before-replace-<date>.json` before overwriting — the same `downloadLibrary()` primitive `exportLibrary()` uses.
 
@@ -174,3 +178,13 @@ The "Data → Backups" modal (`openBackupsModal()`/`renderBackupsModal()`) lists
 `normalizePrompts()` (promptlab.html, right before `load()`) is the single source of truth for prompt schema defaults/migration: tag→category backfill, an orphaned `catId` reassigned to the first available category, `favorite`/`locked`/`vars`/`presets`/`versions`/`lastEdited` backfilled, var `type` defaulted to `'option'`, and a `Clear` preset generated for prompts that have vars but no presets yet.
 
 Every place that assigns `prompts`/`categories` from an external source calls it, not just `load()` — **if you add another data-loading path, route it through `normalizePrompts()` too**, or you'll reintroduce the exact bug class this fixed (a library saved by an older version, or hand-edited outside the app, missing a field that a render function assumes exists — e.g. `renderMain()`'s `Object.keys(p.vars)` used to crash outright on a prompt with no `vars` field at all). The current call sites: `load()`, both branches of `confirmImport()`, `linkFile()`'s merge-on-first-link branch, `reconnectFile()`, and `initFileSync()`.
+
+## Deletion tombstones — why mergePrompts()/mergeCategories() can't just diff arrays
+
+`deletedPromptIds`/`deletedCategoryIds` (each an array of `{id, deletedAt}`) are the record of "this id used to exist and was intentionally removed" — without them, an id absent from `prompts`/`categories` is indistinguishable from an id the app has simply never seen. `tombstone(list, id)`/`untombstone(list, id)` (small helpers near `esc`/`escJs`) add/remove an entry; `deletePrompt()` and `deleteCategory()` call `tombstone()` when removing something.
+
+`mergePrompts()`/`mergeCategories()` are additive by id (prompts also dedup by name — see "Import/export format" above): an incoming item not currently found locally gets added, *unless* its id is tombstoned locally and the tombstone's `deletedAt` is newer than the incoming item's `lastEdited` — in which case it stays deleted. If the incoming copy is newer than the tombstone (an edit made elsewhere *after* the local delete), it's let back in and the stale tombstone is cleared — same last-write-wins spirit as the rest of the merge, rather than a delete being permanent no matter what happens on another device. Both merge functions also fold any *incoming* tombstone list into the local one first (union by id, keeping the later `deletedAt`), so a deletion recorded on one device/file propagates to whichever side is doing the reading.
+
+This is what `mergePrompts()`/`mergeCategories()` protect against: without tombstones, any of the merge points below could resurrect a prompt/category the user had already deleted, simply because a stale copy was still sitting in a linked file, an older local backup, or on another device. `reconnectFile()` and `initFileSync()` used to do a raw overwrite (`prompts = data.prompts`) rather than merge at all, which had the same resurrection failure mode plus a second one — it could silently discard local edits that hadn't made it to the file yet (e.g. during a permission lapse). Both now route through `mergePrompts()`/`mergeCategories()` instead.
+
+Tombstones travel through the file-sync payload (`save()`'s `data`, and the two `fileSyncWrite()` calls in `linkFile()`/`createNewLinkedFile()`) so they propagate to a linked file — but **not** through the plain export/import `.json` format (`downloadLibrary()`/`exportLibrary()` deliberately omit them, matching the export schema staying `{version, exported, categories, prompts}`), and **not** through the local daily-backup snapshots (`maybeSnapshotBackup()`/`restoreBackup()`) — a backup restore is an explicit full replace, same as import's "replace" mode, so neither goes through the tombstone-aware merge path.

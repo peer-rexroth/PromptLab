@@ -86,7 +86,8 @@ test('reconnectFile normalizes prompts adopted from the reconnected file', async
     getFile: async () => ({ text: async () => oldSchemaJson })
   };
   await reconnectFile();
-  const p = prompts[0];
+  const p = prompts.find(x => x.name === 'From reconnect');
+  assertTrue(!!p, 'the reconnected prompt should have been merged in');
   assertEqual(p.locked, false);
   assertEqual(p.vars.tone.type, 'option');
   assertEqual(p.presets[0].name, 'Clear');

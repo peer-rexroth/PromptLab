@@ -450,8 +450,6 @@
     <span><span class="brand-prompt">Prompt</span><span class="brand-lab">Lab</span></span>
   </div>
   <div class="topbar-actions">
-    <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
-    <div class="topbar-divider"></div>
     <div id="fileSyncIndicator" style="display:flex;align-items:center;gap:6px"></div>
     <div class="topbar-divider"></div>
     <div class="lib-dropdown" id="libDropdown">
@@ -473,6 +471,8 @@
     </div>
     <div class="topbar-divider"></div>
     <button class="btn btn-sm btn-primary" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New Prompt</button>
+    <div class="topbar-divider"></div>
+    <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
     <div class="topbar-divider"></div>
     <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
     <button id="themeBtn" class="btn btn-sm" onclick="toggleTheme()" title="Switch to dark mode"><i class="fa-solid fa-moon"></i></button>
@@ -1104,6 +1104,12 @@ const THEME_KEY = "promptlab-theme";
 const BACKUPS_KEY = "promptlab-backups";
 const MAX_BACKUPS = 7;
 let prompts = [], categories = [];
+// {id, deletedAt} tombstones — records "this id used to exist and was
+// intentionally removed" so merges (linkFile/reconnectFile/initFileSync/
+// import-merge) can tell that apart from "never seen this id", instead of
+// silently resurrecting a deleted prompt/category from a stale linked file,
+// another device, or an older local backup. See mergePrompts()/mergeCategories().
+let deletedPromptIds = [], deletedCategoryIds = [];
 let activeId = null, filterCatId = null, filterFavs = false;
 let currentTheme = 'light';
 // Apply saved theme immediately to avoid flash
@@ -1123,6 +1129,10 @@ let sidebarFiltered = [], sidebarFocusIdx = -1;
 // always ends up with a complete, current-shape prompt object instead of
 // crashing later on a missing field (e.g. renderMain() assumes p.vars exists).
 function normalizePrompts() {
+  if (!Array.isArray(deletedPromptIds)) deletedPromptIds = [];
+  if (!Array.isArray(deletedCategoryIds)) deletedCategoryIds = [];
+  deletedPromptIds = deletedPromptIds.filter(x => x && x.id);
+  deletedCategoryIds = deletedCategoryIds.filter(x => x && x.id);
   const tagMap = { Marketing:'marketing', Engineering:'engineering', Content:'content', Other:'other' };
   prompts.forEach(p => {
     if (p.tag && !p.catId) p.catId = tagMap[p.tag] || 'other';
@@ -1148,6 +1158,8 @@ function load() {
       const d = JSON.parse(raw);
       categories  = d.categories  || JSON.parse(JSON.stringify(DEFAULT_CATS));
       prompts     = d.prompts     || JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
+      deletedPromptIds   = d.deletedPromptIds   || [];
+      deletedCategoryIds = d.deletedCategoryIds || [];
       activeId    = d.activeId    || (prompts[0]?.id ?? null);
       filterCatId = d.filterCatId || null;
       filterFavs  = d.filterFavs  || false;
@@ -1155,17 +1167,19 @@ function load() {
     } else {
       categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
       prompts    = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
+      deletedPromptIds = []; deletedCategoryIds = [];
       activeId   = prompts[0]?.id ?? null;
     }
     normalizePrompts();
   } catch(e) {
     categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
     prompts    = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
+    deletedPromptIds = []; deletedCategoryIds = [];
     activeId   = prompts[0]?.id ?? null;
   }
 }
 function save() {
-  const data = { prompts, categories, activeId, filterCatId, filterFavs, theme: currentTheme };
+  const data = { prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, theme: currentTheme };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   if (fileHandle) fileSyncWrite(data).catch(() => {});
   maybeSnapshotBackup();
@@ -1201,6 +1215,15 @@ function colorOf(name)    { return CAT_COLORS.find(c => c.name === name) || CAT_
 function catDot(cat)      { return colorOf(cat.color).dot; }
 function esc(s)   { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escJs(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function tombstone(list, id) {
+  const existing = list.find(x => x.id === id);
+  if (existing) existing.deletedAt = Date.now();
+  else list.push({ id, deletedAt: Date.now() });
+}
+function untombstone(list, id) {
+  const idx = list.findIndex(x => x.id === id);
+  if (idx !== -1) list.splice(idx, 1);
+}
 
 // ── Filter strip ──────────────────────────────────────────────────────────────
 function renderFilterStrip() {
@@ -1995,6 +2018,7 @@ function newPrompt() {
 function deletePrompt(id) {
   if(!confirm("Delete this prompt? This cannot be undone.")) return;
   prompts=prompts.filter(p=>p.id!==id);
+  tombstone(deletedPromptIds, id);
   activeId=prompts.length?prompts[0].id:null;
   save(); render();
 }
@@ -2151,6 +2175,7 @@ function deleteCategory(id) {
   if(prompts.some(p=>p.catId===id)) { showToast('Move or delete prompts in this category first',true); return; }
   if(!confirm(`Delete category "${cat?.name}"?`)) return;
   categories=categories.filter(c=>c.id!==id);
+  tombstone(deletedCategoryIds, id);
   if(filterCatId===id) { filterCatId=null; }
   save(); renderCatManagerBody(); showToast(`"${cat?.name}" deleted`);
 }
@@ -2220,8 +2245,37 @@ function handleFileImport(event) {
   reader.readAsText(file);
 }
 function closeImportModal() { document.getElementById('importModalBg').classList.remove('open'); pendingImportData=null; }
-// Shared merge helper: name-based dedup + last-write-wins + cleans up existing duplicates
-function mergePrompts(incoming) {
+// Shared merge helper for categories — used by every "read data from
+// outside localStorage" path (import-merge, linkFile, reconnectFile,
+// initFileSync). incomingDeleted (an external deletedCategoryIds list, only
+// present when the source is a linked-file payload — see fileSyncWrite) is
+// merged into the local tombstone list first, so a category deleted on one
+// device/file doesn't get silently re-added by a stale copy from the other.
+function mergeCategories(incoming, incomingDeleted) {
+  (incomingDeleted || []).forEach(dc => {
+    const existing = deletedCategoryIds.find(x => x.id === dc.id);
+    if (!existing) deletedCategoryIds.push({ id: dc.id, deletedAt: dc.deletedAt || Date.now() });
+    else if ((dc.deletedAt || 0) > existing.deletedAt) existing.deletedAt = dc.deletedAt;
+  });
+  (incoming || []).forEach(ic => {
+    if (categories.find(c => c.id === ic.id || c.name.toLowerCase() === ic.name.toLowerCase())) return;
+    if (deletedCategoryIds.some(x => x.id === ic.id)) return;
+    categories.push(ic);
+  });
+}
+// Shared merge helper for prompts: name-based dedup + last-write-wins +
+// cleans up existing duplicates. incomingDeleted works as in mergeCategories()
+// above — tombstones (deletedPromptIds) are what let the "not found by name"
+// branch below tell "never seen this id" apart from "saw it, user deleted
+// it", so a stale copy of a deleted prompt from a linked file, another
+// device, or an older local backup doesn't silently reappear.
+function mergePrompts(incoming, incomingDeleted) {
+  (incomingDeleted || []).forEach(dp => {
+    const existing = deletedPromptIds.find(x => x.id === dp.id);
+    if (!existing) deletedPromptIds.push({ id: dp.id, deletedAt: dp.deletedAt || Date.now() });
+    else if ((dp.deletedAt || 0) > existing.deletedAt) existing.deletedAt = dp.deletedAt;
+  });
+
   // Remove any existing duplicates (keep newest by lastEdited)
   const best = new Map();
   prompts.forEach(p => {
@@ -2237,6 +2291,9 @@ function mergePrompts(incoming) {
   incoming.forEach(fp => {
     const appP = appByName.get(fp.name);
     if (!appP) {
+      const tomb = deletedPromptIds.find(x => x.id === fp.id);
+      if (tomb && tomb.deletedAt >= (fp.lastEdited || 0)) return; // stays deleted — the incoming copy is stale
+      if (tomb) untombstone(deletedPromptIds, fp.id); // incoming edit is newer than our deletion — let it back in
       fp.id = fp.id || Date.now() + Math.random(); fp.favorite = fp.favorite || false;
       prompts.unshift(fp); added++;
     } else if ((fp.lastEdited || 0) > (appP.lastEdited || 0)) {
@@ -2251,7 +2308,7 @@ function confirmImport() {
   if(!pendingImportData) return;
   const mode=document.querySelector('input[name="importMode"]:checked').value;
   const {prompts:imp,categories:impCats}=pendingImportData;
-  impCats.forEach(ic=>{ if(!categories.find(c=>c.id===ic.id||c.name.toLowerCase()===ic.name.toLowerCase())) categories.push(ic); });
+  mergeCategories(impCats);
   if(mode==='replace') {
     // Replace is destructive — back up what's about to be overwritten first.
     downloadLibrary(categories, prompts, `prompt-library-backup-before-replace-${new Date().toISOString().slice(0,10)}.json`);
@@ -2614,7 +2671,7 @@ async function createNewLinkedFile() {
     });
     fileHandle = handle;
     try { await _fsPut(handle); } catch(_) {}
-    await fileSyncWrite({ prompts, categories, activeId, filterCatId, filterFavs });
+    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs });
     updateFileSyncUI();
     showToast(`Linked — auto-saving to ${handle.name}`);
   } catch(e) {
@@ -2641,12 +2698,9 @@ async function linkFile() {
       try { data = JSON.parse(existingText); } catch(_) {}
       if (data && data.prompts && data.categories) {
         // Valid library — merge file into current app state (last-write-wins on same name+template)
-        data.categories.forEach(ic => {
-          if (!categories.find(c => c.id === ic.id || c.name.toLowerCase() === ic.name.toLowerCase()))
-            categories.push(ic);
-        });
+        mergeCategories(data.categories, data.deletedCategoryIds);
         applyThemeFromData(data);
-        const {added, updated} = mergePrompts(data.prompts);
+        const {added, updated} = mergePrompts(data.prompts, data.deletedPromptIds);
         normalizePrompts();
         save(); render(); updateFileSyncUI();
         const parts=[]; if(added) parts.push(`${added} added`); if(updated) parts.push(`${updated} updated`);
@@ -2659,7 +2713,7 @@ async function linkFile() {
       return;
     }
     // Empty file — write current library into it
-    await fileSyncWrite({ prompts, categories, activeId, filterCatId, filterFavs });
+    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs });
     updateFileSyncUI();
     showToast(`Linked — auto-saving to ${handle.name}`);
   } catch(e) {
@@ -2679,7 +2733,12 @@ async function reconnectFile() {
     if (perm !== 'granted') { showToast('Permission denied', true); return; }
     const data = JSON.parse(await (await fileHandle.getFile()).text());
     if (data.prompts && data.categories) {
-      prompts = data.prompts; categories = data.categories;
+      // Merge rather than overwrite — a raw replace here could silently
+      // discard local edits that hadn't made it to the file yet (e.g. during
+      // a permission lapse), on top of the usual resurrection risk (see
+      // mergePrompts()/mergeCategories()).
+      mergeCategories(data.categories, data.deletedCategoryIds);
+      mergePrompts(data.prompts, data.deletedPromptIds);
       if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
       if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
       normalizePrompts();
@@ -2728,7 +2787,9 @@ async function initFileSync() {
       try {
         const data = JSON.parse(await (await handle.getFile()).text());
         if (data.prompts && data.categories) {
-          prompts = data.prompts; categories = data.categories;
+          // Merge rather than overwrite — see the same note in reconnectFile().
+          mergeCategories(data.categories, data.deletedCategoryIds);
+          mergePrompts(data.prompts, data.deletedPromptIds);
           if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
           if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
           normalizePrompts();
