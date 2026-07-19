@@ -628,9 +628,9 @@
     <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
     <div class="topbar-divider"></div>
     <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
-    <button class="btn btn-sm" onclick="openThemeModal()" title="Color scheme"><i class="fa-solid fa-palette"></i></button>
-    <button id="themeBtn" class="btn btn-sm" onclick="toggleTheme()" title="Switch to dark mode"><i class="fa-solid fa-moon"></i></button>
     <button class="btn btn-sm" onclick="openShortcuts()" title="Keyboard shortcuts (?)"><i class="fa-solid fa-keyboard"></i></button>
+    <button class="btn btn-sm" onclick="openThemeModal()" title="Color scheme"><i class="fa-solid fa-palette"></i></button>
+    <button class="btn btn-sm" onclick="toggleTheme()" title="Toggle theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
     <button class="btn btn-sm" onclick="openHelp()" title="Help"><i class="fa-regular fa-circle-question"></i></button>
     <button class="btn btn-sm" onclick="openAbout()" title="About"><i class="fa-solid fa-circle-info"></i></button>
     <input type="file" id="fileInput" accept=".json" onchange="handleFileImport(event)">
@@ -2601,7 +2601,6 @@ function applyThemeFromData(d) {
     currentTheme = d.theme;
     document.documentElement.setAttribute('data-theme', d.theme);
     localStorage.setItem(THEME_KEY, d.theme);
-    updateThemeBtn();
   }
   if (d.colorScheme && THEME_SCHEMES.some(s => s.id === d.colorScheme)) {
     colorScheme = d.colorScheme;
@@ -2609,18 +2608,11 @@ function applyThemeFromData(d) {
     localStorage.setItem(SCHEME_KEY, d.colorScheme);
   }
 }
-function updateThemeBtn() {
-  const btn = document.getElementById('themeBtn'); if (!btn) return;
-  const dark = currentTheme === 'dark';
-  btn.innerHTML = dark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-  btn.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
-}
 function toggleTheme() {
   const next = currentTheme === 'dark' ? 'light' : 'dark';
   currentTheme = next;
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem(THEME_KEY, next);
-  updateThemeBtn();
   save(); // persists to localStorage + linked file
 }
 function renderThemeModal() {
@@ -3017,7 +3009,6 @@ async function initFileSync() {
 load();
 activeId = null;
 render();
-updateThemeBtn();
 initFileSync();
 
 document.addEventListener('click', e => {
