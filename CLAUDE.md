@@ -113,6 +113,8 @@ Nine modals share a common `.modal-bg` pattern (add `.open` class to show, remov
 
 Each prompt has a `locked: Boolean` field. When locked, the template textarea and name input are `readonly`, edit-only buttons (Sync, add option, etc.) are hidden, and all mutation functions guard with `if (p.locked) return`. The bundled default prompts are locked on first load. `toggleLock(id)` flips the flag.
 
+The lock only protects the template's *structure* (its text, name, category, and var definitions/options) — a `((text))` var's typed value is still editable while locked, since filling in free-text input is normal usage of a bundled prompt, not an edit to it. `updateTextVar()` has no `p.locked` guard, and its `<input class="var-text-input">` is never rendered with `readonly`.
+
 ### Version history
 
 `snapshotVersion(id)` captures a `{ ts, template, vars }` snapshot into `p.versions[]` (capped at 20) whenever the user stops typing (debounced via `updateTemplate`). `restoreVersion(id, idx)` rolls template and vars back to a snapshot. `buildVersionList(p)` renders the collapsible version history panel with inline diffs via `renderDiff()`.

@@ -25,3 +25,28 @@ test('a default bundled prompt loads locked', function () {
   // CLAUDE.md: "The bundled default prompts are locked on first load."
   assertTrue(prompts[0].locked);
 });
+
+test('updateTextVar still works on a locked prompt', function () {
+  const p = makeUnlockedPrompt({
+    locked: true, template: 'Hello ((name)).',
+    vars: { name: { type: 'text', value: '' } }
+  });
+  updateTextVar(p.id, 'name', 'Ada');
+  assertEqual(p.vars.name.value, 'Ada');
+});
+
+test('renderMain leaves a locked prompt\'s ((text)) var input editable', function () {
+  const p = makeUnlockedPrompt({
+    locked: true, template: 'Hello ((name)).',
+    vars: { name: { type: 'text', value: '' } }
+  });
+  renderMain();
+  const html = document.getElementById('mainArea').innerHTML;
+  const inputStart = html.indexOf('var-text-input');
+  const inputTag = html.slice(inputStart, html.indexOf('>', inputStart));
+  assertNotIncludes(inputTag, 'readonly', 'text-var input should not be readonly when locked');
+  // sanity check: the template textarea is still readonly, as before.
+  const taStart = html.indexOf('id="templateArea"');
+  const taTag = html.slice(taStart, html.indexOf('>', taStart));
+  assertIncludes(taTag, 'readonly', 'template textarea should stay readonly when locked');
+});

@@ -1627,7 +1627,7 @@ function renderMain() {
       return `<div class="var-row" style="box-shadow:inset 3px 0 0 var(--amber-text)">
         <span class="var-name var-name-text" title="${esc(k)}">${esc(k)}</span>
         <input class="var-text-input" type="text" value="${esc(v.value)}" placeholder="Type text…"
-          oninput="updateTextVar(${p.id},'${escJs(k)}',this.value)"${locked?' readonly':''}>
+          oninput="updateTextVar(${p.id},'${escJs(k)}',this.value)">
         ${locked?'<div></div>':`<div style="display:flex;gap:4px;flex-shrink:0">
           <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
             <i class="fa-solid fa-xmark"></i>
