@@ -15,18 +15,19 @@ test('newPrompt defaults the category to the current category filter, when set',
 });
 
 test('deletePrompt removes the prompt after confirmation', function () {
-  const id = prompts[0].id;
+  const p = makeUnlockedPrompt();
   const before = prompts.length;
   globalThis.__confirmReturn = true;
-  deletePrompt(id);
+  deletePrompt(p.id);
   assertEqual(prompts.length, before - 1);
-  assertFalse(prompts.some(p => p.id === id));
+  assertFalse(prompts.some(x => x.id === p.id));
 });
 
 test('deletePrompt does nothing when the confirmation is declined', function () {
+  const p = makeUnlockedPrompt();
   const before = prompts.length;
   globalThis.__confirmReturn = false;
-  deletePrompt(prompts[0].id);
+  deletePrompt(p.id);
   assertEqual(prompts.length, before);
 });
 

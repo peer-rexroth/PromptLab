@@ -27,10 +27,10 @@ test('untombstone() removes the matching entry', function () {
 });
 
 test('deletePrompt records a tombstone for the deleted id', function () {
-  const id = prompts[0].id;
+  const p = makeUnlockedPrompt();
   globalThis.__confirmReturn = true;
-  deletePrompt(id);
-  assertTrue(deletedPromptIds.some(x => x.id === id));
+  deletePrompt(p.id);
+  assertTrue(deletedPromptIds.some(x => x.id === p.id));
 });
 
 test('deleteCategory records a tombstone for the deleted id', function () {
@@ -120,8 +120,9 @@ test('mergePrompts adopts a newer incoming rename of the same id, not just a new
 });
 
 test('reconnectFile does not resurrect a prompt deleted locally, even if the file still has it', function () {
-  const id = prompts[0].id;
-  const name = prompts[0].name;
+  const p = makeUnlockedPrompt();
+  const id = p.id;
+  const name = p.name;
   globalThis.__confirmReturn = true;
   deletePrompt(id); // records a tombstone with deletedAt = now
   const externalJson = JSON.stringify({

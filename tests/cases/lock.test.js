@@ -21,6 +21,16 @@ test('updateCat is a no-op on a locked prompt', function () {
   assertEqual(p.catId, categories[0].id);
 });
 
+test('deletePrompt is a no-op on a locked prompt', function () {
+  const p = makeUnlockedPrompt({ locked: true });
+  const before = prompts.length;
+  globalThis.__confirmReturn = true;
+  deletePrompt(p.id);
+  assertEqual(prompts.length, before);
+  assertTrue(prompts.some(x => x.id === p.id));
+  assertFalse(deletedPromptIds.some(x => x.id === p.id));
+});
+
 test('a default bundled prompt loads locked', function () {
   // CLAUDE.md: "The bundled default prompts are locked on first load."
   assertTrue(prompts[0].locked);
