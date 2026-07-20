@@ -1,0 +1,20 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # The suite runs via `osascript -l JavaScript` (JavaScriptCore), so it
+    # needs an actual macOS runner — there's no Linux equivalent.
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run test suite
+        run: ./tests/run.sh
