@@ -94,6 +94,31 @@ test('reconnectFile merges rather than replacing — an existing local-only prom
   });
 });
 
+test('mergePrompts updates a renamed prompt in place instead of adding a duplicate under its old name', function () {
+  // Regression: a prompt renamed locally (same id) used to get re-added as a
+  // second array entry when a stale-named copy came in via merge, leaving two
+  // prompts sharing one id (sidebar highlight is id-based, so both would light
+  // up together). Matching by id as a fallback when the name doesn't match
+  // any longer prevents that.
+  // Names are deliberately unique (no bundled default shares them) so the
+  // lookup can only succeed via the id fallback, not an incidental name match.
+  const p = makeUnlockedPrompt({ id: 6001, name: 'Sync test v2.0', template: 'current', lastEdited: 2000 });
+  const { added, updated } = mergePrompts([{ id: 6001, name: 'Sync test v1.0', template: 'stale', lastEdited: 1000 }]);
+  assertEqual(added, 0);
+  assertEqual(updated, 0); // incoming is older than the local rename, so it's ignored outright
+  assertEqual(prompts.filter(x => x.id === 6001).length, 1, 'should still be exactly one prompt with this id');
+  assertEqual(p.name, 'Sync test v2.0', 'the local rename should survive');
+});
+
+test('mergePrompts adopts a newer incoming rename of the same id, not just a newer name match', function () {
+  const p = makeUnlockedPrompt({ id: 6002, name: 'Sync test v1.0', template: 'old', lastEdited: 1000 });
+  const { added, updated } = mergePrompts([{ id: 6002, name: 'Sync test v2.0', template: 'new', lastEdited: 2000 }]);
+  assertEqual(added, 0);
+  assertEqual(updated, 1);
+  assertEqual(prompts.filter(x => x.id === 6002).length, 1);
+  assertEqual(p.name, 'Sync test v2.0');
+});
+
 test('reconnectFile does not resurrect a prompt deleted locally, even if the file still has it', function () {
   const id = prompts[0].id;
   const name = prompts[0].name;

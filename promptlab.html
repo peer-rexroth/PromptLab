@@ -1307,6 +1307,16 @@ function normalizePrompts() {
   if (!Array.isArray(deletedCategoryIds)) deletedCategoryIds = [];
   deletedPromptIds = deletedPromptIds.filter(x => x && x.id);
   deletedCategoryIds = deletedCategoryIds.filter(x => x && x.id);
+  // Collapse prompts that share an id (e.g. a pre-fix mergePrompts() adding a
+  // since-renamed prompt back in under its old name), keeping the newest by
+  // lastEdited — every id must be unique for activeId/sidebar-highlight
+  // lookups to work. Mirrors mergePrompts()'s own by-name dedup pass.
+  const bestById = new Map();
+  prompts.forEach(p => {
+    const ex = bestById.get(p.id);
+    if (!ex || (p.lastEdited || 0) >= (ex.lastEdited || 0)) bestById.set(p.id, p);
+  });
+  prompts = [...bestById.values()];
   const tagMap = { Marketing:'marketing', Engineering:'engineering', Content:'content', Other:'other' };
   prompts.forEach(p => {
     if (p.tag && !p.catId) p.catId = tagMap[p.tag] || 'other';
@@ -2463,8 +2473,13 @@ function mergePrompts(incoming, incomingDeleted) {
   // Merge incoming
   let added = 0, updated = 0;
   const appByName = new Map(prompts.map(p => [p.name, p]));
+  const appById = new Map(prompts.map(p => [p.id, p]));
   incoming.forEach(fp => {
-    const appP = appByName.get(fp.name);
+    // Match by id too, not just name — an incoming copy of a prompt that was
+    // since renamed locally (same id, old name) must update that entry, not
+    // get added as a second one sharing its id (see normalizePrompts()'s
+    // id-dedup pass, which exists to repair libraries this bug already hit).
+    const appP = appByName.get(fp.name) || appById.get(fp.id);
     if (!appP) {
       const tomb = deletedPromptIds.find(x => x.id === fp.id);
       if (tomb && tomb.deletedAt >= (fp.lastEdited || 0)) return; // stays deleted — the incoming copy is stale

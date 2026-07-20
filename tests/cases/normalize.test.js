@@ -21,6 +21,19 @@ test('normalizePrompts leaves a valid catId untouched', function () {
   assertEqual(prompts.find(p => p.id === 1).catId, catId);
 });
 
+test('normalizePrompts collapses prompts that share an id, keeping the newest by lastEdited', function () {
+  // Regression: a stale-named copy of a since-renamed prompt could get merged
+  // back in under the same id (fixed in mergePrompts(), see tombstones.test.js),
+  // and libraries that already hit that bug need to self-heal on next load —
+  // this is the repair pass, run from every normalizePrompts() call site.
+  prompts.push({ id: 6003, name: 'Old name', template: 'stale', catId: categories[0].id, vars: {}, lastEdited: 1000 });
+  prompts.push({ id: 6003, name: 'New name', template: 'current', catId: categories[0].id, vars: {}, lastEdited: 2000 });
+  normalizePrompts();
+  const matches = prompts.filter(p => p.id === 6003);
+  assertEqual(matches.length, 1);
+  assertEqual(matches[0].name, 'New name');
+});
+
 test('confirmImport replace mode normalizes the incoming prompts (missing presets/versions/locked backfilled)', function () {
   pendingImportData = {
     prompts: [{ id: 9001, name: 'Bare import', template: '{{tone}}', catId: categories[0].id, vars: { tone: { options: ['a'], selected: 'a' } } }],

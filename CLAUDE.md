@@ -178,6 +178,8 @@ Export produces a version-4 JSON file:
 ```
 Import accepts both the version-4 format and legacy formats (bare array of prompts). `mergePrompts()` (the merge-mode helper, also used by `linkFile()`'s first-link merge, `reconnectFile()`, and `initFileSync()`) dedups by prompt **name**, keeping whichever copy has the newer `lastEdited`, then merges the incoming list in the same way — not by content hash, so two unrelated prompts that happen to share a name will collide. It's also tombstone-aware — see "Deletion tombstones" below.
 
+When an incoming prompt's name doesn't match anything locally, `mergePrompts()` falls back to matching by **id** before treating it as new — otherwise a prompt renamed locally after the incoming copy was captured (an old backup, a stale linked file, another device) would get re-added as a second array entry sharing the renamed prompt's id, since its old name no longer matches anything. Two array entries with the same id break any id-keyed lookup, most visibly the sidebar's `p.id===activeId` highlight check, which then highlights both. `normalizePrompts()` also runs a same-id dedup pass (keeping the newer `lastEdited`) as a repair step, so a library that already hit this bug (prior to the fix) self-heals on next load — see "Data integrity" below.
+
 Replacing the library via import (`confirmImport()`'s "replace" mode) is destructive, so it auto-downloads the current library as `prompt-library-backup-before-replace-<date>.json` before overwriting — the same `downloadLibrary()` primitive `exportLibrary()` uses.
 
 ## Local backups
@@ -188,7 +190,7 @@ The "Data → Backups" modal (`openBackupsModal()`/`renderBackupsModal()`) lists
 
 ## Data integrity
 
-`normalizePrompts()` (promptlab.html, right before `load()`) is the single source of truth for prompt schema defaults/migration: tag→category backfill, an orphaned `catId` reassigned to the first available category, `favorite`/`locked`/`vars`/`presets`/`versions`/`lastEdited` backfilled, var `type` defaulted to `'option'`, and a `Clear` preset generated for prompts that have vars but no presets yet.
+`normalizePrompts()` (promptlab.html, right before `load()`) is the single source of truth for prompt schema defaults/migration: a same-`id` dedup pass (keeping the newer `lastEdited` — see "Import/export format" above for why duplicate ids could occur), tag→category backfill, an orphaned `catId` reassigned to the first available category, `favorite`/`locked`/`vars`/`presets`/`versions`/`lastEdited` backfilled, var `type` defaulted to `'option'`, and a `Clear` preset generated for prompts that have vars but no presets yet.
 
 Every place that assigns `prompts`/`categories` from an external source calls it, not just `load()` — **if you add another data-loading path, route it through `normalizePrompts()` too**, or you'll reintroduce the exact bug class this fixed (a library saved by an older version, or hand-edited outside the app, missing a field that a render function assumes exists — e.g. `renderMain()`'s `Object.keys(p.vars)` used to crash outright on a prompt with no `vars` field at all). The current call sites: `load()`, both branches of `confirmImport()`, `linkFile()`'s merge-on-first-link branch, `reconnectFile()`, and `initFileSync()`.
 
