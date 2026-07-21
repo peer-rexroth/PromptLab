@@ -2438,7 +2438,10 @@ function closeImportModal() { document.getElementById('importModalBg').classList
 // present when the source is a linked-file payload — see fileSyncWrite) is
 // merged into the local tombstone list first, so a category deleted on one
 // device/file doesn't get silently re-added by a stale copy from the other.
-function mergeCategories(incoming, incomingDeleted) {
+// opts.respectTombstones (default true) is set to false only by confirmImport()'s
+// merge mode — see the comment on that call for why manual import is exempt.
+function mergeCategories(incoming, incomingDeleted, opts) {
+  const respectTombstones = !opts || opts.respectTombstones !== false;
   (incomingDeleted || []).forEach(dc => {
     const existing = deletedCategoryIds.find(x => x.id === dc.id);
     if (!existing) deletedCategoryIds.push({ id: dc.id, deletedAt: dc.deletedAt || Date.now() });
@@ -2446,7 +2449,8 @@ function mergeCategories(incoming, incomingDeleted) {
   });
   (incoming || []).forEach(ic => {
     if (categories.find(c => c.id === ic.id || c.name.toLowerCase() === ic.name.toLowerCase())) return;
-    if (deletedCategoryIds.some(x => x.id === ic.id)) return;
+    if (respectTombstones && deletedCategoryIds.some(x => x.id === ic.id)) return;
+    if (!respectTombstones) untombstone(deletedCategoryIds, ic.id);
     categories.push(ic);
   });
 }
@@ -2455,8 +2459,10 @@ function mergeCategories(incoming, incomingDeleted) {
 // above — tombstones (deletedPromptIds) are what let the "not found by name"
 // branch below tell "never seen this id" apart from "saw it, user deleted
 // it", so a stale copy of a deleted prompt from a linked file, another
-// device, or an older local backup doesn't silently reappear.
-function mergePrompts(incoming, incomingDeleted) {
+// device, or an older local backup doesn't silently reappear. opts.respectTombstones
+// — see mergeCategories() above.
+function mergePrompts(incoming, incomingDeleted, opts) {
+  const respectTombstones = !opts || opts.respectTombstones !== false;
   (incomingDeleted || []).forEach(dp => {
     const existing = deletedPromptIds.find(x => x.id === dp.id);
     if (!existing) deletedPromptIds.push({ id: dp.id, deletedAt: dp.deletedAt || Date.now() });
@@ -2484,8 +2490,8 @@ function mergePrompts(incoming, incomingDeleted) {
     const appP = appByName.get(fp.name) || appById.get(fp.id);
     if (!appP) {
       const tomb = deletedPromptIds.find(x => x.id === fp.id);
-      if (tomb && tomb.deletedAt >= (fp.lastEdited || 0)) return; // stays deleted — the incoming copy is stale
-      if (tomb) untombstone(deletedPromptIds, fp.id); // incoming edit is newer than our deletion — let it back in
+      if (respectTombstones && tomb && tomb.deletedAt >= (fp.lastEdited || 0)) return; // stays deleted — the incoming copy is stale
+      if (tomb) untombstone(deletedPromptIds, fp.id); // incoming edit is newer than our deletion (or tombstones are being ignored) — let it back in
       fp.id = fp.id || Date.now() + Math.random(); fp.favorite = fp.favorite || false;
       prompts.unshift(fp); added++;
     } else if ((fp.lastEdited || 0) > (appP.lastEdited || 0)) {
@@ -2500,7 +2506,11 @@ function confirmImport() {
   if(!pendingImportData) return;
   const mode=document.querySelector('input[name="importMode"]:checked').value;
   const {prompts:imp,categories:impCats}=pendingImportData;
-  mergeCategories(impCats);
+  // A manual import is a deliberate, user-picked action — unlike an automatic
+  // file-sync merge, it should bring back a prompt/category whose id was
+  // previously deleted here rather than silently honoring that old tombstone
+  // (see mergePrompts()/mergeCategories()'s opts.respectTombstones).
+  mergeCategories(impCats, null, { respectTombstones: false });
   if(mode==='replace') {
     // Replace is destructive — back up what's about to be overwritten first.
     downloadLibrary(categories, prompts, `prompt-library-backup-before-replace-${new Date().toISOString().slice(0,10)}.json`);
@@ -2510,7 +2520,7 @@ function confirmImport() {
     closeImportModal(); save(); render();
     showToast(`Backed up previous library, then imported ${count} prompt${count!==1?'s':''}`);
   } else {
-    const {added,updated} = mergePrompts(imp);
+    const {added,updated} = mergePrompts(imp, null, { respectTombstones: false });
     normalizePrompts();
     const parts=[]; if(added) parts.push(`${added} added`); if(updated) parts.push(`${updated} updated`);
     closeImportModal(); save(); render();

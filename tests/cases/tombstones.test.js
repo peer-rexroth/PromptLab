@@ -138,3 +138,34 @@ test('reconnectFile does not resurrect a prompt deleted locally, even if the fil
     assertFalse(prompts.some(p => p.id === id), 'the deleted prompt should stay deleted');
   });
 });
+
+// { respectTombstones: false } — the opt-out confirmImport() uses (but
+// reconnectFile()/initFileSync()/linkFile() do not), since a manual import is
+// a deliberate, user-picked action rather than an automatic background sync.
+test('mergePrompts with respectTombstones:false brings back a prompt even if the incoming copy is older than the tombstone', function () {
+  deletedPromptIds.push({ id: 5003, deletedAt: 2000 });
+  const { added } = mergePrompts([{ id: 5003, name: 'Deleted then reimported', template: 'hi', lastEdited: 1000 }], null, { respectTombstones: false });
+  assertEqual(added, 1);
+  assertTrue(prompts.some(p => p.name === 'Deleted then reimported'));
+  assertFalse(deletedPromptIds.some(x => x.id === 5003), 'the tombstone should be cleared once the prompt is deliberately brought back');
+});
+
+test('mergeCategories with respectTombstones:false brings back a tombstoned category', function () {
+  deletedCategoryIds.push({ id: 'cat_gone2', deletedAt: Date.now() });
+  mergeCategories([{ id: 'cat_gone2', name: 'Gone but reimported', color: 'blue' }], null, { respectTombstones: false });
+  assertTrue(categories.some(c => c.id === 'cat_gone2'));
+  assertFalse(deletedCategoryIds.some(x => x.id === 'cat_gone2'));
+});
+
+test('confirmImport in merge mode brings back a prompt previously deleted in this browser', function () {
+  const p = makeUnlockedPrompt({ id: 5004, name: 'Old friend', lastEdited: 1000 });
+  globalThis.__confirmReturn = true;
+  deletePrompt(5004); // tombstoned with deletedAt = now, well after lastEdited: 1000
+  pendingImportData = {
+    prompts: [{ id: 5004, name: 'Old friend', template: 'restored', lastEdited: 1000 }],
+    categories: []
+  };
+  globalThis.__importMode = 'merge';
+  confirmImport();
+  assertTrue(prompts.some(p => p.id === 5004), 'a manually-imported prompt should come back even though it was deleted here before');
+});
