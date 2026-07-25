@@ -38,6 +38,22 @@ test('deletePrompt falls back to the next prompt as active, or null if none rema
   assertEqual(activeId, null);
 });
 
+test('deletePrompt offers an undo via the toast, which restores the prompt at its original position', function () {
+  const p = makeUnlockedPrompt({ name: 'Undo me' });
+  const idx = prompts.findIndex(x => x.id === p.id);
+  const before = prompts.map(x => x.id);
+  globalThis.__confirmReturn = true;
+  deletePrompt(p.id);
+  assertFalse(prompts.some(x => x.id === p.id));
+  assertTrue(typeof toastUndoAction === 'function', 'the toast should carry an undo action');
+  triggerToastUndo();
+  assertTrue(prompts.some(x => x.id === p.id), 'the prompt should be back after undo');
+  assertEqual(prompts.findIndex(x => x.id === p.id), idx, 'it should be reinserted at its original position');
+  assertDeepEqual(prompts.map(x => x.id), before, 'the full ordering should match the pre-delete state');
+  assertEqual(activeId, p.id, 'the restored prompt should become active');
+  assertFalse(deletedPromptIds.some(x => x.id === p.id), 'the tombstone should be cleared on undo');
+});
+
 test('clonePrompt duplicates the prompt with a new id and "(copy)" suffix', function () {
   const src = prompts[0];
   const before = prompts.length;

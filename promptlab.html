@@ -497,6 +497,7 @@
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; transform: translateY(80px); opacity: 0; transition: all 0.25s ease; z-index: 300; }
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.error { background: var(--red-text); }
+  .toast-undo { background: none; border: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; margin-left: 2px; }
 
   /* text variable type */
   .var-name-text { background: var(--amber-bg); color: var(--amber-text); }
@@ -912,6 +913,7 @@
 <div class="toast" id="toast">
   <i id="toastIcon" class="fa-solid fa-check"></i>
   <span id="toastMsg"></span>
+  <button class="toast-undo" id="toastUndoBtn" style="display:none" onclick="triggerToastUndo()">Undo</button>
 </div>
 
 <script>
@@ -2359,11 +2361,19 @@ function newPrompt() {
 function deletePrompt(id) {
   const target = prompts.find(p=>p.id===id);
   if (!target || target.locked) return;
-  if(!confirm("Delete this prompt? This cannot be undone.")) return;
-  prompts=prompts.filter(p=>p.id!==id);
+  if(!confirm("Delete this prompt? You can undo this from the toast right after deleting.")) return;
+  const idx = prompts.findIndex(p=>p.id===id);
+  const [removed] = prompts.splice(idx,1);
   tombstone(deletedPromptIds, id);
   activeId=prompts.length?prompts[0].id:null;
   save(); render();
+  showToast('Prompt deleted', false, ()=>{
+    untombstone(deletedPromptIds, id);
+    prompts.splice(idx,0,removed);
+    activeId = removed.id;
+    save(); render();
+    showToast('Prompt restored');
+  });
 }
 
 function clonePrompt(id) {
@@ -2774,6 +2784,11 @@ document.addEventListener('keydown', e=>{
     if(e.key==='k') { e.preventDefault(); const s=document.getElementById('searchInput'); s.focus(); s.select(); return; }
     if(e.key==='n') { e.preventDefault(); newPrompt(); return; }
     if(e.key==='Enter' && activeId) { e.preventDefault(); copyFinal(activeId); return; }
+    // Undo a delete via the toast — only outside any text input, so it never
+    // fights the template editor's own Cmd+Z (that one's scoped to
+    // #templateArea in a separate listener further down) or a browser's
+    // native text-undo inside a regular input/textarea/select.
+    if(e.key==='z' && !e.shiftKey && !inInput && toastUndoAction) { e.preventDefault(); triggerToastUndo(); return; }
   }
 });
 
@@ -2852,6 +2867,7 @@ function openShortcuts() {
     row('Undo', mod, 'Z'),
     row('Redo', mod, shift, 'Z'),
     group('General'),
+    row('Undo last delete', mod, 'Z'),
     row('Show shortcuts', '?'),
     row('Close modal', 'Esc'),
   ].join('');
@@ -2874,12 +2890,23 @@ function copyFinal(id) {
   const text=buildFinal(prompts.find(p=>p.id===id));
   navigator.clipboard.writeText(text).then(()=>showToast("Prompt copied!"));
 }
-function showToast(msg,isError=false) {
+let toastUndoAction = null, toastHideTimer = null;
+function showToast(msg,isError=false,undoAction=null) {
   const t=document.getElementById('toast');
   document.getElementById('toastMsg').textContent=msg;
   document.getElementById('toastIcon').className=isError?'fa-solid fa-triangle-exclamation':'fa-solid fa-check';
-  t.classList.toggle('error',isError); t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2400);
+  t.classList.toggle('error',isError);
+  toastUndoAction = undoAction;
+  document.getElementById('toastUndoBtn').style.display = undoAction ? 'inline' : 'none';
+  t.classList.add('show');
+  clearTimeout(toastHideTimer);
+  toastHideTimer = setTimeout(()=>{ t.classList.remove('show'); toastUndoAction = null; }, undoAction ? 6000 : 2400);
+}
+function triggerToastUndo() {
+  if (toastUndoAction) toastUndoAction();
+  toastUndoAction = null;
+  clearTimeout(toastHideTimer);
+  document.getElementById('toast').classList.remove('show');
 }
 
 // ── Build helpers ─────────────────────────────────────────────────────────────

@@ -175,6 +175,7 @@ async function run(argv) {
   sidebarFiltered = []; sidebarFocusIdx = -1;
   colorPopoverTarget = null;
   fileHandle = null;
+  toastUndoAction = null; toastHideTimer = null;
   globalThis.__importMode = undefined;
   globalThis.__promptReturn = undefined;
   globalThis.__confirmReturn = undefined;
