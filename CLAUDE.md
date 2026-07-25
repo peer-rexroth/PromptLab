@@ -117,7 +117,7 @@ The lock only protects the template's *structure* (its text, name, category, and
 
 ### Version history
 
-`snapshotVersion(id)` captures a `{ ts, template, vars }` snapshot into `p.versions[]` (capped at 20) whenever the user stops typing (debounced via `updateTemplate`). `restoreVersion(id, idx)` rolls template and vars back to a snapshot. `buildVersionList(p)` renders the collapsible version history panel with inline diffs via `renderDiff()`.
+`snapshotVersion(id)` captures a `{ template, vars, presets, savedAt }` snapshot into `p.versions[]` (capped at 3, newest first) — called from `syncVars()`, right before it reassigns `p.vars` via `detectVars()`, so `p.vars`/`p.presets` at that point are still the pre-edit values matching the pre-edit `template` text pulled from `lastSyncedTemplates`. `restoreVersion(id, idx)` rolls `template`, `vars`, and `presets` back to a snapshot (deep-cloned, so mutating the restored prompt doesn't corrupt the stored version entry) — it snapshots the current unsaved state first, same as any other edit. Version entries saved before `vars`/`presets` were captured lack those fields; `restoreVersion()` falls back to re-detecting vars from the restored template and leaves `presets` untouched in that case. `buildVersionList(p)` renders the collapsible version history panel with inline template diffs via `renderDiff()` (the diff itself is template-text-only, not vars/presets).
 
 ### Presets
 

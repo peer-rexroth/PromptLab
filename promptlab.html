@@ -2193,7 +2193,15 @@ function snapshotVersion(id) {
   // Save the previous stable (pre-edit) state, not the current one
   if (prev === undefined || prev === p.template) return;
   if (p.versions.length && p.versions[0].template === prev) return;
-  p.versions.unshift({ template: prev, savedAt: Date.now() });
+  // p.vars/p.presets still hold their pre-edit values here — syncVars() calls
+  // snapshotVersion() before reassigning p.vars via detectVars(), so this is
+  // the same "as of last Sync" moment the template snapshot represents.
+  p.versions.unshift({
+    template: prev,
+    vars: JSON.parse(JSON.stringify(p.vars)),
+    presets: JSON.parse(JSON.stringify(p.presets || [])),
+    savedAt: Date.now()
+  });
   if (p.versions.length > 3) p.versions.pop();
 }
 function restoreVersion(id, idx) {
@@ -2201,7 +2209,10 @@ function restoreVersion(id, idx) {
   const v = p.versions[idx]; if (!v) return;
   snapshotVersion(id);
   p.template = v.template;
-  p.vars = detectVars(p.template, p.vars);
+  // Older version entries (saved before vars/presets were captured) don't
+  // have these fields — fall back to re-detecting vars from the template.
+  p.vars = v.vars ? JSON.parse(JSON.stringify(v.vars)) : detectVars(p.template, p.vars);
+  if (v.presets) p.presets = JSON.parse(JSON.stringify(v.presets));
   p.lastEdited = Date.now();
   lastSyncedTemplates.set(id, v.template);
   expandedVersionIdx = -1;

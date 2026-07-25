@@ -65,3 +65,50 @@ test('clearVersionHistory empties the versions array', function () {
   clearVersionHistory(p.id);
   assertDeepEqual(p.versions, []);
 });
+
+test('snapshotVersion captures the pre-edit vars and presets alongside the template', function () {
+  const p = makeUnlockedPrompt({
+    template: 'Write a {{tone}} email.',
+    vars: { tone: { type: 'option', options: ['formal', 'casual'], selected: 'formal' } },
+    presets: [{ name: 'Clear', values: { tone: '' } }]
+  });
+  lastSyncedTemplates.set(p.id, p.template);
+  p.template = 'Write a {{tone}} email about {{topic}}.';
+  syncVars(p.id);
+  assertEqual(p.versions[0].vars.tone.selected, 'formal');
+  assertEqual(p.versions[0].presets[0].name, 'Clear');
+});
+
+test('restoreVersion restores vars and presets from a snapshot that has them, not just the template', function () {
+  const p = makeUnlockedPrompt({
+    template: 'current {{tone}}',
+    vars: { tone: { type: 'option', options: ['formal', 'casual'], selected: 'casual' } },
+    presets: [{ name: 'Clear', values: { tone: '' } }]
+  });
+  p.versions = [{
+    template: 'older {{tone}}',
+    vars: { tone: { type: 'option', options: ['formal', 'casual'], selected: 'formal' } },
+    presets: [{ name: 'Clear', values: { tone: '' } }, { name: 'Old preset', values: { tone: 'formal' } }],
+    savedAt: 1
+  }];
+  lastSyncedTemplates.set(p.id, 'current {{tone}}');
+  restoreVersion(p.id, 0);
+  assertEqual(p.template, 'older {{tone}}');
+  assertEqual(p.vars.tone.selected, 'formal', 'the selected value at snapshot time should come back, not just the template text');
+  assertEqual(p.presets.length, 2);
+  assertEqual(p.presets[1].name, 'Old preset');
+});
+
+test('restoreVersion falls back to re-detecting vars from a legacy snapshot with no stored vars/presets', function () {
+  const p = makeUnlockedPrompt({
+    template: 'current {{tone}}',
+    vars: { tone: { type: 'option', options: ['formal', 'casual'], selected: 'casual' } },
+    presets: [{ name: 'Clear', values: { tone: '' } }]
+  });
+  p.versions = [{ template: 'older {{style}}', savedAt: 1 }]; // pre-fix entry, no vars/presets fields
+  lastSyncedTemplates.set(p.id, 'current {{tone}}');
+  restoreVersion(p.id, 0);
+  assertEqual(p.template, 'older {{style}}');
+  assertTrue('style' in p.vars, 'vars should be re-detected from the restored template');
+  assertEqual(p.presets.length, 1, 'presets should be left untouched when the snapshot has none');
+});
