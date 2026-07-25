@@ -2030,7 +2030,14 @@ function select(id) {
   if (p && !lastSyncedTemplates.has(id)) lastSyncedTemplates.set(id, p.template);
   save(); render();
 }
-function updateName(id,v)  { const p=prompts.find(q=>q.id===id); if(p.locked) return; p.name=v; p.lastEdited=Date.now(); save(); renderSidebar(); }
+function updateName(id,v)  {
+  const p=prompts.find(q=>q.id===id); if(p.locked) return;
+  const trimmed = v.trim();
+  // Silently reject an exact duplicate (case-insensitive), mirroring renameCat()'s
+  // same guard for categories — see uniqueName() above for why this matters beyond looks.
+  if (trimmed && prompts.some(q => q.id !== id && q.name.toLowerCase() === trimmed.toLowerCase())) return;
+  p.name=v; p.lastEdited=Date.now(); save(); renderSidebar();
+}
 function updateCat(id,v)   { const p=prompts.find(q=>q.id===id); if(p.locked) return; p.catId=v; save(); renderSidebar(); }
 
 function toggleCatDropdown(e) {
@@ -2339,10 +2346,20 @@ function deletePreset(id, name) {
   save(); renderMain();
 }
 
+// Appends " 2", " 3", ... until the name doesn't collide with any existing
+// prompt (case-insensitive) — mergePrompts()/mergeCategories() dedup by
+// name, so two locally-created same-named prompts risk one silently
+// overwriting or dropping the other on a future merge.
+function uniqueName(base) {
+  if (!prompts.some(p => p.name.toLowerCase() === base.toLowerCase())) return base;
+  let n = 2;
+  while (prompts.some(p => p.name.toLowerCase() === `${base} ${n}`.toLowerCase())) n++;
+  return `${base} ${n}`;
+}
 function newPrompt() {
   const id = Date.now();
   const defaultCat = (filterCatId && categories.find(c=>c.id===filterCatId)) ? filterCatId : (categories[0]?.id||'other');
-  prompts.unshift({ id, name:"New Prompt", catId:defaultCat, favorite: filterFavs,
+  prompts.unshift({ id, name:uniqueName("New Prompt"), catId:defaultCat, favorite: filterFavs,
     template:"Write a {{style}} text about {{topic}}.",
     vars:{ style:{options:["short","detailed","creative"],selected:"short"}, topic:{options:["my topic"],selected:"my topic"} },
     presets: [{ name: 'Clear', values: { style: '', topic: '' } }],
@@ -2375,7 +2392,7 @@ function clonePrompt(id) {
   if (!src) return;
   const clone = JSON.parse(JSON.stringify(src));
   clone.id = Date.now();
-  clone.name = src.name + ' (copy)';
+  clone.name = uniqueName(src.name + ' (copy)');
   clone.favorite = false;
   prompts.unshift(clone);
   activeId = clone.id;
@@ -2520,11 +2537,20 @@ function addCategory() {
 function deleteCategory(id) {
   const cat=categories.find(c=>c.id===id);
   if(prompts.some(p=>p.catId===id)) { showToast('Move or delete prompts in this category first',true); return; }
-  if(!confirm(`Delete category "${cat?.name}"?`)) return;
-  categories=categories.filter(c=>c.id!==id);
+  if(!confirm(`Delete category "${cat?.name}"? You can undo this from the toast right after deleting.`)) return;
+  const idx = categories.findIndex(c=>c.id===id);
+  const [removed] = categories.splice(idx,1);
   tombstone(deletedCategoryIds, id);
-  if(filterCatId===id) { filterCatId=null; }
-  save(); renderCatManagerBody(); showToast(`"${cat?.name}" deleted`);
+  const hadFilter = filterCatId===id;
+  if (hadFilter) { filterCatId=null; }
+  save(); renderCatManagerBody();
+  showToast(`"${cat?.name}" deleted`, false, ()=>{
+    untombstone(deletedCategoryIds, id);
+    categories.splice(idx,0,removed);
+    if (hadFilter) filterCatId = removed.id;
+    save(); renderCatManagerBody();
+    showToast(`"${removed.name}" restored`);
+  });
 }
 
 // ── Export ────────────────────────────────────────────────────────────────────

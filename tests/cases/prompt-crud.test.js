@@ -14,6 +14,31 @@ test('newPrompt defaults the category to the current category filter, when set',
   assertEqual(prompts[0].catId, categories[1].id);
 });
 
+test('newPrompt disambiguates the default name so repeated clicks don\'t collide', function () {
+  newPrompt();
+  assertEqual(prompts[0].name, 'New Prompt');
+  newPrompt();
+  assertEqual(prompts[0].name, 'New Prompt 2');
+  newPrompt();
+  assertEqual(prompts[0].name, 'New Prompt 3');
+});
+
+test('uniqueName is case-insensitive and fills the first free numeric suffix', function () {
+  makeUnlockedPrompt({ id: 7101, name: 'Draft' });
+  makeUnlockedPrompt({ id: 7102, name: 'draft 2' }); // different case, still counts as taken
+  assertEqual(uniqueName('Draft'), 'Draft 3');
+  assertEqual(uniqueName('Something else'), 'Something else');
+});
+
+test('updateName rejects an exact duplicate (case-insensitive) of another prompt, leaving the name unchanged', function () {
+  const a = makeUnlockedPrompt({ id: 7201, name: 'Alpha' });
+  const b = makeUnlockedPrompt({ id: 7202, name: 'Beta' });
+  updateName(b.id, 'ALPHA');
+  assertEqual(b.name, 'Beta', 'the rename should have been silently rejected');
+  updateName(b.id, 'Gamma');
+  assertEqual(b.name, 'Gamma', 'a non-colliding rename should still go through');
+});
+
 test('deletePrompt removes the prompt after confirmation', function () {
   const p = makeUnlockedPrompt();
   const before = prompts.length;
@@ -63,6 +88,14 @@ test('clonePrompt duplicates the prompt with a new id and "(copy)" suffix', func
   assertTrue(clone.id !== src.id);
   assertEqual(clone.name, src.name + ' (copy)');
   assertEqual(activeId, clone.id);
+});
+
+test('clonePrompt disambiguates the suffix when cloning the same prompt twice', function () {
+  const src = makeUnlockedPrompt({ id: 7301, name: 'Twice cloned' });
+  clonePrompt(src.id);
+  clonePrompt(src.id);
+  assertEqual(prompts[0].name, 'Twice cloned (copy) 2');
+  assertTrue(prompts.some(p => p.name === 'Twice cloned (copy)'), 'the first clone should keep its plain suffix');
 });
 
 test('clonePrompt resets favorite on the clone even if the source was favorited', function () {

@@ -54,3 +54,19 @@ test('deleting the currently active filter category clears the filter', function
   deleteCategory('cat_unused3');
   assertEqual(filterCatId, null);
 });
+
+test('deleteCategory offers an undo via the toast, which restores the category at its original position and re-applies the filter', function () {
+  categories.push({ id: 'cat_unused4', name: 'Unused4', color: 'blue' });
+  const idx = categories.findIndex(c => c.id === 'cat_unused4');
+  filterCatId = 'cat_unused4';
+  globalThis.__confirmReturn = true;
+  deleteCategory('cat_unused4');
+  assertFalse(categories.some(c => c.id === 'cat_unused4'));
+  assertEqual(filterCatId, null);
+  assertTrue(typeof toastUndoAction === 'function');
+  triggerToastUndo();
+  assertTrue(categories.some(c => c.id === 'cat_unused4'), 'the category should be back after undo');
+  assertEqual(categories.findIndex(c => c.id === 'cat_unused4'), idx, 'it should be reinserted at its original position');
+  assertEqual(filterCatId, 'cat_unused4', 'the filter that was cleared by the delete should be re-applied');
+  assertFalse(deletedCategoryIds.some(x => x.id === 'cat_unused4'), 'the tombstone should be cleared on undo');
+});
