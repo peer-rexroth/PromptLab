@@ -176,6 +176,7 @@ async function run(argv) {
   colorPopoverTarget = null;
   fileHandle = null;
   toastUndoAction = null; toastHideTimer = null;
+  renamingPreset = null;
   globalThis.__importMode = undefined;
   globalThis.__promptReturn = undefined;
   globalThis.__confirmReturn = undefined;

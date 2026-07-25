@@ -77,46 +77,60 @@ test('presetMatchesCurrent(named preset) compares stored values against live var
   assertTrue(presetMatchesCurrent(p, preset, false));
 });
 
-test('renamePreset renames a preset to the prompted value', function () {
+test('startRenamePreset marks the chip as renaming, but refuses the built-in Clear preset', function () {
   const p = presetTestPrompt();
   p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
-  globalThis.__promptReturn = 'Sales pitch';
-  renamePreset(p.id, 'Temp');
+  startRenamePreset(p.id, 'Temp');
+  assertDeepEqual(renamingPreset, { promptId: p.id, name: 'Temp' });
+  startRenamePreset(p.id, 'Clear');
+  assertDeepEqual(renamingPreset, { promptId: p.id, name: 'Temp' }, 'Clear should not become renamable');
+});
+
+test('commitRenamePreset renames the preset to the given value (double-click + inline edit, not a dialog)', function () {
+  const p = presetTestPrompt();
+  p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
+  startRenamePreset(p.id, 'Temp');
+  commitRenamePreset(p.id, 'Temp', 'Sales pitch');
   assertFalse(p.presets.some(x => x.name === 'Temp'));
   assertTrue(p.presets.some(x => x.name === 'Sales pitch'));
+  assertEqual(renamingPreset, null, 'renaming state should be cleared after commit');
 });
 
-test('renamePreset does nothing when the rename prompt is cancelled', function () {
+test('commitRenamePreset does nothing for a blank or unchanged value', function () {
   const p = presetTestPrompt();
   p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
-  globalThis.__promptReturn = null; // simulates Cancel
-  renamePreset(p.id, 'Temp');
-  assertTrue(p.presets.some(x => x.name === 'Temp'), 'name should be unchanged');
-});
-
-test('renamePreset does nothing for a blank or unchanged name', function () {
-  const p = presetTestPrompt();
-  p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
-  globalThis.__promptReturn = '   ';
-  renamePreset(p.id, 'Temp');
+  startRenamePreset(p.id, 'Temp');
+  commitRenamePreset(p.id, 'Temp', '   ');
   assertTrue(p.presets.some(x => x.name === 'Temp'));
-  globalThis.__promptReturn = 'Temp';
-  renamePreset(p.id, 'Temp');
+  startRenamePreset(p.id, 'Temp');
+  commitRenamePreset(p.id, 'Temp', 'Temp');
   assertTrue(p.presets.some(x => x.name === 'Temp'));
 });
 
-test('renamePreset rejects a name that collides with another preset, case-insensitively', function () {
+test('commitRenamePreset rejects a value that collides with another preset, case-insensitively', function () {
   const p = presetTestPrompt();
   p.presets.push({ name: 'Sales pitch', values: { tone: 'casual', topic: 'sales' } });
   p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
-  globalThis.__promptReturn = 'SALES PITCH';
-  renamePreset(p.id, 'Temp');
+  startRenamePreset(p.id, 'Temp');
+  commitRenamePreset(p.id, 'Temp', 'SALES PITCH');
   assertTrue(p.presets.some(x => x.name === 'Temp'), 'the rename should have been rejected');
 });
 
-test('renamePreset refuses to rename the built-in Clear preset', function () {
+test('cancelRenamePreset clears the renaming state without touching the preset', function () {
   const p = presetTestPrompt();
-  globalThis.__promptReturn = 'Not Clear';
-  renamePreset(p.id, 'Clear');
-  assertTrue(p.presets.some(x => x.name === 'Clear'), 'Clear should be unrenameable');
+  p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
+  startRenamePreset(p.id, 'Temp');
+  cancelRenamePreset();
+  assertEqual(renamingPreset, null);
+  assertTrue(p.presets.some(x => x.name === 'Temp'));
+});
+
+test('commitRenamePreset is a no-op once cancelRenamePreset already cleared the state (Escape-then-blur race)', function () {
+  const p = presetTestPrompt();
+  p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
+  startRenamePreset(p.id, 'Temp');
+  cancelRenamePreset(); // simulates Escape firing before the input's blur event
+  commitRenamePreset(p.id, 'Temp', 'Sales pitch'); // the blur handler still fires afterward
+  assertTrue(p.presets.some(x => x.name === 'Temp'), 'the stale commit should not have applied');
+  assertFalse(p.presets.some(x => x.name === 'Sales pitch'));
 });

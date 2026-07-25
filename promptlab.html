@@ -527,13 +527,16 @@
   .preset-chip-active { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); font-weight: 500; }
   .preset-chip-fixed { padding: 3px 10px; }
   .preset-chip-name { cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-  .preset-chip-del, .preset-chip-rename {
+  .preset-chip-name-input {
+    flex: 1; min-width: 40px; font: inherit; color: inherit;
+    background: transparent; border: none; outline: none; padding: 0;
+  }
+  .preset-chip-del {
     flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px; border-radius: 50%; margin-left: 4px;
     background: transparent; border: none; cursor: pointer;
     color: var(--text-3); font-size: 11px; padding: 0; line-height: 1;
   }
-  .preset-chip-rename:hover { background: var(--bg-3); color: var(--text); }
   .preset-chip-del:hover { background: var(--red-bg); color: var(--red-text); }
   .no-presets { font-size: 12px; color: var(--text-3); }
 
@@ -1424,6 +1427,7 @@ let colorScheme = 'standard';
 (function(){ const t=localStorage.getItem(THEME_KEY); if(t){currentTheme=t;document.documentElement.setAttribute('data-theme',t);} })();
 (function(){ const s=localStorage.getItem(SCHEME_KEY); if(s && THEME_SCHEMES.some(x=>x.id===s)){colorScheme=s;} document.documentElement.setAttribute('data-scheme', colorScheme); })();
 let modalTarget = null, pendingImportData = null, newCatColor = 'blue';
+let renamingPreset = null; // { promptId, name } — which preset chip (if any) shows its rename input
 const undoStacks = new Map(); // promptId → { past: string[], future: string[] }
 const lastSyncedTemplates = new Map(); // promptId → template string at last Sync
 let undoDebounce = null, undoSessionStart = null, undoSessionId = null;
@@ -1730,12 +1734,18 @@ function renderMain() {
     return `<div class="preset-chips">${p.presets.map((pr, idx) => {
       const fixed = idx === 0 && pr.name === 'Clear';
       const active = presetMatchesCurrent(p, pr, fixed);
+      const renaming = !fixed && renamingPreset && renamingPreset.promptId === p.id && renamingPreset.name === pr.name;
+      const nameHtml = renaming
+        ? `<input class="preset-chip-name-input" id="presetRenameInput" value="${esc(pr.name)}"
+             onclick="event.stopPropagation()"
+             onblur="commitRenamePreset(${p.id},'${escJs(pr.name)}',this.value)"
+             onkeydown="event.stopPropagation(); if(event.key==='Enter'){ this.blur(); } else if(event.key==='Escape'){ event.preventDefault(); cancelRenamePreset(); } else if(event.key==='Tab'){ event.preventDefault(); this.blur(); }">`
+        : `<span class="preset-chip-name" onclick="applyPreset(${p.id},'${escJs(pr.name)}')"${fixed ? '' : ` ondblclick="event.stopPropagation();startRenamePreset(${p.id},'${escJs(pr.name)}')"`}>${esc(pr.name)}</span>`;
       return `<span class="preset-chip${fixed ? ' preset-chip-fixed' : ' preset-chip-draggable'}${active ? ' preset-chip-active' : ''}"
         ${fixed ? '' : 'draggable="true"'}
         data-presetname="${escJs(pr.name)}" data-promptid="${p.id}" data-fixed="${fixed}"
         title="${esc(pr.name)}">
-        <span class="preset-chip-name" onclick="applyPreset(${p.id},'${escJs(pr.name)}')">${esc(pr.name)}</span>
-        ${fixed ? '' : `<button class="preset-chip-rename" onclick="event.stopPropagation();renamePreset(${p.id},'${escJs(pr.name)}')" title="Rename preset"><i class="fa-solid fa-pen"></i></button>`}
+        ${nameHtml}
         ${fixed ? '' : `<button class="preset-chip-del" onclick="event.stopPropagation();deletePreset(${p.id},'${escJs(pr.name)}')" title="Delete preset"><i class="fa-solid fa-xmark"></i></button>`}
       </span>`;
     }).join('')}</div>`;
@@ -2347,22 +2357,42 @@ function deletePreset(id, name) {
   p.presets = (p.presets || []).filter(x => x.name !== name);
   save(); renderMain();
 }
-function renamePreset(id, name) {
+// Double-click a preset chip's name to rename it — mirrors mytasks' inline
+// rename pattern (a span swapped for an <input> in place, committed on
+// blur/Enter, cancelled on Escape) rather than a window.prompt() dialog.
+function startRenamePreset(id, name) {
   const p = prompts.find(x => x.id === id);
   const preset = p?.presets?.find(x => x.name === name);
   if (!preset) return;
   if (p.presets[0] === preset && name === 'Clear') return; // the built-in Clear preset can't be renamed
-  const input = window.prompt('Rename preset:', name);
-  if (input === null) return; // cancelled
-  const trimmed = input.trim();
-  if (!trimmed || trimmed === name) return;
+  renamingPreset = { promptId: id, name };
+  renderMain();
+  const input = document.getElementById('presetRenameInput');
+  if (input) { input.focus(); input.select(); }
+}
+function commitRenamePreset(id, oldName, value) {
+  // Escape's cancelRenamePreset() clears renamingPreset and re-renders
+  // (swapping the input back out) before this blur-triggered call runs —
+  // this guard is what makes that a no-op instead of a second commit.
+  if (!renamingPreset || renamingPreset.promptId !== id || renamingPreset.name !== oldName) return;
+  renamingPreset = null;
+  const p = prompts.find(x => x.id === id);
+  const preset = p?.presets?.find(x => x.name === oldName);
+  if (!preset) { renderMain(); return; }
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === oldName) { renderMain(); return; }
   if (p.presets.some(x => x !== preset && x.name.toLowerCase() === trimmed.toLowerCase())) {
     showToast('A preset with that name already exists', true);
+    renderMain();
     return;
   }
   preset.name = trimmed;
   save(); renderMain();
   showToast(`Renamed to "${trimmed}"`);
+}
+function cancelRenamePreset() {
+  renamingPreset = null;
+  renderMain();
 }
 
 // Appends " 2", " 3", ... until the name doesn't collide with any existing
