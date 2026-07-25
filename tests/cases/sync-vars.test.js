@@ -40,3 +40,17 @@ test('syncVars updates lastEdited', function () {
   syncVars(p.id);
   assertTrue(p.lastEdited > 1);
 });
+
+test('syncVars shows a plain "Synced" toast when no variables were added', function () {
+  const p = makeUnlockedPrompt();
+  p.template = 'Write a {{tone}} email, just reworded a bit.'; // same var, no additions
+  syncVars(p.id);
+  assertEqual(document.getElementById('toastMsg').textContent, 'Synced');
+});
+
+test('syncVars reports the count of newly detected variables in the toast', function () {
+  const p = makeUnlockedPrompt();
+  p.template = 'Write a {{tone}} email about {{topic}} for {{audience}}.';
+  syncVars(p.id);
+  assertEqual(document.getElementById('toastMsg').textContent, 'Synced — 2 new variables detected');
+});

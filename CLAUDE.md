@@ -81,7 +81,7 @@ Templates support three placeholder syntaxes detected by `detectVars()`:
 - `((name))` — free-text variable; substituted with the typed value
 - Prefix with `\` to escape a placeholder (e.g. `\{{name}}`) — it renders as literal text in the copy output
 
-`syncVars(id)` re-runs `detectVars()` after template edits, preserving existing var configurations while adding newly detected ones and dropping removed ones.
+`syncVars(id)` re-runs `detectVars()` after template edits, preserving existing var configurations while adding newly detected ones and dropping removed ones. It always shows a toast (`"Synced"`, or `"Synced — N new variables detected"`) even though a plain text edit that touches no placeholder has no other visible effect — without it, Sync looks like a no-op for exactly that (very common) kind of edit.
 
 ### Rendering pattern
 

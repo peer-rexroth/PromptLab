@@ -2089,10 +2089,17 @@ function updateTemplate(id, v) {
 function syncVars(id) {
   snapshotVersion(id);
   const p = prompts.find(x => x.id === id);
+  const beforeKeys = new Set(Object.keys(p.vars));
   p.vars = detectVars(p.template, p.vars);
+  const addedCount = Object.keys(p.vars).filter(k => !beforeKeys.has(k)).length;
   p.lastEdited = Date.now();
   lastSyncedTemplates.set(id, p.template);
   save(); renderMain();
+  // Sync's only visible effect is often invisible (a plain text edit with no
+  // {{ }}/[[ ]]/(( )) changes touches no variable), so it needs its own
+  // confirmation like every other mutating action — without one, a no-op-
+  // looking Sync reads as "didn't work" even though the edit did save.
+  showToast(addedCount ? `Synced — ${addedCount} new variable${addedCount!==1?'s':''} detected` : 'Synced');
 }
 function selectOpt(id,k,v) { prompts.find(p=>p.id===id).vars[k].selected=v; save(); renderMain(); }
 function deleteVar(id,k)   { const p=prompts.find(q=>q.id===id); delete p.vars[k]; p.lastEdited=Date.now(); save(); renderMain(); }
