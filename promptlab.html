@@ -335,7 +335,12 @@
   .option-pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--bg-2); border: 0.5px solid var(--border); cursor: pointer; color: var(--text-2); transition: all 0.1s; }
   .option-pill.selected { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); font-weight: 500; }
   .option-pill:hover:not(.selected) { border-color: var(--border-2); color: var(--text); }
-  .option-pill.selected:hover::after { content: ' ✎'; font-size: 11px; opacity: 0.6; }
+  /* [draggable="true"] is only present on a pill when the prompt is unlocked
+     (see the pill's render markup) — reusing it here, rather than adding a
+     dedicated class, keeps this hover hint from implying double-click-to-edit
+     works on a locked prompt, where the dblclick handler is correctly omitted
+     but this CSS rule previously wasn't scoped to match. */
+  .option-pill.selected[draggable="true"]:hover::after { content: ' ✎'; font-size: 11px; opacity: 0.6; }
   .option-pill.pill-dragging { opacity: 0.35; }
   .option-pill.pill-drag-left  { box-shadow: -3px 0 0 var(--blue-border); }
   .option-pill.pill-drag-right { box-shadow:  3px 0 0 var(--blue-border); }
