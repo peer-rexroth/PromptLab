@@ -121,7 +121,7 @@ The lock only protects the template's *structure* (its text, name, category, and
 
 ### Presets
 
-Each prompt stores named snapshots of its current variable selections in `p.presets[]`. A built-in "Clear" preset (index 0) is always present when vars exist. `savePreset`, `applyPreset`, and `deletePreset` manage the list. Presets are shown as chips in the variables panel.
+Each prompt stores named snapshots of its current variable selections in `p.presets[]`. A built-in "Clear" preset (index 0) is always present when vars exist and can't be renamed, deleted, or reordered — `initPillDragDrop()`'s preset-chip drag handlers and the chip markup both gate on `fixed = idx === 0 && pr.name === 'Clear'`, only marking non-fixed chips `draggable` and only rendering the rename/delete buttons on them. `savePreset`, `applyPreset`, `deletePreset`, and `renamePreset` manage the list; reordering is drag-and-drop only (no dedicated function — the chip's `drop` handler in `initPillDragDrop()` splices `p.presets` directly, same pattern as option-pill and category-row reordering). `renamePreset` uses `window.prompt()` like `savePreset` does for consistency, and silently rejects a case-insensitive collision with another preset's name (`showToast`s instead, unlike `updateName`'s fully silent rejection, since a preset rename is a deliberate one-shot action via a dialog rather than live-as-you-type). Presets are shown as chips in the variables panel.
 
 ### Undo / redo
 

@@ -76,3 +76,47 @@ test('presetMatchesCurrent(named preset) compares stored values against live var
   p.vars.topic.selected = 'support';
   assertTrue(presetMatchesCurrent(p, preset, false));
 });
+
+test('renamePreset renames a preset to the prompted value', function () {
+  const p = presetTestPrompt();
+  p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
+  globalThis.__promptReturn = 'Sales pitch';
+  renamePreset(p.id, 'Temp');
+  assertFalse(p.presets.some(x => x.name === 'Temp'));
+  assertTrue(p.presets.some(x => x.name === 'Sales pitch'));
+});
+
+test('renamePreset does nothing when the rename prompt is cancelled', function () {
+  const p = presetTestPrompt();
+  p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
+  globalThis.__promptReturn = null; // simulates Cancel
+  renamePreset(p.id, 'Temp');
+  assertTrue(p.presets.some(x => x.name === 'Temp'), 'name should be unchanged');
+});
+
+test('renamePreset does nothing for a blank or unchanged name', function () {
+  const p = presetTestPrompt();
+  p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
+  globalThis.__promptReturn = '   ';
+  renamePreset(p.id, 'Temp');
+  assertTrue(p.presets.some(x => x.name === 'Temp'));
+  globalThis.__promptReturn = 'Temp';
+  renamePreset(p.id, 'Temp');
+  assertTrue(p.presets.some(x => x.name === 'Temp'));
+});
+
+test('renamePreset rejects a name that collides with another preset, case-insensitively', function () {
+  const p = presetTestPrompt();
+  p.presets.push({ name: 'Sales pitch', values: { tone: 'casual', topic: 'sales' } });
+  p.presets.push({ name: 'Temp', values: { tone: 'formal', topic: 'sales' } });
+  globalThis.__promptReturn = 'SALES PITCH';
+  renamePreset(p.id, 'Temp');
+  assertTrue(p.presets.some(x => x.name === 'Temp'), 'the rename should have been rejected');
+});
+
+test('renamePreset refuses to rename the built-in Clear preset', function () {
+  const p = presetTestPrompt();
+  globalThis.__promptReturn = 'Not Clear';
+  renamePreset(p.id, 'Clear');
+  assertTrue(p.presets.some(x => x.name === 'Clear'), 'Clear should be unrenameable');
+});
