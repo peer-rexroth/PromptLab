@@ -1733,20 +1733,24 @@ function renderMain() {
       return `<div class="no-presets">No presets yet — save the current values to reuse them later.</div>`;
     return `<div class="preset-chips">${p.presets.map((pr, idx) => {
       const fixed = idx === 0 && pr.name === 'Clear';
+      // Locked prompts get no preset mutation at all (rename/delete/reorder),
+      // same as option pills losing their edit affordances when locked —
+      // presets are part of the template's structure, not just its usage.
+      const editable = !fixed && !locked;
       const active = presetMatchesCurrent(p, pr, fixed);
-      const renaming = !fixed && renamingPreset && renamingPreset.promptId === p.id && renamingPreset.name === pr.name;
+      const renaming = editable && renamingPreset && renamingPreset.promptId === p.id && renamingPreset.name === pr.name;
       const nameHtml = renaming
         ? `<input class="preset-chip-name-input" id="presetRenameInput" value="${esc(pr.name)}"
              onclick="event.stopPropagation()"
              onblur="commitRenamePreset(${p.id},'${escJs(pr.name)}',this.value)"
              onkeydown="event.stopPropagation(); if(event.key==='Enter'){ this.blur(); } else if(event.key==='Escape'){ event.preventDefault(); cancelRenamePreset(); } else if(event.key==='Tab'){ event.preventDefault(); this.blur(); }">`
-        : `<span class="preset-chip-name" onclick="applyPreset(${p.id},'${escJs(pr.name)}')"${fixed ? '' : ` ondblclick="event.stopPropagation();startRenamePreset(${p.id},'${escJs(pr.name)}')"`}>${esc(pr.name)}</span>`;
-      return `<span class="preset-chip${fixed ? ' preset-chip-fixed' : ' preset-chip-draggable'}${active ? ' preset-chip-active' : ''}"
-        ${fixed ? '' : 'draggable="true"'}
+        : `<span class="preset-chip-name" onclick="applyPreset(${p.id},'${escJs(pr.name)}')"${editable ? ` ondblclick="event.stopPropagation();startRenamePreset(${p.id},'${escJs(pr.name)}')"` : ''}>${esc(pr.name)}</span>`;
+      return `<span class="preset-chip${editable ? ' preset-chip-draggable' : ' preset-chip-fixed'}${active ? ' preset-chip-active' : ''}"
+        ${editable ? 'draggable="true"' : ''}
         data-presetname="${escJs(pr.name)}" data-promptid="${p.id}" data-fixed="${fixed}"
         title="${esc(pr.name)}">
         ${nameHtml}
-        ${fixed ? '' : `<button class="preset-chip-del" onclick="event.stopPropagation();deletePreset(${p.id},'${escJs(pr.name)}')" title="Delete preset"><i class="fa-solid fa-xmark"></i></button>`}
+        ${editable ? `<button class="preset-chip-del" onclick="event.stopPropagation();deletePreset(${p.id},'${escJs(pr.name)}')" title="Delete preset"><i class="fa-solid fa-xmark"></i></button>` : ''}
       </span>`;
     }).join('')}</div>`;
   })();
@@ -1888,9 +1892,9 @@ function renderMain() {
           <div class="presets-section">
             <div class="presets-header">
               <span class="presets-label">Presets</span>
-              <button class="btn btn-sm" onclick="savePreset(${p.id})"${!hasVars?' disabled style="opacity:0.4;cursor:not-allowed"':''}>
+              ${locked ? '' : `<button class="btn btn-sm" onclick="savePreset(${p.id})"${!hasVars?' disabled style="opacity:0.4;cursor:not-allowed"':''}>
                 <i class="fa-regular fa-bookmark"></i> Save preset
-              </button>
+              </button>`}
             </div>
             ${presetsHtml}
           </div>
@@ -2281,7 +2285,7 @@ function buildVersionList(p) {
 
 function savePreset(id) {
   const p = prompts.find(x => x.id === id);
-  if (!Object.keys(p.vars).length) return;
+  if (p.locked || !Object.keys(p.vars).length) return;
   const name = window.prompt('Name this preset:');
   if (!name || !name.trim()) return;
   const trimmed = name.trim();
@@ -2354,6 +2358,7 @@ function applyPreset(id, name) {
 }
 function deletePreset(id, name) {
   const p = prompts.find(x => x.id === id);
+  if (p.locked) return;
   p.presets = (p.presets || []).filter(x => x.name !== name);
   save(); renderMain();
 }
@@ -2363,7 +2368,7 @@ function deletePreset(id, name) {
 function startRenamePreset(id, name) {
   const p = prompts.find(x => x.id === id);
   const preset = p?.presets?.find(x => x.name === name);
-  if (!preset) return;
+  if (!preset || p.locked) return;
   if (p.presets[0] === preset && name === 'Clear') return; // the built-in Clear preset can't be renamed
   renamingPreset = { promptId: id, name };
   renderMain();

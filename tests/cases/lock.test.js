@@ -60,3 +60,41 @@ test('renderMain leaves a locked prompt\'s ((text)) var input editable', functio
   const taTag = html.slice(taStart, html.indexOf('>', taStart));
   assertIncludes(taTag, 'readonly', 'template textarea should stay readonly when locked');
 });
+
+test('savePreset is a no-op on a locked prompt', function () {
+  const p = makeUnlockedPrompt({ locked: true, presets: [{ name: 'Clear', values: { tone: '' } }] });
+  globalThis.__promptReturn = 'New preset';
+  savePreset(p.id);
+  assertEqual(p.presets.length, 1, 'no preset should have been added');
+});
+
+test('deletePreset is a no-op on a locked prompt', function () {
+  const p = makeUnlockedPrompt({
+    locked: true,
+    presets: [{ name: 'Clear', values: { tone: '' } }, { name: 'Formal', values: { tone: 'formal' } }]
+  });
+  deletePreset(p.id, 'Formal');
+  assertTrue(p.presets.some(x => x.name === 'Formal'));
+});
+
+test('startRenamePreset is a no-op on a locked prompt', function () {
+  const p = makeUnlockedPrompt({
+    locked: true,
+    presets: [{ name: 'Clear', values: { tone: '' } }, { name: 'Formal', values: { tone: 'formal' } }]
+  });
+  startRenamePreset(p.id, 'Formal');
+  assertEqual(renamingPreset, null, 'no rename should have started');
+});
+
+test('renderMain hides preset rename/delete/reorder affordances and the Save preset button for a locked prompt', function () {
+  const p = makeUnlockedPrompt({
+    locked: true,
+    presets: [{ name: 'Clear', values: { tone: '' } }, { name: 'Formal', values: { tone: 'formal' } }]
+  });
+  renderMain();
+  const html = document.getElementById('mainArea').innerHTML;
+  assertNotIncludes(html, 'preset-chip-del', 'no delete button on a locked prompt\'s presets');
+  assertNotIncludes(html, 'startRenamePreset', 'no double-click rename trigger on a locked prompt\'s presets');
+  assertNotIncludes(html, 'draggable="true"', 'preset chips should not be draggable on a locked prompt');
+  assertNotIncludes(html, 'Save preset', 'no Save preset button on a locked prompt');
+});
