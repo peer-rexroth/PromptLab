@@ -69,27 +69,25 @@
   .sidebar-new-btn { flex-shrink: 0; width: 30px; height: 30px; padding: 0; justify-content: center; }
 
   /* filter strip */
-  .filter-strip { border-bottom: 1px solid var(--border); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
-  .filter-strip-head { display: flex; align-items: center; justify-content: space-between; }
+  .filter-strip { border-bottom: 1px solid var(--border); padding: 8px 8px 6px; display: flex; flex-direction: column; gap: 1px; max-height: 46%; overflow-y: auto; flex-shrink: 0; }
+  .src-row { display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border: 0; border-radius: var(--glass-r-row, 8px); background: transparent; color: var(--text); font: inherit; font-size: 14px; text-align: left; cursor: default; }
+  .src-row:hover { background: var(--bg-3); }
+  .src-row.active { background: var(--bg-3); font-weight: 600; }
+  .src-row.dim { color: var(--text-3); }
+  .src-lead { width: 16px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--text-2); font-size: 13px; }
+  .src-star { color: var(--text-2); }
+  .src-row.active .src-star { color: var(--star); }
+  .src-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .src-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .src-count { font-size: 12px; color: var(--text-3); font-weight: 500; flex-shrink: 0; }
+  .src-head { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 2px; padding: 0 2px 0 8px; }
+  .src-head-toggle { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 2px 0; font: inherit; font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; cursor: default; }
+  .src-head-toggle:hover { color: var(--text); }
+  .src-head-toggle i { font-size: 9px; width: 10px; }
+  .filter-strip-manage { font-size: 12px; padding: 4px 7px; border-radius: 999px; }
   .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 12px; padding: 3px 5px; border-radius: 5px; font-family: var(--font); }
   .icon-btn:hover { background: var(--bg-3); color: var(--text); }
   .icon-btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 0; }
-  .filter-strip-manage { font-size: 12px; padding: 4px 7px; margin: -4px -5px -4px 0; border-radius: 999px; }
-  .filter-strip-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
-  .filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-  .f-chip {
-    font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px;
-    cursor: pointer; border: 1px solid transparent;
-    background: var(--bg-2); color: var(--text-2);
-    display: inline-flex; align-items: center; gap: 4px; transition: all 0.1s;
-    user-select: none;
-  }
-  .f-chip:hover { border-color: var(--border-2); color: var(--text); }
-  .f-chip.active { font-weight: 500; }
-  .f-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .f-chip.fav-chip { }
-  .f-chip.fav-chip.active { background: var(--star-bg); color: var(--star); border-color: var(--star); }
-  .f-chip.fav-chip i { font-size: 10px; }
 
   /* prompt list */
   .prompt-list { flex: 1; overflow-y: auto; padding: 6px; }
@@ -100,7 +98,6 @@
   }
   .prompt-item:hover { background: var(--bg-2); border-color: var(--border); }
   .prompt-item.active { background: var(--bg-2); border-color: var(--border-2); }
-  .prompt-item.kb-focus { background: var(--bg-2); outline: 2px solid var(--accent); outline-offset: -2px; }
   .prompt-item-body { min-width: 0; }
   .prompt-item-name { font-size: 13px; font-weight: 500; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .prompt-item-preview { font-size: 11px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -187,7 +184,6 @@
      dedicated class, keeps this hover hint from implying double-click-to-edit
      works on a locked prompt, where the dblclick handler is correctly omitted
      but this CSS rule previously wasn't scoped to match. */
-  .option-pill.selected[draggable="true"]:hover::after { content: ' ✎'; font-size: 11px; opacity: 0.6; }
   .option-pill.pill-dragging { opacity: 0.35; }
   .option-pill.pill-drag-left  { box-shadow: -3px 0 0 var(--blue-border); }
   .option-pill.pill-drag-right { box-shadow:  3px 0 0 var(--blue-border); }
@@ -517,22 +513,19 @@
 
   /* sidebar list: rounded rows, a quiet hover, Mail's solid accent for the open prompt */
   html[data-scheme="glass"] .prompt-list { padding: 8px; }
-  html[data-scheme="glass"] .prompt-item { border-radius: var(--glass-r-row); border: 0; padding: 7px 8px 7px 12px; }
+  html[data-scheme="glass"] .prompt-item { border-radius: var(--glass-r-row); border: 0; padding: 7px 8px 7px 10px; }
   html[data-scheme="glass"] .prompt-item:hover:not(.active) { background: var(--bg-3); border-color: transparent; }
-  html[data-scheme="glass"] .prompt-item.kb-focus:not(.active) { background: var(--bg-3); outline: 2px solid var(--focus-ring); outline-offset: -2px; }
   html[data-scheme="glass"] .prompt-item.active {
     background: var(--sel-bg); color: #fff;
     --text: #fff; --text-2: rgba(255,255,255,.88); --text-3: rgba(255,255,255,.72);
-    box-shadow: inset 3px 0 0 rgba(255,255,255,.7) !important;   /* the inline category stripe turns white on the blue row */
   }
   html[data-scheme="glass"] .prompt-item.active .star-btn:hover { color: #fff; }
   html[data-scheme="glass"] .prompt-item.active .star-btn.starred { color: #fff; }
-  html[data-scheme="glass"] .prompt-item.kb-focus.active { outline: 2px solid rgba(255,255,255,.8); outline-offset: -3px; }
 
   /* pill controls with a springy press */
   html[data-scheme="glass"] .btn { border-radius: var(--radius); background: var(--bg-3); border: 1px solid var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-rim), 0 1px 4px rgba(40,50,110,.10); transition: transform .35s cubic-bezier(.34,1.56,.64,1), background .15s ease, box-shadow .15s ease, border-color .15s ease; }
   html[data-scheme="glass"] .btn:hover { background: var(--glass-strong); box-shadow: inset 0 1px 0 var(--glass-rim), 0 4px 14px rgba(40,50,110,.14); }
-  html[data-scheme="glass"] :is(.btn, .f-chip):active { transform: scale(.94); }
+  html[data-scheme="glass"] :is(.btn, .src-row):active { transform: scale(.94); }
   /* the gradient paints over the border box too (a translucent white border on top of a repeating gradient read as a second, paler blue ring) */
   html[data-scheme="glass"] .btn-primary { background: var(--glass-accent); background-origin: border-box; color: #fff; border-color: transparent; box-shadow: none; }
   html[data-scheme="glass"] .btn-primary:hover { background: var(--glass-accent); filter: brightness(1.06); opacity: 1; }
@@ -546,8 +539,6 @@
   /* capsules: controls that live in the topbar and the editor header, as in Mail; everything in the content stays at --radius */
   html[data-scheme="glass"] :is(.topbar, .main-header) .btn { border-radius: 999px; }
   html[data-scheme="glass"] .main-header .btn { background-color: var(--bg-2); }
-  html[data-scheme="glass"] .f-chip { background: var(--bg-3); border-color: var(--glass-edge); }
-  html[data-scheme="glass"] .f-chip.fav-chip.active { background: var(--star-bg); border-color: var(--star); }
   html[data-scheme="glass"] :is(.modal input, .modal select, .var-text-input, .cat-add-row input) { background: var(--bg-2); border: 1px solid var(--glass-edge); border-radius: var(--radius); }
   html[data-scheme="glass"] .option-pill { background: var(--bg-3); border-color: var(--glass-edge); }
   html[data-scheme="glass"] .option-pill.selected { background: var(--blue-bg); border-color: var(--blue-border); }
@@ -589,8 +580,7 @@
     border-color: var(--focus-edge) !important;
     box-shadow: 0 0 0 3px var(--focus-ring) !important;
   }
-  :is(.btn, .f-chip, .prompt-item, .option-pill, .instr-item):focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 0; }
-  .f-chip:focus-visible { outline-width: 2px; }
+  :is(.btn, .src-row, .src-head-toggle, .prompt-item, .option-pill, .instr-item):focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 0; }
   select:focus-visible, select:focus { outline: none; }
   /* the borderless fields that live inside another surface */
   .prompt-name-input:focus-visible, .preset-chip-name-input:focus-visible { box-shadow: none !important; border-color: transparent !important; }
@@ -639,8 +629,8 @@
   .btn { font-size: 14px; padding: 7px 14px; }
   .btn-sm { font-size: 13px; padding: 6px 11px; }
   .sidebar-search input { font-size: 14px; padding: 8px 10px 8px 34px; }
-  .filter-strip-label, .presets-label, .field-label, .help-section-title, .shortcut-group-label { font-size: 12px; }
-  .f-chip, .tag, .sidebar-footer { font-size: 12px; }
+  .presets-label, .field-label, .help-section-title, .shortcut-group-label { font-size: 12px; }
+  .tag, .sidebar-footer { font-size: 12px; }
   .prompt-item-name { font-size: 14px; }
   .prompt-item-preview { font-size: 12px; }
   .prompt-name-input { font-size: 18px; }
@@ -722,6 +712,25 @@
   html[data-scheme="glass"] .cat-add-row { border-top: 0; padding: 12px 4px 2px; }
   html[data-scheme="glass"] .cat-add-row input { border-radius: 999px; padding: 7px 14px; }
   .color-swatch { width: 20px; height: 20px; }
+  /* Variables panel, quieted (in step with the category dialog and the editor header): no stripe down each row, the name chip
+     sizes to its name, row actions are quiet icons that appear on hover/focus, "+ Option" is a plain muted link, and Save
+     preset is a quiet pill. */
+  .var-name { justify-self: start; }
+  .var-actions { display: flex; gap: 2px; flex-shrink: 0; align-self: center; opacity: 0; transition: opacity .12s ease; }
+  .var-row:hover .var-actions, .var-row:focus-within .var-actions { opacity: 1; }
+  @media (hover: none) { .var-actions { opacity: 1; } }
+  .var-actions .icon-btn { font-size: 13px; padding: 6px 8px; border-radius: 999px; }
+  .var-actions .icon-btn:hover:not(:disabled) { background: var(--bg-3); color: var(--text); }
+  /* per-option delete: a small ✕ inside the pill's right end (like the preset chips'), collapsed to nothing until the pill is
+     hovered or focused, then slid open */
+  .opt-x { display: inline-flex; align-items: center; justify-content: center; width: 0; height: 16px; margin-left: 0; opacity: 0; overflow: hidden; border-radius: 50%; color: var(--text-3); font-size: 9px; cursor: pointer; vertical-align: middle; transition: width .15s ease, margin-left .15s ease, opacity .12s ease, background .1s; }
+  .option-pill:hover .opt-x, .option-pill:focus-within .opt-x { width: 16px; margin-left: 5px; opacity: 1; }
+  .opt-x:hover { background: var(--red-bg); color: var(--red-text); }
+  .opt-x:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 0; }
+  .btn-add-opt { border: 0; background: transparent; padding: 4px 8px; border-radius: 999px; color: var(--text-3); }
+  .btn-add-opt:hover { background: var(--bg-3); color: var(--text); }
+  html[data-scheme="glass"] .btn.btn-quiet { background: transparent; border-color: transparent; box-shadow: none; color: var(--text-2); }
+  html[data-scheme="glass"] .btn.btn-quiet:hover:not(:disabled) { background: var(--bg-3); color: var(--text); box-shadow: none; }
   #fileInput { display: none; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -1605,7 +1614,7 @@ const undoStacks = new Map(); // promptId → { past: string[], future: string[]
 const lastSyncedTemplates = new Map(); // promptId → template string at last Sync
 let undoDebounce = null, undoSessionStart = null, undoSessionId = null;
 let showVersionHistory = false, expandedVersionIdx = -1;
-let sidebarFiltered = [], sidebarFocusIdx = -1;
+let sidebarFiltered = [];
 
 // ── Persistence ───────────────────────────────────────────────────────────────
 // Schema defaults/migration for prompts, shared by every place that assigns
@@ -1721,55 +1730,61 @@ function untombstone(list, id) {
   if (idx !== -1) list.splice(idx, 1);
 }
 
-// ── Filter strip ──────────────────────────────────────────────────────────────
+// ── Filter strip (source list) ────────────────────────────────────────────────
+// A Mail/Notes-style list: All Prompts, Favorites, then a collapsible Categories section with a dot, name and count per
+// row. The selected row is a soft grey fill (like mytasks' nav rows) so it never competes with the solid-blue open
+// prompt below. Clicking the selected category again clears the filter. Collapse state is per-device.
+const CATS_COLLAPSED_KEY = 'promptlab-cats-collapsed';
+let catsCollapsed = false;
+try { catsCollapsed = localStorage.getItem(CATS_COLLAPSED_KEY) === '1'; } catch(_) {}
+function toggleCatsSection() {
+  catsCollapsed = !catsCollapsed;
+  try { localStorage.setItem(CATS_COLLAPSED_KEY, catsCollapsed ? '1' : '0'); } catch(_) {}
+  renderFilterStrip();
+}
+function onCatRowClick(id) { setFilter(filterCatId === id && !filterFavs ? null : id, false); }
+
 function renderFilterStrip() {
-  const favCount = prompts.filter(p => p.favorite).length;
-  const allCount = prompts.length;
+  const row = (cls, onclick, lead, label, count, dim) =>
+    `<button type="button" class="src-row${cls}${dim?' dim':''}" onclick="${onclick}">
+      <span class="src-lead">${lead}</span><span class="src-name">${esc(label)}</span><span class="src-count">${count}</span>
+    </button>`;
 
-  const favChip = `<span class="f-chip fav-chip${filterFavs?' active':''}" onclick="toggleFavFilter()">
-    <i class="fa-${filterFavs?'solid':'regular'} fa-star"></i>
-    Favorites <span style="opacity:0.6">${favCount}</span>
-  </span>`;
+  const noFilter = !filterCatId && !filterFavs;
+  const allRow = row(noFilter ? ' active' : '', 'setFilter(null,false)', '<i class="fa-solid fa-layer-group"></i>', 'All Prompts', prompts.length);
+  const favRow = row(filterFavs ? ' active' : '', 'toggleFavFilter()', `<i class="fa-${filterFavs?'solid':'regular'} fa-star src-star"></i>`, 'Favorites', prompts.filter(p => p.favorite).length);
 
-  const allChip = `<span class="f-chip${!filterCatId&&!filterFavs?' active':''}\"
-    style="${!filterCatId&&!filterFavs?'background:var(--bg-3);color:var(--text);border-color:var(--border-2)':''}"
-    onclick="setFilter(null,false)">
-    All <span style="opacity:0.6">${allCount}</span>
-  </span>`;
-
-  const catChips = categories.map(c => {
+  const catRow = c => {
     const count = prompts.filter(p => p.catId === c.id).length;
     const active = filterCatId === c.id && !filterFavs;
-    const col = colorOf(c.color);
-    const dot = catDot(c);
-    const style = active ? `background:${col.bg};color:${col.text};border-color:${dot}` : '';
-    const dim = count === 0 && !active ? 'opacity:0.45;font-style:italic' : '';
-    return `<span class="f-chip${active?' active':''}" style="${style};${dim}" onclick="setFilter('${c.id}',false)">
-      <span class="chip-dot" style="background:${dot}"></span>${esc(c.name)} <span style="opacity:0.6">${count}</span>
-    </span>`;
-  }).join('');
+    return row(active ? ' active' : '', `onCatRowClick('${escJs(c.id)}')`, `<span class="src-dot" style="background:${catDot(c)}"></span>`, c.name, count, count === 0 && !active);
+  };
+  // collapsed: the section hides its rows, except the active category so the current filter is never invisible
+  const shown = catsCollapsed ? categories.filter(c => filterCatId === c.id && !filterFavs) : categories;
 
   document.getElementById('filterStrip').innerHTML = `
-    <div class="filter-strip-head">
-      <span class="filter-strip-label">Filter</span>
+    ${allRow}${favRow}
+    <div class="src-head">
+      <button type="button" class="src-head-toggle" onclick="toggleCatsSection()" aria-expanded="${!catsCollapsed}" title="${catsCollapsed?'Show':'Hide'} categories">
+        <i class="fa-solid fa-chevron-${catsCollapsed?'right':'down'}"></i><span>Categories</span>
+      </button>
       <button type="button" class="icon-btn filter-strip-manage" onclick="openCatManager()" title="Manage categories" aria-label="Manage categories"><i class="fa-solid fa-sliders"></i></button>
     </div>
-    <div class="filter-chips">${allChip}${favChip}${catChips}</div>`;
+    ${shown.map(catRow).join('')}`;
 }
 
 function setFilter(catId, favs) {
-  filterCatId = catId; filterFavs = favs; sidebarFocusIdx = -1;
+  filterCatId = catId; filterFavs = favs;
   save(); renderSidebar();
 }
 function toggleFavFilter() {
   filterFavs = !filterFavs;
   if (filterFavs) filterCatId = null;
-  sidebarFocusIdx = -1;
   save(); renderSidebar();
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
-function onSearchInput() { sidebarFocusIdx = -1; renderSidebar(); }
+function onSearchInput() { renderSidebar(); }
 function renderSidebar() {
   renderFilterStrip();
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -1784,15 +1799,11 @@ function renderSidebar() {
   });
 
   sidebarFiltered = filtered;
-  if (sidebarFocusIdx >= filtered.length) sidebarFocusIdx = filtered.length - 1;
 
   document.getElementById('promptList').innerHTML = filtered.length
     ? filtered.map((p, i) => {
-        const cat = getCat(p.catId);
-        const col = colorOf(cat.color);
-        const dot = catDot(cat);
         const starred = p.favorite;
-        return `<div class="prompt-item${p.id===activeId?' active':''}${i===sidebarFocusIdx?' kb-focus':''}" onclick="select(${p.id})" style="box-shadow:inset 3px 0 0 ${dot}">
+        return `<div class="prompt-item${p.id===activeId?' active':''}" onclick="select(${p.id})">
           <div class="prompt-item-body">
             <div class="prompt-item-name">${esc(p.name)}${p.locked?'<i class="fa-solid fa-lock" style="font-size:9px;color:var(--text-3);margin-left:5px;vertical-align:middle"></i>':''}</div>
             <div class="prompt-item-preview">${esc(p.template.substring(0,50))}…</div>
@@ -1944,47 +1955,37 @@ function renderMain() {
           </span>`}
         </div>`;
       }).join('');
-      return `<div class="var-row var-row-instr" style="box-shadow:inset 3px 0 0 #1d9e75">
+      return `<div class="var-row var-row-instr">
         <span class="var-name var-name-instr" title="${esc(k)}">${esc(k)}</span>
         <div>
           <div class="instr-list">${items||'<div style="font-size:12px;color:var(--text-3);padding:2px 0">No instructions yet.</div>'}</div>
           ${locked?'':` <button class="btn-add-opt" style="margin-top:6px" onclick="addOption(${p.id},'${escJs(k)}')"><i class="fa-solid fa-plus" style="font-size:10px"></i> Instruction</button>`}
         </div>
-        ${locked?'<div></div>':`<div style="display:flex;gap:4px;flex-shrink:0;padding-top:2px">
-          <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+        ${locked?'<div></div>':`<div class="var-actions">
+          <button class="icon-btn" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable" aria-label="Remove entire variable"><i class="fa-solid fa-xmark"></i></button>
         </div>`}
       </div>`;
     }
     // text type
     if (v.type === 'text') {
-      return `<div class="var-row" style="box-shadow:inset 3px 0 0 var(--amber-text)">
+      return `<div class="var-row">
         <span class="var-name var-name-text" title="${esc(k)}">${esc(k)}</span>
         <input class="var-text-input" type="text" value="${esc(v.value)}" placeholder="Type text…"
           oninput="updateTextVar(${p.id},'${escJs(k)}',this.value)">
-        ${locked?'<div></div>':`<div style="display:flex;gap:4px;flex-shrink:0">
-          <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+        ${locked?'<div></div>':`<div class="var-actions">
+          <button class="icon-btn" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable" aria-label="Remove entire variable"><i class="fa-solid fa-xmark"></i></button>
         </div>`}
       </div>`;
     }
     // default: option type
-    return `<div class="var-row" style="box-shadow:inset 3px 0 0 var(--blue-border)">
+    return `<div class="var-row">
       <span class="var-name" title="${esc(k)}">${esc(k)}</span>
       <div class="var-options">
-        ${v.options.map(o=>`<span class="option-pill${o===v.selected?' selected':''}" ${locked?'':` draggable="true" data-opt="${escJs(o)}" data-promptid="${p.id}" data-varkey="${escJs(k)}"`} onclick="selectOpt(${p.id},'${escJs(k)}','${escJs(o)}')" ${locked?'':` ondblclick="editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Double-click to edit"`}>${esc(o)}</span>`).join('')}
+        ${v.options.map(o=>`<span class="option-pill${o===v.selected?' selected':''}" ${locked?'':` draggable="true" data-opt="${escJs(o)}" data-promptid="${p.id}" data-varkey="${escJs(k)}"`} onclick="selectOpt(${p.id},'${escJs(k)}','${escJs(o)}')" ${locked?'':` ondblclick="editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Double-click to edit"`}>${esc(o)}${locked||v.options.length<=1?'':`<span class="opt-x" role="button" tabindex="0" title="Remove this option" aria-label="Remove option ${esc(o)}" onclick="event.stopPropagation();deleteOption(${p.id},'${escJs(k)}','${escJs(o)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();deleteOption(${p.id},'${escJs(k)}','${escJs(o)}')}"><i class="fa-solid fa-xmark"></i></span>`}</span>`).join('')}
         ${locked?'':` <button class="btn-add-opt" onclick="addOption(${p.id},'${escJs(k)}')"><i class="fa-solid fa-plus" style="font-size:10px"></i> Option</button>`}
       </div>
-      ${locked?'<div></div>':`<div style="display:flex;gap:4px;flex-shrink:0">
-        <button class="btn btn-sm btn-danger" onclick="deleteSelectedOpt(${p.id},'${escJs(k)}')" title="Remove selected option"
-          ${v.options.length<=1?'disabled style="opacity:0.35;cursor:not-allowed"':''}>
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
-        <button class="btn btn-sm" style="color:var(--text-3);border-color:var(--border)" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+      ${locked?'<div></div>':`<div class="var-actions">
+        <button class="icon-btn" onclick="deleteVar(${p.id},'${escJs(k)}')" title="Remove entire variable" aria-label="Remove entire variable"><i class="fa-solid fa-xmark"></i></button>
       </div>`}
     </div>`;
   }).join('');
@@ -2061,7 +2062,7 @@ function renderMain() {
           <div class="presets-section">
             <div class="presets-header">
               <span class="presets-label">Presets</span>
-              ${locked ? '' : `<button class="btn btn-sm" onclick="savePreset(${p.id})"${!hasVars?' disabled style="opacity:0.4;cursor:not-allowed"':''}>
+              ${locked ? '' : `<button class="btn btn-sm btn-quiet" onclick="savePreset(${p.id})"${!hasVars?' disabled style="opacity:0.4;cursor:not-allowed"':''}>
                 <i class="fa-regular fa-bookmark"></i> Save preset
               </button>`}
             </div>
@@ -2209,9 +2210,22 @@ function initPillDragDrop() {
 }
 
 // ── Prompt actions ────────────────────────────────────────────────────────────
-function select(id) {
-  activeId = id; sidebarFocusIdx = -1;
-  collapseSidebarIfNarrow();
+// ↑/↓ switch directly between the prompts in the list (the open prompt follows the arrow, as in Mail/Notes) — no separate
+// focus ring and Enter step. With no open prompt in the current list, ↓ opens the first and ↑ the last.
+function stepPrompt(dir) {
+  if (!sidebarFiltered.length) return;
+  const cur = sidebarFiltered.findIndex(p => p.id === activeId);
+  let idx;
+  if (cur < 0) idx = dir > 0 ? 0 : sidebarFiltered.length - 1;
+  else idx = Math.max(0, Math.min(sidebarFiltered.length - 1, cur + dir));
+  if (idx === cur) return;
+  select(sidebarFiltered[idx].id, true);
+  document.querySelector('#promptList .prompt-item.active')?.scrollIntoView({ block: 'nearest' });
+}
+// keepSidebar: arrow-key navigation steps through prompts without closing the floating (narrow-window) sidebar
+function select(id, keepSidebar) {
+  activeId = id;
+  if (!keepSidebar) collapseSidebarIfNarrow();
   const p = prompts.find(x => x.id === id);
   if (p && !lastSyncedTemplates.has(id)) lastSyncedTemplates.set(id, p.template);
   save(); render();
@@ -2292,12 +2306,15 @@ function syncVars(id) {
 }
 function selectOpt(id,k,v) { prompts.find(p=>p.id===id).vars[k].selected=v; save(); renderMain(); }
 function deleteVar(id,k)   { const p=prompts.find(q=>q.id===id); delete p.vars[k]; p.lastEdited=Date.now(); save(); renderMain(); }
-function deleteSelectedOpt(id,k) {
-  const p = prompts.find(q=>q.id===id);
+// Remove one option (the ✕ that appears on a pill when you hover it). The last option can't be removed; if the removed one
+// was selected, the first remaining option becomes the selection.
+function deleteOption(id, k, o) {
+  const p = prompts.find(q => q.id === id);
+  if (!p || p.locked) return;
   const v = p.vars[k];
-  if (v.options.length <= 1) return;
-  v.options = v.options.filter(o => o !== v.selected);
-  v.selected = v.options[0];
+  if (!v || v.options.length <= 1 || !v.options.includes(o)) return;
+  v.options = v.options.filter(x => x !== o);
+  if (v.selected === o) v.selected = v.options[0];
   p.lastEdited = Date.now();
   save(); renderMain();
 }
@@ -3008,18 +3025,8 @@ document.addEventListener('keydown', e=>{
   if((e.key==='ArrowDown'||e.key==='ArrowUp') && (!inInput||onSearch)) {
     e.preventDefault();
     if(!sidebarFiltered.length) return;
-    if(sidebarFocusIdx<0) {
-      const ai = sidebarFiltered.findIndex(p=>p.id===activeId);
-      sidebarFocusIdx = ai>=0 ? ai : -1;
-    }
-    if(e.key==='ArrowDown') sidebarFocusIdx = Math.min(sidebarFocusIdx+1, sidebarFiltered.length-1);
-    else sidebarFocusIdx = Math.max(sidebarFocusIdx-1, 0);
-    renderSidebar();
-    document.querySelector('#promptList .kb-focus')?.scrollIntoView({block:'nearest'});
+    stepPrompt(e.key==='ArrowDown' ? 1 : -1);
     return;
-  }
-  if(e.key==='Enter' && (!inInput||onSearch) && sidebarFocusIdx>=0 && sidebarFiltered[sidebarFocusIdx]) {
-    e.preventDefault(); select(sidebarFiltered[sidebarFocusIdx].id); return;
   }
   // global shortcuts
   if(e.metaKey || e.ctrlKey) {
@@ -3106,8 +3113,7 @@ function openShortcuts() {
     group('Navigation'),
     row('Focus search', mod, 'K'),
     row('Show/hide sidebar', mod, 'B'),
-    row('Navigate prompts', '↑', '↓'),
-    row('Select prompt', '↵'),
+    row('Previous / next prompt', '↑', '↓'),
     row('New prompt', mod, 'N'),
     row('Copy prompt', mod, '↵'),
     group('Template editing'),
