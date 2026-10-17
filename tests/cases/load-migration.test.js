@@ -70,11 +70,12 @@ test('load() does not add a Clear preset to a prompt with no vars', function () 
   assertDeepEqual(prompts[0].presets, []);
 });
 
-test('load() restores the persisted theme and applies it to the document', function () {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+test('load() ignores a legacy theme in the stored blob (the theme is per-device)', function () {
+  setThemeMode('light');
+  localStorage.setItem('promptlab-v4', JSON.stringify({
     categories: DEFAULT_CATS, prompts: DEFAULT_PROMPTS, theme: 'dark'
   }));
   load();
-  assertEqual(currentTheme, 'dark');
-  assertEqual(document.documentElement.getAttribute('data-theme'), 'dark');
+  assertEqual(currentTheme, 'light');
+  assertEqual(document.documentElement.getAttribute('data-theme'), 'light');
 });

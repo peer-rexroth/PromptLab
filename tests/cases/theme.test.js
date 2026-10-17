@@ -1,80 +1,77 @@
-// Color scheme picker (Standard/Modern/Dracula/GitHub/GitHub Dimmed) —
-// persistence and cross-device sync via the same theme/filter plumbing.
+// Appearance: light/dark/auto theme and the two text sizes. The app has one look (Glass, set as
+// <html data-scheme="glass"> in the markup). The theme is a per-device preference (localStorage only);
+// the text size also travels in the saved blob / linked file.
 
-test('setColorScheme updates state, the data-scheme attribute, and localStorage', function () {
-  setColorScheme('modern');
-  assertEqual(colorScheme, 'modern');
-  assertEqual(document.documentElement.getAttribute('data-scheme'), 'modern');
-  assertEqual(localStorage.getItem('promptlab-scheme'), 'modern');
-});
-
-test('setColorScheme persists into the stored data blob via save()', function () {
-  setColorScheme('dracula');
-  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-  assertEqual(saved.colorScheme, 'dracula');
-});
-
-test('load() picks up a colorScheme saved in the data blob, same as theme', function () {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    categories: DEFAULT_CATS, prompts: DEFAULT_PROMPTS, colorScheme: 'github'
-  }));
-  load();
-  assertEqual(colorScheme, 'github');
-  assertEqual(document.documentElement.getAttribute('data-scheme'), 'github');
-});
-
-test('load() ignores an unrecognized colorScheme rather than crashing', function () {
-  colorScheme = 'github';
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    categories: DEFAULT_CATS, prompts: DEFAULT_PROMPTS, colorScheme: 'not-a-real-scheme'
-  }));
-  load();
-  assertEqual(colorScheme, 'github', 'an invalid saved scheme should leave the current one alone');
-});
-
-test('applyThemeFromData applies colorScheme even when theme is absent', function () {
-  colorScheme = 'standard';
-  applyThemeFromData({ colorScheme: 'githubdimmed' });
-  assertEqual(colorScheme, 'githubdimmed');
-  assertEqual(document.documentElement.getAttribute('data-scheme'), 'githubdimmed');
-});
-
-test('applyThemeFromData ignores an unrecognized colorScheme', function () {
-  colorScheme = 'standard';
-  applyThemeFromData({ colorScheme: 'not-a-real-scheme' });
-  assertEqual(colorScheme, 'standard');
-});
-
-test('applyThemeFromData still applies theme independently of colorScheme', function () {
-  currentTheme = 'light';
-  applyThemeFromData({ theme: 'dark' });
+test('setThemeMode light/dark sets state, the attribute and localStorage', function () {
+  setThemeMode('dark');
+  assertEqual(themePref, 'dark');
   assertEqual(currentTheme, 'dark');
   assertEqual(document.documentElement.getAttribute('data-theme'), 'dark');
+  assertEqual(localStorage.getItem('promptlab-theme'), 'dark');
+  setThemeMode('light');
+  assertEqual(document.documentElement.getAttribute('data-theme'), 'light');
 });
 
-test('renderThemeModal marks only the currently active scheme as selected', function () {
-  setColorScheme('dracula');
-  renderThemeModal();
-  const html = document.getElementById('themeOptions').innerHTML;
-  assertIncludes(html, `class="theme-option selected" onclick="setColorScheme('dracula')"`);
-  assertNotIncludes(html, `class="theme-option selected" onclick="setColorScheme('standard')"`);
+test('setThemeMode auto follows the system setting', function () {
+  window.matchMedia = function () { return { matches: true }; };
+  setThemeMode('auto');
+  assertEqual(themePref, 'auto');
+  assertEqual(currentTheme, 'dark');
+  window.matchMedia = function () { return { matches: false }; };
+  applyTheme();
+  assertEqual(currentTheme, 'light');
 });
 
-test('every THEME_SCHEMES entry has a matching [data-scheme] CSS selector in the stylesheet', function () {
-  // Cheap guard against a typo splitting the picker's ids from the CSS
-  // selectors that actually retheme the app.
-  const ids = THEME_SCHEMES.map(s => s.id).sort();
-  assertDeepEqual(ids, ['dracula', 'github', 'githubdimmed', 'modern', 'standard']);
+test('setThemeMode treats an unknown mode as auto', function () {
+  setThemeMode('sepia');
+  assertEqual(themePref, 'auto');
 });
 
-test('openThemeModal opens the modal and renders the current options', function () {
-  openThemeModal();
-  assertTrue(document.getElementById('themeModalBg').classList.contains('open'));
-  assertIncludes(document.getElementById('themeOptions').innerHTML, 'Standard');
+test('the theme is not written into the saved blob', function () {
+  setThemeMode('dark');
+  save();
+  assertEqual(JSON.parse(localStorage.getItem('promptlab-v4')).theme, undefined);
+  assertEqual(JSON.parse(localStorage.getItem('promptlab-v4')).colorScheme, undefined);
 });
 
-test('closeThemeModal closes the modal', function () {
-  openThemeModal();
-  closeThemeModal();
-  assertFalse(document.getElementById('themeModalBg').classList.contains('open'));
+test('clampUiScale snaps any value to Medium (100) or Large (115)', function () {
+  assertEqual(clampUiScale(100), 100);
+  assertEqual(clampUiScale(115), 115);
+  assertEqual(clampUiScale(90), 100);
+  assertEqual(clampUiScale(130), 115);
+  assertEqual(clampUiScale('abc'), 100);
+});
+
+test('setUiScale updates state, zoom, localStorage and the saved blob', function () {
+  setUiScale(115);
+  assertEqual(uiScale, 115);
+  assertEqual(document.documentElement.style.zoom, 1.15);
+  assertEqual(localStorage.getItem('promptlab-uiscale'), '115');
+  assertEqual(JSON.parse(localStorage.getItem('promptlab-v4')).uiScale, 115);
+});
+
+test('applyAppearanceFromData applies a text size from a linked file, and ignores one that is absent', function () {
+  uiScale = 100;
+  applyAppearanceFromData({ uiScale: 115 });
+  assertEqual(uiScale, 115);
+  applyAppearanceFromData({});
+  applyAppearanceFromData(null);
+  assertEqual(uiScale, 115);
+});
+
+test('load() restores the text size saved in the blob', function () {
+  uiScale = 100;
+  localStorage.setItem('promptlab-v4', JSON.stringify({ categories: DEFAULT_CATS, prompts: DEFAULT_PROMPTS, uiScale: 115 }));
+  load();
+  assertEqual(uiScale, 115);
+});
+
+test('renderUiScaleMenu marks only the active size and theme', function () {
+  uiScale = 115; setThemeMode('dark');
+  renderUiScaleMenu();
+  const html = document.getElementById('uiScaleMenu').innerHTML;
+  assertIncludes(html, 'view-switch-btn active" title="Large"');
+  assertNotIncludes(html, 'view-switch-btn active" title="Medium"');
+  assertIncludes(html, `view-switch-btn active" onclick="event.stopPropagation();setThemeMode('dark')"`);
+  assertNotIncludes(html, `view-switch-btn active" onclick="event.stopPropagation();setThemeMode('light')"`);
 });

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'promptlab-cache-v1';
+const CACHE_NAME = 'promptlab-cache-v2';
 const APP_SHELL = [
   'promptlab.html',
   'manifest.json',

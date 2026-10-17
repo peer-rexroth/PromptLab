@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-scheme="glass">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PromptLab">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1e1e1c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eef0f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14161c" media="(prefers-color-scheme: dark)">
 <title>PromptLab</title>
 <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -16,211 +16,65 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── Theme system ──────────────────────────────────────────────────────────
-     Two independent axes: data-theme (light/dark, toggled by the moon/sun
-     button) and data-scheme (standard/modern/dracula/github/githubdimmed,
-     picked from the palette-icon button's theme modal). Each scheme defines
-     its own light+dark pair. "Standard" is the app's original, untouched
-     palette — :root and the bare html[data-theme="dark"] block below are it,
-     so an app with no data-scheme attribute (or scheme=standard) looks
-     exactly as it always has. A scheme's dark block wins via higher selector
-     specificity ([data-scheme="x"][data-theme="dark"] beats the bare
-     [data-theme="dark"]), so block order here doesn't matter for correctness.
-     coral/pink/star are Standard-only accents with no equivalent token in
-     the other schemes' source palettes, so they're deliberately left out of
-     every other scheme's block — CSS falls back to :root's/the bare dark
-     block's values for those specific properties on every scheme. */
-  :root, html[data-scheme="standard"] {
-    --bg: #ffffff; --bg-2: #f5f5f3; --bg-3: #ededea;
-    --text: #1a1a18; --text-2: #6b6b66; --text-3: #a0a09a;
-    --border: rgba(0,0,0,0.10); --border-2: rgba(0,0,0,0.18);
-    --blue-bg: #e6f1fb; --blue-text: #0c447c; --blue-border: #85b7eb;
-    --teal-bg: #e1f5ee; --teal-text: #085041;
-    --amber-bg: #faeeda; --amber-text: #633806;
-    --red-bg: #fcebeb; --red-text: #a32d2d; --red-border: #f7c1c1;
-    --green-bg: #eaf3de; --green-text: #3b6d11;
-    --purple-bg: #eeedfe; --purple-text: #3c3489;
+  /* ── Look ──────────────────────────────────────────────────────────────────
+     The app has ONE look: Glass (see the Glass section near the end of this
+     stylesheet), in light and dark (data-theme, toggled by the topbar's
+     half-circle button). <html data-scheme="glass"> is set in the markup and is
+     only a styling hook — there is no scheme picker. Glass defines every colour
+     variable in both themes; :root carries only what it does not: the fonts and
+     the three accents (coral/pink/star) the category colours and the favourite
+     star use. */
+  :root {
     --coral-bg: #faece7; --coral-text: #993c1d;
     --pink-bg: #fbeaf0; --pink-text: #72243e;
     --star: #ba7517; --star-bg: #faeeda;
-    --radius: 8px; --radius-lg: 12px;
     --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sel-bg: #2f6fde;
+    --focus-ring: #9bbcf6; --focus-edge: #89aae6;
   }
   html[data-theme="dark"] {
-    --bg: #1e1e1c; --bg-2: #272724; --bg-3: #2f2f2c;
-    --text: #f0f0ec; --text-2: #9a9a94; --text-3: #5c5c58;
-    --border: rgba(255,255,255,0.10); --border-2: rgba(255,255,255,0.18);
-    --blue-bg: #0c2d4f; --blue-text: #85b7eb; --blue-border: #185fa5;
-    --teal-bg: #04342c; --teal-text: #5dcaa5;
-    --amber-bg: #412402; --amber-text: #fac775;
-    --red-bg: #501313; --red-text: #f09595; --red-border: #a32d2d;
-    --green-bg: #173404; --green-text: #97c459;
-    --purple-bg: #26215c; --purple-text: #afa9ec;
     --coral-bg: #4a1b0c; --coral-text: #f0997b;
     --pink-bg: #4b1528; --pink-text: #ed93b1;
     --star: #fac775; --star-bg: #412402;
+    --sel-bg: #2c62c9;
+    --focus-ring: #417391; --focus-edge: #3c6f8c;
   }
-
-  /* Modern: VS Code's actual Dark Modern / Light Modern themes — its
-     dark-graphite/light-gray neutrals and accent blue (#005fb8 light,
-     #3794ff/#0078d4 dark), plus semantic red/amber/cyan/purple/green rather
-     than approximations (values fetched directly from microsoft/vscode's
-     extensions/theme-defaults/themes/light_modern.json, not memory).
-     Signature: the sidebar footer becomes a status bar — VS Code's most
-     recognizable single UI element. */
-  html[data-scheme="modern"] {
-    --bg: #ffffff; --bg-2: #f8f8f8; --bg-3: #e8e8e8;
-    --text: #3b3b3b; --text-2: #3b3b3b; --text-3: #8a8a8a;
-    --border: rgba(59,59,59,0.12); --border-2: rgba(59,59,59,0.24);
-    --blue-bg: #e3edf7; --blue-text: #005fb8; --blue-border: #6ba0d6;
-    --teal-bg: #dcf0f5; --teal-text: #0598bc;
-    --amber-bg: #faf0d0; --amber-text: #bf8803;
-    --red-bg: #fbe7e6; --red-text: #cd3131;
-    --green-bg: #e2f0e0; --green-text: #388a34;
-    --purple-bg: #f5e0fa; --purple-text: #af00db;
-  }
-  html[data-scheme="modern"][data-theme="dark"] {
-    --bg: #1f1f1f; --bg-2: #181818; --bg-3: #2a2d2e;
-    --text: #cccccc; --text-2: #9d9d9d; --text-3: #6a6a6a;
-    --border: rgba(204,204,204,0.10); --border-2: rgba(204,204,204,0.20);
-    --blue-bg: #0d2d4a; --blue-text: #3794ff; --blue-border: #0078d4;
-    --teal-bg: #0d2e38; --teal-text: #29b8db;
-    --amber-bg: #3a3010; --amber-text: #cca700;
-    --red-bg: #4a1414; --red-text: #f14c4c;
-    --green-bg: #1c3320; --green-text: #89d185;
-    --purple-bg: #2e2036; --purple-text: #c586c0;
-  }
-  html[data-scheme="modern"] .sidebar-footer {
-    background: var(--blue-text); color: #fff; text-align: left; font-family: var(--mono); border-top: none;
-  }
-
-  /* Dracula: the official palette, not an approximation — #282a36 with
-     #6272a4 comments, #bd93f9 purple, #ff79c6 pink, #8be9fd cyan, #50fa7b
-     green, #ff5555 red. Light mode is Alucard, Dracula Pro's own official
-     light theme (draculatheme.com/spec) — also the real spec values, not an
-     invented companion. Signature: a soft purple glow on the brand icon, a
-     small nod to the palette's neon-on-dark character. */
-  html[data-scheme="dracula"] {
-    --bg: #fffbeb; --bg-2: #f5efd7; --bg-3: #cfcfde;
-    --text: #1f1f1f; --text-2: #6c664b; --text-3: #a39d7a;
-    --border: rgba(31,31,31,0.12); --border-2: rgba(31,31,31,0.24);
-    --blue-bg: #e7e0f7; --blue-text: #644ac9; --blue-border: #a68fd9;
-    --teal-bg: #d8f0f3; --teal-text: #036a96;
-    --amber-bg: #f5e2ce; --amber-text: #a34d14;
-    --red-bg: #fbe2df; --red-text: #cb3a2a;
-    --green-bg: #dcf0d8; --green-text: #14710a;
-    --purple-bg: #f7dce8; --purple-text: #a3144d;
-  }
-  html[data-scheme="dracula"][data-theme="dark"] {
-    --bg: #282a36; --bg-2: #21222c; --bg-3: #44475a;
-    --text: #f8f8f2; --text-2: #6272a4; --text-3: #4d5673;
-    --border: rgba(248,248,242,0.10); --border-2: rgba(248,248,242,0.22);
-    --blue-bg: #3a3355; --blue-text: #bd93f9; --blue-border: #9d7ee8;
-    --teal-bg: #1c3a42; --teal-text: #8be9fd;
-    --amber-bg: #4a3820; --amber-text: #ffb86c;
-    --red-bg: #47272a; --red-text: #ff5555;
-    --green-bg: #1c3a26; --green-text: #50fa7b;
-    --purple-bg: #4a2740; --purple-text: #ff79c6;
-  }
-  html[data-scheme="dracula"] .topbar-brand i { text-shadow: 0 0 8px var(--blue-text); }
-
-  /* GitHub: Primer's actual semantic colors — #0969da/#4493f8 accent blue,
-     #1a7f37/#3fb950 success green, #cf222e/#f85149 danger red, #8250df/
-     #a371f7 "merged" purple, #9a6700/#d29922 attention amber. GitHub's
-     semantic palette has no named teal, so that slot is an approximation
-     from Primer's broader scale, not a literal token. Signature: the
-     primary button becomes GitHub's solid green — its most recognizable
-     single UI element ("Merge pull request", "New", etc). */
-  html[data-scheme="github"] {
-    --bg: #ffffff; --bg-2: #f6f8fa; --bg-3: #eaeef2;
-    --text: #1f2328; --text-2: #656d76; --text-3: #8c959f;
-    --border: rgba(31,35,40,0.12); --border-2: rgba(31,35,40,0.24);
-    --blue-bg: #ddf4ff; --blue-text: #0969da; --blue-border: #54aeff;
-    --teal-bg: #daf1f1; --teal-text: #1b7c83;
-    --amber-bg: #fff8c5; --amber-text: #9a6700;
-    --red-bg: #ffebe9; --red-text: #cf222e;
-    --green-bg: #dafbe1; --green-text: #1a7f37;
-    --purple-bg: #fbefff; --purple-text: #8250df;
-  }
-  html[data-scheme="github"][data-theme="dark"] {
-    --bg: #0d1117; --bg-2: #161b22; --bg-3: #21262d;
-    --text: #e6edf3; --text-2: #9198a1; --text-3: #6e7681;
-    --border: rgba(230,237,243,0.10); --border-2: rgba(230,237,243,0.20);
-    --blue-bg: #0c2d6b; --blue-text: #4493f8; --blue-border: #1f6feb;
-    --teal-bg: #0d2d32; --teal-text: #39c5cf;
-    --amber-bg: #3b2900; --amber-text: #d29922;
-    --red-bg: #3c1618; --red-text: #f85149;
-    --green-bg: #14261d; --green-text: #3fb950;
-    --purple-bg: #2e2140; --purple-text: #a371f7;
-  }
-  html[data-scheme="github"] .btn-primary { background: var(--green-text); border-color: var(--green-text); }
-
-  /* GitHub Dimmed: GitHub Dark Dimmed's real compiled values (fetched from
-     @primer/primitives directly — canvas #212830, canvas-muted #262c36,
-     fg #d1d7e0/#9198a1, accent #478be6, danger #e5534b, attention #c69026,
-     success #57ab5a). Notably NOT the same background as GitHub Dark
-     Default's near-black #0d1117 — that's the whole point of "dimmed".
-     Light mode reuses GitHub Light Default exactly, unchanged from the
-     regular GitHub scheme above. Same signature (solid green primary
-     button) and teal caveat as GitHub. */
-  html[data-scheme="githubdimmed"] {
-    --bg: #ffffff; --bg-2: #f6f8fa; --bg-3: #eaeef2;
-    --text: #1f2328; --text-2: #656d76; --text-3: #8c959f;
-    --border: rgba(31,35,40,0.12); --border-2: rgba(31,35,40,0.24);
-    --blue-bg: #ddf4ff; --blue-text: #0969da; --blue-border: #54aeff;
-    --teal-bg: #daf1f1; --teal-text: #1b7c83;
-    --amber-bg: #fff8c5; --amber-text: #9a6700;
-    --red-bg: #ffebe9; --red-text: #cf222e;
-    --green-bg: #dafbe1; --green-text: #1a7f37;
-    --purple-bg: #fbefff; --purple-text: #8250df;
-  }
-  html[data-scheme="githubdimmed"][data-theme="dark"] {
-    --bg: #212830; --bg-2: #262c36; --bg-3: #2d3640;
-    --text: #d1d7e0; --text-2: #9198a1; --text-3: #6b7280;
-    --border: rgba(209,215,224,0.10); --border-2: rgba(209,215,224,0.20);
-    --blue-bg: #16324f; --blue-text: #478be6; --blue-border: #6ba3ea;
-    --teal-bg: #163338; --teal-text: #4cb6c4;
-    --amber-bg: #3a2e14; --amber-text: #c69026;
-    --red-bg: #3d211d; --red-text: #e5534b;
-    --green-bg: #1c3320; --green-text: #57ab5a;
-    --purple-bg: #2e2246; --purple-text: #986ee2;
-  }
-  html[data-scheme="githubdimmed"] .btn-primary { background: var(--green-text); border-color: var(--green-text); }
+  html { --ink: var(--text); --ink-2: var(--text-2); --ink-3: var(--text-3); }
 
   html, body { height: 100%; }
   body { font-family: var(--font); background: var(--bg-2); color: var(--text); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; min-height: 100vh; }
 
   /* topbar */
-  .topbar { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 0 20px; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .topbar { background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 20px; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
   .topbar-brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 400; letter-spacing: -0.01em; }
   .topbar-brand i { color: var(--blue-text); font-size: 20px; }
   .topbar-brand .brand-prompt { color: var(--text-2); font-weight: 400; }
   .topbar-brand .brand-lab { color: var(--text); font-weight: 600; }
   .topbar-actions { display: flex; gap: 8px; align-items: center; }
-  .topbar-divider { width: 0.5px; height: 20px; background: var(--border-2); margin: 0 2px; }
+  .topbar-divider { width: 1px; height: 20px; background: var(--border-2); margin: 0 2px; }
   .lib-dropdown { position: relative; display: inline-flex; }
 
   /* layout */
   .layout { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 52px); }
 
   /* sidebar */
-  .sidebar { width: 268px; flex-shrink: 0; background: var(--bg); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .sidebar { width: 268px; flex-shrink: 0; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
 
   /* search */
-  .sidebar-search { padding: 10px 12px; border-bottom: 0.5px solid var(--border); position: relative; display: flex; align-items: center; gap: 6px; }
-  .sidebar-search input { flex: 1; min-width: 0; background: var(--bg-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 7px 10px 7px 30px; font-size: 13px; color: var(--text); outline: none; font-family: var(--font); }
+  .sidebar-search { padding: 10px 12px; border-bottom: 1px solid var(--border); position: relative; display: flex; align-items: center; gap: 6px; }
+  .sidebar-search input { flex: 1; min-width: 0; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 10px 7px 30px; font-size: 13px; color: var(--text); outline: none; font-family: var(--font); }
   .sidebar-search input:focus { border-color: var(--border-2); }
   .sidebar-search .search-icon { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 13px; pointer-events: none; }
   .sidebar-new-btn { flex-shrink: 0; width: 30px; height: 30px; padding: 0; justify-content: center; }
 
   /* filter strip */
-  .filter-strip { border-bottom: 0.5px solid var(--border); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+  .filter-strip { border-bottom: 1px solid var(--border); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
   .filter-strip-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
   .filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .f-chip {
     font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px;
-    cursor: pointer; border: 0.5px solid transparent;
+    cursor: pointer; border: 1px solid transparent;
     background: var(--bg-2); color: var(--text-2);
     display: inline-flex; align-items: center; gap: 4px; transition: all 0.1s;
     user-select: none;
@@ -236,7 +90,7 @@
   .prompt-list { flex: 1; overflow-y: auto; padding: 6px; }
   .prompt-item {
     padding: 7px 8px 7px 11px; border-radius: 0 var(--radius) var(--radius) 0; cursor: pointer;
-    margin-bottom: 2px; border: 0.5px solid transparent; transition: background 0.1s;
+    margin-bottom: 2px; border: 1px solid transparent; transition: background 0.1s;
     display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center;
   }
   .prompt-item:hover { background: var(--bg-2); border-color: var(--border); }
@@ -257,23 +111,23 @@
   .star-btn:hover { color: var(--star); transform: scale(1.2); }
   .star-btn.starred { color: var(--star); }
 
-  .sidebar-footer { padding: 10px 12px; border-top: 0.5px solid var(--border); font-size: 12px; color: var(--text-3); text-align: center; }
+  .sidebar-footer { padding: 10px 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-3); text-align: center; }
 
   /* main */
   .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; background: var(--bg-2); }
   @keyframes main-fade-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
   .main-fade { animation: main-fade-in 0.16s ease; }
-  .main-header { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+  .main-header { background: var(--bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
   .prompt-name-input { font-size: 17px; font-weight: 500; border: none; background: transparent; color: var(--text); outline: none; flex: 1; font-family: var(--font); min-width: 0; }
   .header-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .cat-drop-wrap { position: relative; display: inline-flex; }
   .cat-drop-btn { display: inline-flex; align-items: center; gap: 6px; }
   .cat-drop-btn:disabled { opacity: 0.5; cursor: default; }
-  .cat-drop-menu { display: none; position: absolute; top: calc(100% + 5px); left: 0; min-width: 160px; background: var(--bg); border: 0.5px solid var(--border-2); border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0,0,0,0.14); z-index: 200; overflow: hidden; }
+  .cat-drop-menu { display: none; position: absolute; top: calc(100% + 5px); left: 0; min-width: 160px; background: var(--bg); border: 1px solid var(--border-2); border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0,0,0,0.14); z-index: 200; overflow: hidden; }
   .cat-drop-menu.open { display: block; }
   .cat-drop-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; font-size: 12px; color: var(--text); white-space: nowrap; }
   .cat-drop-item:hover { background: var(--bg-2); }
-  .cat-drop-item + .cat-drop-item { border-top: 0.5px solid var(--border); }
+  .cat-drop-item + .cat-drop-item { border-top: 1px solid var(--border); }
   .cat-drop-item-active { font-weight: 500; }
   .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
   .lock-btn { font-size: 12px; padding: 4px 10px; }
@@ -283,7 +137,7 @@
   .prompt-name-input[readonly] { cursor: default; }
   /* star button in header */
   .star-btn-lg {
-    background: none; border: 0.5px solid var(--border-2); border-radius: var(--radius);
+    background: none; border: 1px solid var(--border-2); border-radius: var(--radius);
     cursor: pointer; padding: 5px 10px; color: var(--text-2); font-size: 14px;
     display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;
     font-family: var(--font); font-size: 12px; white-space: nowrap;
@@ -292,7 +146,7 @@
   .star-btn-lg.starred { background: var(--star-bg); color: var(--star); border-color: var(--star); font-weight: 500; }
 
   /* buttons */
-  .btn { font-size: 13px; border: 0.5px solid var(--border-2); border-radius: var(--radius); padding: 6px 14px; background: transparent; color: var(--text); cursor: pointer; font-family: var(--font); display: inline-flex; align-items: center; gap: 6px; transition: background 0.1s; white-space: nowrap; }
+  .btn { font-size: 13px; border: 1px solid var(--border-2); border-radius: var(--radius); padding: 6px 14px; background: transparent; color: var(--text); cursor: pointer; font-family: var(--font); display: inline-flex; align-items: center; gap: 6px; transition: background 0.1s; white-space: nowrap; }
   .btn:hover { background: var(--bg-3); }
   .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
   .btn-primary:hover { opacity: 0.85; background: var(--text); }
@@ -307,7 +161,7 @@
   .editor-col-left  { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
   .editor-col-right { flex: 1; min-width: 0; }
   .prompt-textarea {
-    width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius);
+    width: 100%; border: 1px solid var(--border); border-radius: var(--radius);
     padding: 12px 14px; font-size: 14px; font-family: var(--mono);
     color: var(--text); background: var(--bg); resize: vertical;
     min-height: calc(66vh - 120px); height: calc(66vh - 120px);
@@ -325,14 +179,14 @@
   code.inline { font-family: var(--mono); font-size: 11px; background: var(--bg-3); padding: 1px 5px; border-radius: 4px; color: var(--blue-text); }
 
   /* vars */
-  .vars-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-  .vars-card-header { padding: 10px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500; background: var(--bg-2); }
-  .var-row { display: grid; grid-template-columns: 150px 1fr auto; gap: 10px; padding: 10px 16px; align-items: center; border-bottom: 0.5px solid var(--border); }
+  .vars-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .vars-card-header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500; background: var(--bg-2); }
+  .var-row { display: grid; grid-template-columns: 168px 1fr auto; gap: 10px; padding: 10px 16px; align-items: center; border-bottom: 1px solid var(--border); }
   .var-row:last-child { border-bottom: none; }
   .var-row-instr { align-items: start; }
   .var-name { font-size: 12px; font-weight: 500; color: var(--blue-text); font-family: var(--mono); background: var(--blue-bg); padding: 3px 8px; border-radius: 5px; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
   .var-options { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-  .option-pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--bg-2); border: 0.5px solid var(--border); cursor: pointer; color: var(--text-2); transition: all 0.1s; }
+  .option-pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--bg-2); border: 1px solid var(--border); cursor: pointer; color: var(--text-2); transition: all 0.1s; }
   .option-pill.selected { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); font-weight: 500; }
   .option-pill:hover:not(.selected) { border-color: var(--border-2); color: var(--text); }
   /* [draggable="true"] is only present on a pill when the prompt is unlocked
@@ -351,7 +205,7 @@
   .instr-item {
     display: flex; align-items: center; gap: 8px;
     font-size: 13px; cursor: pointer; padding: 3px 6px;
-    border-radius: var(--radius); border: 0.5px solid transparent;
+    border-radius: var(--radius); border: 1px solid transparent;
     transition: background 0.1s; user-select: none;
   }
   .instr-item:hover { background: var(--bg-2); border-color: var(--border); }
@@ -372,17 +226,17 @@
     border-radius: 3px; font-size: 11px; color: inherit; opacity: 0.6;
   }
   .instr-act-btn:hover { opacity: 1; background: rgba(0,0,0,0.08); }
-  .var-row-instr { grid-template-columns: 150px 1fr auto; align-items: start; }
+  .var-row-instr { grid-template-columns: 168px 1fr auto; align-items: start; }
   .instr-item.instr-dragging { opacity: 0.35; }
   .instr-item.instr-drag-top    { box-shadow: inset 0  2px 0 #1d9e75; }
   .instr-item.instr-drag-bottom { box-shadow: inset 0 -2px 0 #1d9e75; }
-  .btn-add-opt { font-size: 12px; padding: 4px 9px; border-radius: 20px; background: transparent; border: 0.5px dashed var(--border-2); cursor: pointer; color: var(--text-3); font-family: var(--font); display: inline-flex; align-items: center; gap: 3px; transition: all 0.1s; }
+  .btn-add-opt { font-size: 12px; padding: 4px 9px; border-radius: 20px; background: transparent; border: 1px dashed var(--border-2); cursor: pointer; color: var(--text-3); font-family: var(--font); display: inline-flex; align-items: center; gap: 3px; transition: all 0.1s; }
   .btn-add-opt:hover { border-style: solid; color: var(--text); }
   .no-vars { padding: 14px 16px; font-size: 13px; color: var(--text-3); }
 
   /* preview */
-  .preview-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; }
-  .preview-card-header { padding: 10px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg-2); font-size: 13px; font-weight: 500; flex-shrink: 0; }
+  .preview-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; }
+  .preview-card-header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg-2); font-size: 13px; font-weight: 500; flex-shrink: 0; }
   .preview-body { padding: 14px 16px; font-size: 14px; line-height: 1.75; color: var(--text); white-space: pre-wrap; word-break: break-word; overflow-y: auto; max-height: calc(34vh - 80px); min-height: 80px; }
   .var-highlight { background: var(--blue-bg); color: var(--blue-text); border-radius: 4px; padding: 1px 4px; font-weight: 500; font-size: 13px; }
 
@@ -392,8 +246,8 @@
   .empty p { font-size: 14px; }
 
   /* category manager */
-  .cat-manager { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-  .cat-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 0.5px solid var(--border); cursor: default; transition: background 0.1s; }
+  .cat-manager { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .cat-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 1px solid var(--border); cursor: default; transition: background 0.1s; }
   .cat-row:last-child { border-bottom: none; }
   .cat-row.cat-dragging { opacity: 0.35; }
   .cat-row.cat-drag-top    { box-shadow: inset 0  2px 0 var(--blue-border); }
@@ -404,7 +258,7 @@
   .cat-color-dot:hover { transform: scale(1.25); }
   .cat-row-name { flex: 1; font-size: 13px; }
   .cat-row-name-input {
-    flex: 1; font-size: 13px; border: 0.5px solid var(--border-2); border-radius: var(--radius);
+    flex: 1; font-size: 13px; border: 1px solid var(--border-2); border-radius: var(--radius);
     padding: 3px 8px; background: var(--bg); color: var(--text); outline: none; font-family: var(--font);
   }
   .cat-row-name-input:focus { border-color: var(--blue-border); }
@@ -412,14 +266,14 @@
   .cat-row-actions { display: flex; gap: 4px; flex-shrink: 0; }
   /* color popover */
   .color-popover {
-    display: none; position: absolute; background: var(--bg); border: 0.5px solid var(--border-2);
+    display: none; position: absolute; background: var(--bg); border: 1px solid var(--border-2);
     border-radius: var(--radius); padding: 8px; gap: 5px; flex-wrap: wrap; width: 132px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 300;
   }
   .color-popover.open { display: flex; }
-  .cat-add-row { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px; border-top: 0.5px solid var(--border); }
+  .cat-add-row { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); }
   .cat-add-row-top { display: flex; gap: 8px; align-items: center; }
-  .cat-add-row input { flex: 1; min-width: 0; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 6px 10px; font-size: 13px; background: var(--bg-2); color: var(--text); outline: none; font-family: var(--font); }
+  .cat-add-row input { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 10px; font-size: 13px; background: var(--bg-2); color: var(--text); outline: none; font-family: var(--font); }
   .cat-add-row input:focus { border-color: var(--border-2); }
   .color-picker-row { display: flex; gap: 5px; align-items: center; }
   .color-swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.1s; flex-shrink: 0; }
@@ -427,18 +281,18 @@
 
   /* help modal */
   .help-modal { width: 560px; max-height: 80vh; overflow-y: auto; gap: 0; padding: 0; }
-  .help-modal-header { padding: 18px 22px 14px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg); z-index: 1; }
+  .help-modal-header { padding: 18px 22px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg); z-index: 1; }
   .help-modal-header h3 { font-size: 16px; }
   .help-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 20px; }
   .help-section { display: flex; flex-direction: column; gap: 8px; }
   .help-section-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); }
   .help-row { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.6; color: var(--text-2); }
   .help-row i { font-size: 14px; color: var(--text-3); flex-shrink: 0; margin-top: 2px; width: 16px; text-align: center; }
-  .help-divider { height: 0.5px; background: var(--border); }
+  .help-divider { height: 1px; background: var(--border); }
   .help-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px; font-family: var(--mono); white-space: nowrap; }
   .help-badge-blue   { background: var(--blue-bg);  color: var(--blue-text); }
   .help-badge-teal   { background: var(--teal-bg);  color: var(--teal-text); }
-  .help-tip { background: var(--bg-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--text-2); line-height: 1.6; }
+  .help-tip { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--text-2); line-height: 1.6; }
   .help-tip strong { color: var(--text); font-weight: 500; }
 
   /* onboarding (embedded in main area) */
@@ -478,21 +332,21 @@
   /* modal */
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.25); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .15s ease, visibility .15s ease; }
   .modal-bg.open { opacity: 1; visibility: visible; pointer-events: auto; }
-  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border-2); padding: 22px; width: 380px; max-width: 90vw; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border-2); padding: 22px; width: 380px; max-width: 90vw; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
   .modal h3 { font-size: 15px; font-weight: 600; }
   .modal p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
-  .modal input, .modal select { width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px 12px; font-size: 14px; background: var(--bg-2); color: var(--text); outline: none; font-family: var(--font); }
+  .modal input, .modal select { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; font-size: 14px; background: var(--bg-2); color: var(--text); outline: none; font-family: var(--font); }
   .modal input:focus { border-color: var(--border-2); }
   .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
   .import-options { display: flex; flex-direction: column; gap: 8px; }
-  .import-option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: background 0.1s; }
+  .import-option { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: background 0.1s; }
   .import-option:hover { background: var(--bg-2); }
   .import-option input[type=radio] { width: auto; margin-top: 2px; flex-shrink: 0; }
   .import-option-text strong { display: block; font-size: 13px; font-weight: 500; }
   .import-option-text span { font-size: 12px; color: var(--text-2); }
 
   /* keyboard shortcuts */
-  kbd { font-family: var(--mono); font-size: 11px; background: var(--bg-3); border: 0.5px solid var(--border-2); border-radius: 4px; padding: 2px 6px; color: var(--text); box-shadow: 0 1px 0 var(--border-2); display: inline-block; line-height: 1.4; }
+  kbd { font-family: var(--mono); font-size: 11px; background: var(--bg-3); border: 1px solid var(--border-2); border-radius: 4px; padding: 2px 6px; color: var(--text); box-shadow: 0 1px 0 var(--border-2); display: inline-block; line-height: 1.4; }
   .shortcut-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding: 4px 0; }
   .shortcut-row span { color: var(--text-2); }
   .shortcut-keys { display: flex; gap: 3px; }
@@ -507,7 +361,7 @@
   /* text variable type */
   .var-name-text { background: var(--amber-bg); color: var(--amber-text); }
   .var-text-input {
-    width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius);
+    width: 100%; border: 1px solid var(--border); border-radius: var(--radius);
     padding: 6px 10px; font-size: 13px; background: var(--bg-2); color: var(--text);
     outline: none; font-family: var(--font);
   }
@@ -517,13 +371,13 @@
   .onboarding-badge-amber { background: var(--amber-bg); color: var(--amber-text); }
 
   /* presets */
-  .presets-section { border-bottom: 0.5px solid var(--border); padding: 10px 12px 8px; }
+  .presets-section { border-bottom: 1px solid var(--border); padding: 10px 12px 8px; }
   .presets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .presets-label { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
   .preset-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .preset-chip {
     display: inline-flex; align-items: center;
-    background: var(--bg-2); border: 0.5px solid var(--border);
+    background: var(--bg-2); border: 1px solid var(--border);
     border-radius: 20px; padding: 3px 4px 3px 10px;
     font-size: 12px; color: var(--text); transition: border-color 0.1s;
     max-width: 180px;
@@ -548,34 +402,16 @@
   /* backups */
   .backups-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
   .backups-empty { font-size: 13px; color: var(--text-2); padding: 8px 2px; line-height: 1.5; }
-  .backup-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: var(--radius); border: 0.5px solid var(--border-2); }
+  .backup-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border-2); }
   .backup-row-date { font-size: 13px; font-weight: 600; }
   .backup-row-desc { font-size: 12px; color: var(--text-2); margin-top: 1px; }
 
-  /* theme (color scheme) picker */
-  .theme-options { display: flex; flex-direction: column; gap: 10px; }
-  .theme-option { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius); border: 0.5px solid var(--border-2); cursor: pointer; }
-  .theme-option:hover { background: var(--bg-2); }
-  .theme-option.selected { border-color: var(--blue-border); box-shadow: 0 0 0 1px var(--blue-border); }
-  .theme-option-swatches { display: flex; gap: 3px; flex-shrink: 0; }
-  .theme-option-swatch { width: 16px; height: 16px; border-radius: 50%; border: 0.5px solid var(--border-2); }
-  .theme-option-body { flex: 1; min-width: 0; }
-  .theme-option-name { font-size: 13px; font-weight: 600; }
-  .theme-option-desc { font-size: 12px; color: var(--text-2); margin-top: 1px; }
-  .theme-option-check { color: var(--blue-text); font-size: 15px; opacity: 0; flex-shrink: 0; }
-  .theme-option.selected .theme-option-check { opacity: 1; }
-
   /* split link button */
-  .split-btn { display: inline-flex; position: relative; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: visible; }
-  .split-btn-main { display: flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--bg-2); color: var(--text); font-size: 12px; font-family: var(--font); border: none; border-radius: var(--radius) 0 0 var(--radius); cursor: pointer; white-space: nowrap; }
-  .split-btn-main:hover { background: var(--bg-3); }
-  .split-btn-chevron { display: flex; align-items: center; padding: 5px 7px; background: var(--bg-2); color: var(--text-3); font-size: 9px; font-family: var(--font); border: none; border-left: 0.5px solid var(--border); border-radius: 0 var(--radius) var(--radius) 0; cursor: pointer; }
-  .split-btn-chevron:hover { background: var(--bg-3); color: var(--text); }
-  .split-btn-menu { display: none; position: absolute; top: calc(100% + 5px); right: 0; background: var(--bg-2); border: 0.5px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0,0,0,.14); min-width: 200px; z-index: 300; overflow: hidden; }
+  .split-btn-menu { display: none; position: absolute; top: calc(100% + 5px); right: 0; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0,0,0,.14); min-width: 200px; z-index: 300; overflow: hidden; }
   .split-btn-menu.open { display: block; }
   .split-btn-menu-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 13px; cursor: pointer; color: var(--text); }
   .split-btn-menu-item:hover { background: var(--bg-3); }
-  .split-btn-menu-item + .split-btn-menu-item { border-top: 0.5px solid var(--border); }
+  .split-btn-menu-item + .split-btn-menu-item { border-top: 1px solid var(--border); }
   .split-btn-menu-icon { flex-shrink: 0; width: 14px; margin-top: 1px; color: var(--text-2); font-size: 12px; }
   .split-btn-menu-label { font-size: 12px; font-weight: 500; }
   .split-btn-menu-desc { font-size: 11px; color: var(--text-3); margin-top: 1px; }
@@ -589,17 +425,273 @@
   .version-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; color: var(--text-2); font-size: 12px; font-weight: 500; padding: 2px 0; }
   .version-toggle:hover { color: var(--text); }
   .version-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-  .version-row { border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .version-row { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   .version-row-header { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: var(--bg-2); cursor: pointer; gap: 8px; }
   .version-row-header:hover { background: var(--bg-3); }
   .version-meta { font-size: 12px; color: var(--text-2); flex: 1; }
-  .diff-view { padding: 8px 10px; font-family: var(--mono); font-size: 11px; line-height: 1.6; max-height: 220px; overflow-y: auto; background: var(--bg); border-top: 0.5px solid var(--border); }
+  .diff-view { padding: 8px 10px; font-family: var(--mono); font-size: 11px; line-height: 1.6; max-height: 220px; overflow-y: auto; background: var(--bg); border-top: 1px solid var(--border); }
   .diff-line { white-space: pre-wrap; word-break: break-all; padding: 0 2px; border-radius: 2px; }
   .diff-same { color: var(--text-3); }
   .diff-add { background: var(--green-bg); color: var(--green-text); }
   .diff-del { background: var(--red-bg); color: var(--red-text); }
   .no-versions { font-size: 12px; color: var(--text-3); margin-top: 8px; }
 
+  /* ── Glass (Apple "Liquid Glass" / Mail-style) — the app's only look ─────────
+     Ported from mytasks. The CHROME is glass and the CONTENT is flat: the topbar
+     and the sidebar are translucent and blur a soft graphite wallpaper (--wall) —
+     the web stand-in for macOS vibrancy — the topbar and header controls are
+     capsules, and the editor (.main) is opaque and neutral. The window is flush,
+     with no floating cards. Rules the CSS has to respect:
+     - Content is made flat by *scoping variables*: `.main` redefines
+       --bg/--bg-2/--bg-3/--glass-* to opaque neutral values, so every descendant
+       rule that reads them (cards, pills, inputs, popovers) is flat with no
+       per-element overrides. Chrome (topbar, sidebar) keeps the translucent ones.
+       Modals get the same opaque variables (but their own glass background).
+     - backdrop-filter does not see through a parent that has its own, so only
+       body-level surfaces (topbar, sidebar, modals, toast) blur; menus inside
+       the topbar or the content use the near-opaque --glass-strong.
+     - The light block and the dark block must define the same variables: the
+       light block would otherwise beat the bare html[data-theme="dark"] block
+       for any variable only it sets.
+     Accessibility: prefers-reduced-transparency / prefers-contrast (and browsers
+     without backdrop-filter) get solid chrome and a flat wallpaper. */
+  html[data-scheme="glass"] {
+    --bg: rgba(255,255,255,.46); --bg-2: rgba(255,255,255,.30); --bg-3: rgba(255,255,255,.62);
+    --text: #15161b; --text-2: rgba(21,22,27,.68); --text-3: rgba(21,22,27,.48);
+    --border: rgba(40,44,70,.13); --border-2: rgba(40,44,70,.24);
+    --blue-bg: rgba(10,132,255,.16); --blue-text: #0a5fd0; --blue-border: #7ab4ff;
+    --teal-bg: rgba(48,176,160,.18); --teal-text: #0b6b5f;
+    --amber-bg: rgba(255,159,10,.20); --amber-text: #8a4b00;
+    --red-bg: rgba(255,69,58,.15); --red-text: #c4281f; --red-border: rgba(196,40,31,.4);
+    --green-bg: rgba(52,199,89,.18); --green-text: #1a7a36;
+    --purple-bg: rgba(175,82,222,.16); --purple-text: #7a2fb0;
+    --radius: 10px; --radius-lg: 14px; --glass-r-row: 8px; --glass-r-bar: 12px; --glass-r-menu: 16px;
+    --glass-strong: rgba(255,255,255,.97);
+    --glass-rim: rgba(255,255,255,.80); --glass-edge: rgba(255,255,255,.60);
+    --glass-shadow: 0 10px 40px rgba(40,50,110,.16), 0 2px 8px rgba(40,50,110,.08);
+    --glass-blur: blur(26px);
+    --glass-accent: linear-gradient(180deg, #3a9bff, #0a72f0);
+    --wall: radial-gradient(55% 45% at 12% 10%, #dfe3ea 0, transparent 70%), radial-gradient(50% 45% at 88% 15%, #f3f4f7 0, transparent 70%), radial-gradient(60% 55% at 75% 95%, #cfd5df 0, transparent 70%), linear-gradient(160deg, #eef0f4, #e3e6ec);   /* Graphite — the only wallpaper */
+  }
+  html[data-scheme="glass"][data-theme="dark"] {
+    --bg: rgba(34,36,52,.50); --bg-2: rgba(22,24,36,.40); --bg-3: rgba(255,255,255,.12);
+    --text: #f5f6fa; --text-2: rgba(245,246,250,.70); --text-3: rgba(245,246,250,.46);
+    --border: rgba(255,255,255,.14); --border-2: rgba(255,255,255,.26);
+    --blue-bg: rgba(10,132,255,.26); --blue-text: #8cc2ff; --blue-border: #3a82e0;
+    --teal-bg: rgba(48,176,160,.26); --teal-text: #7fe0d0;
+    --amber-bg: rgba(255,159,10,.26); --amber-text: #ffc566;
+    --red-bg: rgba(255,69,58,.26); --red-text: #ff9a92; --red-border: rgba(255,154,146,.45);
+    --green-bg: rgba(52,199,89,.26); --green-text: #8ee6a4;
+    --purple-bg: rgba(175,82,222,.28); --purple-text: #d6a6f5;
+    --radius: 10px; --radius-lg: 14px; --glass-r-row: 8px; --glass-r-bar: 12px; --glass-r-menu: 16px;
+    --glass-strong: rgba(36,38,56,.97);
+    --glass-rim: rgba(255,255,255,.22); --glass-edge: rgba(255,255,255,.16);
+    --glass-shadow: 0 12px 44px rgba(0,0,0,.45), 0 2px 10px rgba(0,0,0,.30);
+    --glass-blur: blur(28px);
+    --glass-accent: linear-gradient(180deg, #4aa3ff, #1a6fe6);
+    --wall: radial-gradient(55% 45% at 12% 10%, #2a2f3a 0, transparent 70%), radial-gradient(50% 45% at 88% 15%, #1b1f29 0, transparent 70%), radial-gradient(60% 55% at 75% 95%, #343a48 0, transparent 70%), linear-gradient(160deg, #14161c, #1a1d26);
+  }
+  html[data-scheme="glass"] body { background: var(--wall); background-attachment: fixed; background-size: cover; }
+
+  /* flush window: glass chrome (topbar + sidebar) around flat content */
+  html[data-scheme="glass"] .layout { flex: 1; min-height: 0; height: auto; padding: 0; gap: 0; }
+  html[data-scheme="glass"] .topbar { position: relative; z-index: 60; margin: 0; height: 56px; padding: 0 18px; border-radius: 0; border-bottom: 1px solid var(--border); }
+  html[data-scheme="glass"] .sidebar { border-radius: 0; border-right: 1px solid var(--border); }
+  html[data-scheme="glass"] :is(.topbar, .sidebar) { background: var(--bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+  html[data-scheme="glass"] :is(.sidebar-search, .filter-strip, .sidebar-footer) { border-color: var(--border); }
+  html[data-scheme="glass"] .sidebar-search input { border-radius: var(--radius); background: var(--bg-3); border: 1px solid var(--glass-edge); }
+  html[data-scheme="glass"] .topbar-divider { background: var(--border); }
+
+  /* content: opaque and neutral — achieved by scoping the variables (see header) */
+  html[data-scheme="glass"] :is(.main, .modal) {
+    --bg: #ffffff; --bg-2: #f6f6f9; --bg-3: #ececf1;
+    --glass-strong: #ffffff; --glass-edge: rgba(40,44,70,.16); --glass-rim: transparent;
+    --border: rgba(40,44,70,.10); --border-2: rgba(40,44,70,.20);
+    --ink-border: var(--border); --ink-border-2: var(--border-2);
+  }
+  html[data-scheme="glass"][data-theme="dark"] :is(.main, .modal) {
+    --bg: #1e1f24; --bg-2: #26272d; --bg-3: #31323a;
+    --glass-strong: #26272d; --glass-edge: rgba(255,255,255,.14); --glass-rim: transparent;
+    --border: rgba(255,255,255,.10); --border-2: rgba(255,255,255,.20);
+    --ink-border: var(--border); --ink-border-2: var(--border-2);
+  }
+  html[data-scheme="glass"] .main { background: var(--bg-2); border-radius: 0; box-shadow: none; }
+  html[data-scheme="glass"] .main-header { border-bottom: 1px solid var(--border); }
+  html[data-scheme="glass"] :is(.vars-card, .preview-card, .cat-manager) { border: 1px solid var(--border); box-shadow: none; }
+  html[data-scheme="glass"] :is(.vars-card-header, .preview-card-header) { border-bottom: 1px solid var(--border); }
+  html[data-scheme="glass"] .prompt-textarea { border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  html[data-scheme="glass"] .prompt-textarea[readonly] { border-color: var(--amber-text); }
+
+  /* sidebar list: rounded rows, a quiet hover, Mail's solid accent for the open prompt */
+  html[data-scheme="glass"] .prompt-list { padding: 8px; }
+  html[data-scheme="glass"] .prompt-item { border-radius: var(--glass-r-row); border: 0; padding: 7px 8px 7px 12px; }
+  html[data-scheme="glass"] .prompt-item:hover:not(.active) { background: var(--bg-3); border-color: transparent; }
+  html[data-scheme="glass"] .prompt-item.kb-focus:not(.active) { background: var(--bg-3); outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+  html[data-scheme="glass"] .prompt-item.active {
+    background: var(--sel-bg); color: #fff;
+    --text: #fff; --text-2: rgba(255,255,255,.88); --text-3: rgba(255,255,255,.72);
+    box-shadow: inset 3px 0 0 rgba(255,255,255,.7) !important;   /* the inline category stripe turns white on the blue row */
+  }
+  html[data-scheme="glass"] .prompt-item.active .star-btn:hover { color: #fff; }
+  html[data-scheme="glass"] .prompt-item.active .star-btn.starred { color: #fff; }
+  html[data-scheme="glass"] .prompt-item.kb-focus.active { outline: 2px solid rgba(255,255,255,.8); outline-offset: -3px; }
+
+  /* pill controls with a springy press */
+  html[data-scheme="glass"] .btn { border-radius: var(--radius); background: var(--bg-3); border: 1px solid var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-rim), 0 1px 4px rgba(40,50,110,.10); transition: transform .35s cubic-bezier(.34,1.56,.64,1), background .15s ease, box-shadow .15s ease, border-color .15s ease; }
+  html[data-scheme="glass"] .btn:hover { background: var(--glass-strong); box-shadow: inset 0 1px 0 var(--glass-rim), 0 4px 14px rgba(40,50,110,.14); }
+  html[data-scheme="glass"] :is(.btn, .f-chip, .star-btn-lg):active { transform: scale(.94); }
+  /* the gradient paints over the border box too (a translucent white border on top of a repeating gradient read as a second, paler blue ring) */
+  html[data-scheme="glass"] .btn-primary { background: var(--glass-accent); background-origin: border-box; color: #fff; border-color: transparent; box-shadow: none; }
+  html[data-scheme="glass"] .btn-primary:hover { background: var(--glass-accent); filter: brightness(1.06); opacity: 1; }
+  /* macOS-flavoured refinements (PromptLab only): prominent buttons carry no outer shadow or glow, just the inner top highlight; the sidebar's
+     search field and its "+" are a capsule and a circle, like Mail's sidebar controls */
+      html[data-scheme="glass"] .sidebar-search input { border-radius: 999px; padding-left: 34px; }
+  html[data-scheme="glass"] .sidebar-search .search-icon { left: 24px; }
+  html[data-scheme="glass"] .sidebar-new-btn { border-radius: 50%; width: 32px; height: 32px; }
+  html[data-scheme="glass"] .btn-danger { color: var(--red-text); border-color: var(--red-border); }
+  html[data-scheme="glass"] .btn-danger:hover { background: var(--red-bg); }
+  html[data-scheme="glass"] .lock-btn-on { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-text); }
+  html[data-scheme="glass"] .star-btn-lg { background: var(--bg-3); border: 1px solid var(--glass-edge); transition: transform .35s cubic-bezier(.34,1.56,.64,1), background .15s ease, color .15s ease; }
+  html[data-scheme="glass"] .star-btn-lg:hover, html[data-scheme="glass"] .star-btn-lg.starred { background: var(--star-bg); border-color: var(--star); color: var(--star); }
+  /* capsules: controls that live in the topbar and the editor header, as in Mail; everything in the content stays at --radius */
+  html[data-scheme="glass"] :is(.topbar, .main-header) :is(.btn, .star-btn-lg) { border-radius: 999px; }
+  html[data-scheme="glass"] .main-header :is(.btn, .star-btn-lg) { background-color: var(--bg-2); }
+  html[data-scheme="glass"] .main-header .btn.lock-btn-on { background-color: var(--amber-bg); }
+  html[data-scheme="glass"] .f-chip { background: var(--bg-3); border-color: var(--glass-edge); }
+  html[data-scheme="glass"] .f-chip.fav-chip.active { background: var(--star-bg); border-color: var(--star); }
+  html[data-scheme="glass"] :is(.modal input, .modal select, .var-text-input, .cat-add-row input) { background: var(--bg-2); border: 1px solid var(--glass-edge); border-radius: var(--radius); }
+  html[data-scheme="glass"] .option-pill { background: var(--bg-3); border-color: var(--glass-edge); }
+  html[data-scheme="glass"] .option-pill.selected { background: var(--blue-bg); border-color: var(--blue-border); }
+  html[data-scheme="glass"] .preset-chip { background: var(--bg-3); border-color: var(--glass-edge); }
+  html[data-scheme="glass"] .preset-chip-active { background: var(--blue-bg); border-color: var(--blue-border); }
+
+  /* menus, modals, toast */
+  html[data-scheme="glass"] :is(.split-btn-menu, .cat-drop-menu, .color-popover, .modal, .toast) { background: var(--glass-strong); color: var(--text); border: 1px solid var(--glass-edge); border-radius: var(--glass-r-menu); box-shadow: inset 0 1px 0 var(--glass-rim), var(--glass-shadow); }
+  html[data-scheme="glass"] :is(.modal, .toast) { -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+  html[data-scheme="glass"] .split-btn-menu, html[data-scheme="glass"] .cat-drop-menu { padding: 5px; }
+  html[data-scheme="glass"] :is(.split-btn-menu-item, .cat-drop-item) { border-radius: 8px; border-top: 0; }
+  html[data-scheme="glass"] :is(.split-btn-menu-item, .cat-drop-item):hover { background: var(--sel-bg); color: #fff; }
+  html[data-scheme="glass"] .split-btn-menu-item:hover :is(.split-btn-menu-icon, .split-btn-menu-desc) { color: rgba(255,255,255,.85); }
+  html[data-scheme="glass"] .toast.error { background: var(--red-bg); color: var(--red-text); }
+  html[data-scheme="glass"] .modal-bg { background: rgba(20,24,50,.22); }
+  html[data-scheme="glass"] :is(.import-option, .backup-row) { border: 1px solid var(--border); }
+  html[data-scheme="glass"] .import-option:hover { background: var(--bg-2); }
+
+  /* Dropdown chevron: the browser's own arrow is a heavy dark glyph that crowds the pill's right edge, so Glass draws a
+     light, thin one (appearance:none keeps the native popup list). Must come after every Glass rule that sets the
+     `background` shorthand (it would reset these). Two data-URIs because a data-URI can't read CSS variables. */
+  html[data-scheme="glass"] .modal select { -webkit-appearance: none; appearance: none; padding-right: 30px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2315161b' stroke-opacity='.45' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; background-size: 12px 8px; }
+  html[data-scheme="glass"][data-theme="dark"] .modal select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23f5f6fa' stroke-opacity='.6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+
+  /* solid fallback: reduced transparency / high contrast / no backdrop-filter */
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    html[data-scheme="glass"] { --bg: #ffffff; --bg-2: #f2f3f7; --bg-3: #e8eaf0; --glass-strong: #ffffff; --glass-blur: none; --glass-rim: transparent; --glass-edge: rgba(40,44,70,.18); --wall: linear-gradient(160deg, #e9eefc, #f3ebfa); }
+    html[data-scheme="glass"][data-theme="dark"] { --bg: #1d1f2b; --bg-2: #171925; --bg-3: #2a2d3d; --glass-strong: #232636; --glass-blur: none; --glass-rim: transparent; --glass-edge: rgba(255,255,255,.18); --wall: linear-gradient(160deg, #10121c, #171326); }
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    html[data-scheme="glass"] { --bg: #ffffff; --bg-2: #f2f3f7; --bg-3: #e8eaf0; --glass-strong: #ffffff; --glass-blur: none; --glass-rim: transparent; --glass-edge: rgba(40,44,70,.18); --wall: linear-gradient(160deg, #e9eefc, #f3ebfa); }
+    html[data-scheme="glass"][data-theme="dark"] { --bg: #1d1f2b; --bg-2: #171925; --bg-3: #2a2d3d; --glass-strong: #232636; --glass-blur: none; --glass-rim: transparent; --glass-edge: rgba(255,255,255,.18); --wall: linear-gradient(160deg, #10121c, #171326); }
+  }
+
+  /* One focus style (Apple Mail's colours): a solid ~3pt band with the control's own border taking a slightly darker edge.
+     The indicator is restyled, never removed. Clickable non-input things get the same colour as an outline, keyboard only. */
+  :is(input:where(:not([type=checkbox]):not([type=radio]):not([type=file])), textarea):focus-visible {
+    outline: none !important;
+    border-color: var(--focus-edge) !important;
+    box-shadow: 0 0 0 3px var(--focus-ring) !important;
+  }
+  :is(.btn, .star-btn-lg, .f-chip, .prompt-item, .option-pill, .instr-item):focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 0; }
+  .f-chip:focus-visible { outline-width: 2px; }
+  select:focus-visible, select:focus { outline: none; }
+  /* the borderless fields that live inside another surface */
+  .prompt-name-input:focus-visible, .preset-chip-name-input:focus-visible { box-shadow: none !important; border-color: transparent !important; }
+
+  /* topbar tools: one icon-only capsule group with tooltips, like mytasks (Data, theme, Help each open
+     their own menu); the linked-file state is a single status chip beside it */
+  .tool-group { display: inline-flex; align-items: center; gap: 1px; padding: 2px; border: 1px solid var(--border-2); border-radius: 999px; background: var(--bg); }
+  .tool-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 30px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--text); font-size: 14px; cursor: pointer; transition: background .12s ease, opacity .12s ease; }
+  .tool-btn:hover:not(:disabled) { background: var(--bg-3); }
+  .tool-btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 0; }
+  .file-chip.warn { color: var(--amber-text); border-color: var(--amber-text); }
+  .file-chip.ok i { color: var(--green-text); }
+  .file-chip.bad { color: var(--red-text); border-color: var(--red-text); }
+  .topbar-brand { user-select: none; }
+  /* Appearance button: a small A beside a large A (Safari's "aA"); its menu reuses .view-switch (the same pill as mytasks) */
+  .aa-ico { display: inline-flex; align-items: baseline; gap: 1px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+  .aa-s { font-size: 11px; }
+  .aa-l { font-size: 17px; }
+  .ui-scale-panel { padding: 10px 12px; }
+  .ui-scale-panel-header { font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; }
+  .ui-scale-panel .ap-gap { margin-top: 12px; }
+  .view-switch { display: inline-flex; border: 1px solid var(--border-2); border-radius: var(--radius); overflow: hidden; padding: 3px; gap: 2px; background: var(--bg-2); }
+  .view-switch-btn { padding: 5px 10px; background: transparent; border: none; border-radius: calc(var(--radius) - 3px); color: var(--text-3); cursor: pointer; font-size: 12px; font-weight: 600; line-height: 1.2; min-width: 30px; text-align: center; white-space: nowrap; font-family: var(--font); transition: transform .35s cubic-bezier(.34,1.56,.64,1), background .15s ease; }
+  .view-switch-btn:hover { color: var(--text); }
+  .view-switch-btn:active { transform: scale(.94); }
+  .view-switch-btn.active { background: var(--glass-strong); color: var(--text); box-shadow: inset 0 1px 0 var(--glass-rim), 0 2px 8px rgba(40,50,110,.15); }
+  .view-switch-btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 0; }
+  .theme-ico { vertical-align: -3px; margin-right: 6px; }
+  /* ── Polish pass (ported from mytasks, which took it from Milestone) ───────
+     Geometry/type only — no colors. Placed last so it wins over the earlier base rules at equal specificity.
+     UI text steps up ~1px (11→12, 12→13, 13→14, 14→15): the old sizes read small next to mytasks, e.g. the
+     topbar's "Linked" chip. Hairline borders became 1px above, crisp on non-retina displays. */
+  body { font-size: 16px; }
+  .topbar { height: 56px; }
+  .topbar-brand { font-size: 23px; }
+  .topbar-brand i { font-size: 21px; }
+  .topbar-actions { gap: 6px; }
+  .topbar-divider { width: 1px; height: 22px; }
+  .btn { font-size: 14px; padding: 7px 14px; }
+  .btn-sm { font-size: 13px; padding: 6px 11px; }
+  .sidebar-search input { font-size: 14px; padding: 8px 10px 8px 34px; }
+  .filter-strip-label, .presets-label, .field-label, .help-section-title, .shortcut-group-label { font-size: 12px; }
+  .f-chip, .tag, .sidebar-footer { font-size: 12px; }
+  .prompt-item-name { font-size: 14px; }
+  .prompt-item-preview { font-size: 12px; }
+  .prompt-name-input { font-size: 18px; }
+  .lock-btn, .star-btn-lg, .cat-drop-item { font-size: 13px; }
+  .prompt-textarea { font-size: 15px; }
+  .hint { font-size: 13px; }
+  code.inline { font-size: 12px; }
+  .vars-card-header, .preview-card-header { font-size: 14px; }
+  .var-name { font-size: 13px; }
+  .option-pill, .preset-chip, .btn-add-opt, .no-presets { font-size: 13px; }
+  .instr-item, .no-vars { font-size: 14px; }
+  .var-text-input { font-size: 14px; }
+  .preview-body { font-size: 15px; }
+  .var-highlight, .var-highlight-text { font-size: 14px; }
+  .version-toggle, .version-meta, .no-versions { font-size: 13px; }
+  .diff-view { font-size: 12px; }
+  .cat-row-name, .cat-row-name-input, .cat-add-row input { font-size: 14px; }
+  .cat-row-count { font-size: 13px; }
+  .split-btn-menu-label { font-size: 13px; }
+  .split-btn-menu-desc { font-size: 12px; }
+  .modal h3 { font-size: 17px; }
+  .modal p { font-size: 14px; }
+  .modal input, .modal select { font-size: 15px; }
+  .import-option-text strong { font-size: 14px; }
+  .import-option-text span { font-size: 13px; }
+  .help-row, .shortcut-row { font-size: 14px; }
+  .help-tip { font-size: 13px; }
+  .backup-row-date { font-size: 14px; }
+  .backup-row-desc { font-size: 13px; }
+  kbd { font-size: 12px; }
+  .toast { font-size: 14px; }
+  .ui-scale-panel-header { font-size: 13px; }
+  .view-switch-btn { font-size: 13px; padding: 6px 11px; }
+  .tool-btn { font-size: 15px; }
+
+  /* ── Collapsible sidebar (ported from mytasks) ────────────────────────────── */
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .sidebar-toggle { padding: 6px 9px; }
+  .sidebar { transition: width .2s ease, border-width .2s ease; }
+  html.sidebar-collapsed .sidebar { width: 0; border-right-width: 0; visibility: hidden; transition: width .2s ease, border-width .2s ease, visibility 0s linear .2s; }
+  @media (max-width: 800px) {
+    /* narrow: the sidebar floats over the content instead of squeezing it */
+    .sidebar { position: fixed; top: 56px; bottom: 0; left: 0; z-index: 140; width: min(300px, 86vw); box-shadow: 0 0 40px rgba(0,0,0,.25); }
+    html.sidebar-collapsed .sidebar { width: min(300px, 86vw); transform: translateX(-100%); box-shadow: none; }
+    .sidebar { transition: transform .2s ease; }
+    .topbar-brand > span { display: none; }   /* icon only, so the toggle and the right-hand buttons fit */
+  }
   #fileInput { display: none; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -609,39 +701,48 @@
 <body>
 
 <div class="topbar">
-  <div class="topbar-brand">
-    <i class="fa-solid fa-flask"></i>
-    <span><span class="brand-prompt">Prompt</span><span class="brand-lab">Lab</span></span>
+  <div class="topbar-left">
+    <button class="btn btn-icon btn-sm sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-expanded="true" title="Hide sidebar"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2.5"/><path d="M6 2.5v11"/></svg></button>
+    <div class="topbar-brand" onclick="goHome()" title="Home" style="cursor:pointer">
+      <i class="fa-solid fa-flask"></i>
+      <span><span class="brand-prompt">Prompt</span><span class="brand-lab">Lab</span></span>
+    </div>
   </div>
   <div class="topbar-actions">
-    <div id="fileSyncIndicator" style="display:flex;align-items:center;gap:6px"></div>
+    <span id="fileSyncIndicator"></span>
     <div class="topbar-divider"></div>
-    <div class="lib-dropdown" id="libDropdown">
-      <button class="btn btn-sm" onclick="toggleLibMenu()"><i class="fa-solid fa-database"></i> Data <i class="fa-solid fa-chevron-down" style="font-size:9px;margin-left:1px"></i></button>
-      <div class="split-btn-menu" id="libMenu" style="right:0;left:auto">
-        <div class="split-btn-menu-item" onclick="exportLibrary();closeLibMenu()">
-          <i class="fa-solid fa-download split-btn-menu-icon"></i>
-          <div><div class="split-btn-menu-label">Export</div><div class="split-btn-menu-desc">Download library as .json</div></div>
+    <div class="tool-group topbar-tools">
+      <button type="button" class="tool-btn" onclick="openCatManager()" title="Categories"><i class="fa-solid fa-tags"></i></button>
+      <div class="lib-dropdown" id="libDropdown">
+        <button type="button" class="tool-btn" onclick="event.stopPropagation();toggleLibMenu()" title="Data — export, import, backups" aria-haspopup="menu"><i class="fa-regular fa-hard-drive"></i></button>
+        <div class="split-btn-menu" id="libMenu" style="right:0;left:auto">
+          <div class="split-btn-menu-item" onclick="exportLibrary();closeLibMenu()">
+            <i class="fa-solid fa-download split-btn-menu-icon"></i>
+            <div><div class="split-btn-menu-label">Export</div><div class="split-btn-menu-desc">Download library as .json</div></div>
+          </div>
+          <div class="split-btn-menu-item" onclick="triggerImport();closeLibMenu()">
+            <i class="fa-solid fa-upload split-btn-menu-icon"></i>
+            <div><div class="split-btn-menu-label">Import</div><div class="split-btn-menu-desc">Merge or replace from .json file</div></div>
+          </div>
+          <div class="split-btn-menu-item" onclick="openBackupsModal();closeLibMenu()">
+            <i class="fa-solid fa-clock-rotate-left split-btn-menu-icon"></i>
+            <div><div class="split-btn-menu-label">Backups</div><div class="split-btn-menu-desc">Restore an automatic daily snapshot</div></div>
+          </div>
         </div>
-        <div class="split-btn-menu-item" onclick="triggerImport();closeLibMenu()">
-          <i class="fa-solid fa-upload split-btn-menu-icon"></i>
-          <div><div class="split-btn-menu-label">Import</div><div class="split-btn-menu-desc">Merge or replace from .json file</div></div>
-        </div>
-        <div class="split-btn-menu-item" onclick="openBackupsModal();closeLibMenu()">
-          <i class="fa-solid fa-clock-rotate-left split-btn-menu-icon"></i>
-          <div><div class="split-btn-menu-label">Backups</div><div class="split-btn-menu-desc">Restore an automatic daily snapshot</div></div>
+      </div>
+      <div class="lib-dropdown" id="uiScaleDropdown">
+        <button type="button" class="tool-btn" onclick="event.stopPropagation();toggleUiScaleMenu()" title="Appearance — text size and theme" aria-haspopup="menu"><span class="aa-ico" aria-hidden="true"><span class="aa-s">A</span><span class="aa-l">A</span></span></button>
+        <div class="split-btn-menu" id="uiScaleMenu" style="left:auto;right:0;min-width:210px"></div>
+      </div>
+      <div class="lib-dropdown" id="helpDropdown">
+        <button type="button" class="tool-btn" onclick="event.stopPropagation();toggleHelpMenu()" title="Help, shortcuts and about" aria-haspopup="menu"><i class="fa-regular fa-circle-question"></i></button>
+        <div class="split-btn-menu" id="helpMenu" style="right:0;left:auto">
+          <div class="split-btn-menu-item" onclick="openHelp();closeHelpMenu()"><i class="fa-regular fa-circle-question split-btn-menu-icon"></i><div><div class="split-btn-menu-label">Help guide</div></div></div>
+          <div class="split-btn-menu-item" onclick="openShortcuts();closeHelpMenu()"><i class="fa-solid fa-keyboard split-btn-menu-icon"></i><div><div class="split-btn-menu-label">Keyboard shortcuts</div></div></div>
+          <div class="split-btn-menu-item" onclick="openAbout();closeHelpMenu()"><i class="fa-solid fa-circle-info split-btn-menu-icon"></i><div><div class="split-btn-menu-label">About</div></div></div>
         </div>
       </div>
     </div>
-    <div class="topbar-divider"></div>
-    <button class="btn btn-sm" onclick="openCatManager()"><i class="fa-solid fa-tags"></i> Categories</button>
-    <div class="topbar-divider"></div>
-    <button class="btn btn-sm" onclick="goHome()" title="Home"><i class="fa-solid fa-house"></i></button>
-    <button class="btn btn-sm" onclick="openShortcuts()" title="Keyboard shortcuts (?)"><i class="fa-solid fa-keyboard"></i></button>
-    <button class="btn btn-sm" onclick="openThemeModal()" title="Color scheme"><i class="fa-solid fa-palette"></i></button>
-    <button class="btn btn-sm" onclick="toggleTheme()" title="Toggle theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
-    <button class="btn btn-sm" onclick="openHelp()" title="Help"><i class="fa-regular fa-circle-question"></i></button>
-    <button class="btn btn-sm" onclick="openAbout()" title="About"><i class="fa-solid fa-circle-info"></i></button>
     <input type="file" id="fileInput" accept=".json" onchange="handleFileImport(event)">
   </div>
 </div>
@@ -907,15 +1008,6 @@
   </div>
 </div>
 
-<!-- Theme modal -->
-<div class="modal-bg" id="themeModalBg" onclick="if(event.target===this)closeThemeModal()">
-  <div class="modal" style="width:400px">
-    <h3>Color scheme</h3>
-    <div class="theme-options" id="themeOptions"></div>
-    <div class="modal-actions"><button class="btn btn-primary" onclick="closeThemeModal()">Done</button></div>
-  </div>
-</div>
-
 <!-- Color popover (for editing category color) -->
 <div class="color-popover" id="colorPopover"></div>
 
@@ -936,14 +1028,6 @@ const CAT_COLORS = [
   { name:'pink',   bg:'#fbeaf0', text:'#72243e', dot:'#d4537e' },
   { name:'green',  bg:'#eaf3de', text:'#3b6d11', dot:'#639922' },
   { name:'red',    bg:'#fcebeb', text:'#a32d2d', dot:'#e24b4a' },
-];
-
-const THEME_SCHEMES = [
-  { id: 'standard', name: 'Standard', desc: 'Neutral gray and white, with one blue accent.', swatches: ['#f5f5f3', '#0c447c', '#a32d2d'] },
-  { id: 'modern', name: 'Modern', desc: 'Clean graphite and white, with a confident accent blue.', swatches: ['#f8f8f8', '#005fb8', '#cd3131'] },
-  { id: 'dracula', name: 'Dracula', desc: 'Deep purple-gray, lit by vivid pink, cyan and green.', swatches: ['#f8f8f2', '#7c4dd9', '#cb3a2a'] },
-  { id: 'github', name: 'GitHub', desc: 'Crisp neutral gray-white, with a solid green action button.', swatches: ['#f6f8fa', '#0969da', '#cf222e'] },
-  { id: 'githubdimmed', name: 'GitHub Dimmed', desc: 'The same crisp palette, dimmed to a softer graphite.', swatches: ['#f6f8fa', '#478be6', '#e5534b'] }
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
@@ -1415,7 +1499,23 @@ const DEFAULT_PROMPTS = [
 // ── State ─────────────────────────────────────────────────────────────────────
 const STORAGE_KEY = "promptlab-v4";
 const THEME_KEY = "promptlab-theme";
-const SCHEME_KEY = "promptlab-scheme";
+const UI_SCALE_KEY = "promptlab-uiscale";
+// Two stops, as in mytasks: Medium (the default) and Large. A saved value that is not exactly one of them
+// (an older build, a hand-edited file) snaps to the nearest, so nobody is left on a size the control lacks.
+// Each segment shows the letter A at its own size (glyph, px) — like Safari's "aA" menu; label is its tooltip.
+const UI_SCALE_STEPS = [
+  { pct: 100, label: 'Medium', glyph: 14 },
+  { pct: 115, label: 'Large',  glyph: 19 }
+];
+const UI_SCALE_DEFAULT = 100;
+function clampUiScale(v) {
+  v = Number(v);
+  if (!isFinite(v)) return UI_SCALE_DEFAULT;
+  return UI_SCALE_STEPS.reduce((best, s) => Math.abs(s.pct - v) < Math.abs(best.pct - v) ? s : best).pct;
+}
+const ICON_SUN = '<svg class="theme-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.35 5.35l1.5 1.5M17.15 17.15l1.5 1.5M5.35 18.65l1.5-1.5M17.15 6.85l1.5-1.5"/></svg>';
+const ICON_MOON = '<svg class="theme-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.2 14.4A8.4 8.4 0 0 1 9.6 3.8a8.4 8.4 0 1 0 10.6 10.6z"/></svg>';
+const ICON_AUTO = '<svg class="theme-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 3.8a8.2 8.2 0 0 0 0 16.4z" fill="currentColor"/></svg>';
 const BACKUPS_KEY = "promptlab-backups";
 const MAX_BACKUPS = 7;
 let prompts = [], categories = [];
@@ -1426,11 +1526,50 @@ let prompts = [], categories = [];
 // another device, or an older local backup. See mergePrompts()/mergeCategories().
 let deletedPromptIds = [], deletedCategoryIds = [];
 let activeId = null, filterCatId = null, filterFavs = false;
-let currentTheme = 'light';
-let colorScheme = 'standard';
-// Apply saved theme/scheme immediately to avoid flash
-(function(){ const t=localStorage.getItem(THEME_KEY); if(t){currentTheme=t;document.documentElement.setAttribute('data-theme',t);} })();
-(function(){ const s=localStorage.getItem(SCHEME_KEY); if(s && THEME_SCHEMES.some(x=>x.id===s)){colorScheme=s;} document.documentElement.setAttribute('data-scheme', colorScheme); })();
+let currentTheme = 'light';     // the resolved theme data-theme shows
+let themePref = 'auto';         // what the user chose: 'light' | 'dark' | 'auto' (follow the system)
+let uiScale = UI_SCALE_DEFAULT; // percent, e.g. 100 = 100%
+// Apply the saved theme and text size immediately to avoid a flash. Both are per-device
+// preferences (localStorage only): each device follows its own system, and a synced file must not push
+// one device's choice onto another. Auto follows the system live, not just at load.
+(function(){
+  let t = null; try { t = localStorage.getItem(THEME_KEY); } catch(_) {}
+  themePref = (t === 'light' || t === 'dark') ? t : 'auto';
+  applyTheme();
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq && mq.addEventListener) mq.addEventListener('change', () => { if (themePref === 'auto') { applyTheme(); renderUiScaleMenu(); } });
+  }
+})();
+// Sidebar collapse — a per-device display preference (localStorage). With no saved choice it starts collapsed on
+// narrow screens. Picking a prompt on a narrow screen closes it again *without* saving, so a wide window is never
+// affected by what happened on a phone-sized one.
+const SIDEBAR_KEY = 'promptlab-sidebar-collapsed';
+let sidebarCollapsed = false;
+function applySidebarState() {
+  document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+  const b = document.getElementById('sidebarToggle');
+  if (b) {
+    b.setAttribute('aria-expanded', String(!sidebarCollapsed));
+    const mac = /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    b.title = (sidebarCollapsed ? 'Show' : 'Hide') + ' sidebar (' + (mac ? '⌘B' : 'Ctrl+B') + ')';
+  }
+}
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  try { localStorage.setItem(SIDEBAR_KEY, sidebarCollapsed ? '1' : '0'); } catch(_) {}
+  applySidebarState();
+}
+function collapseSidebarIfNarrow() {
+  if (sidebarCollapsed || !window.matchMedia) return;
+  if (window.matchMedia('(max-width: 800px)').matches) { sidebarCollapsed = true; applySidebarState(); }
+}
+(function(){
+  let v = null; try { v = localStorage.getItem(SIDEBAR_KEY); } catch(_) {}
+  sidebarCollapsed = v === '1' ? true : v === '0' ? false : (typeof window !== 'undefined' && window.innerWidth <= 800);
+  applySidebarState();
+})();
+(function(){ const n = parseInt(localStorage.getItem(UI_SCALE_KEY), 10); if (!isNaN(n)) uiScale = clampUiScale(n); document.documentElement.style.zoom = (uiScale / 100); })();
 let modalTarget = null, pendingImportData = null, newCatColor = 'blue';
 let renamingPreset = null; // { promptId, name } — which preset chip (if any) shows its rename input
 const undoStacks = new Map(); // promptId → { past: string[], future: string[] }
@@ -1491,8 +1630,7 @@ function load() {
       activeId    = d.activeId    || (prompts[0]?.id ?? null);
       filterCatId = d.filterCatId || null;
       filterFavs  = d.filterFavs  || false;
-      if (d.theme) { currentTheme = d.theme; document.documentElement.setAttribute('data-theme', d.theme); localStorage.setItem(THEME_KEY, d.theme); }
-      if (d.colorScheme && THEME_SCHEMES.some(s => s.id === d.colorScheme)) { colorScheme = d.colorScheme; document.documentElement.setAttribute('data-scheme', d.colorScheme); localStorage.setItem(SCHEME_KEY, d.colorScheme); }
+      applyAppearanceFromData(d);
     } else {
       categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
       prompts    = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
@@ -1508,7 +1646,7 @@ function load() {
   }
 }
 function save() {
-  const data = { prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, theme: currentTheme, colorScheme };
+  const data = { prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, uiScale };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   if (fileHandle) fileSyncWrite(data).catch(() => {});
   maybeSnapshotBackup();
@@ -2047,6 +2185,7 @@ function initPillDragDrop() {
 // ── Prompt actions ────────────────────────────────────────────────────────────
 function select(id) {
   activeId = id; sidebarFocusIdx = -1;
+  collapseSidebarIfNarrow();
   const p = prompts.find(x => x.id === id);
   if (p && !lastSyncedTemplates.has(id)) lastSyncedTemplates.set(id, p.template);
   save(); render();
@@ -2837,7 +2976,6 @@ document.addEventListener('keydown', e=>{
   if(document.getElementById('helpModalBg').classList.contains('open'))       { if(e.key==='Escape') closeHelp(); return; }
   if(document.getElementById('aboutModalBg').classList.contains('open'))      { if(e.key==='Escape') closeAbout(); return; }
   if(document.getElementById('backupsModalBg').classList.contains('open'))    { if(e.key==='Escape') closeBackupsModal(); return; }
-  if(document.getElementById('themeModalBg').classList.contains('open'))      { if(e.key==='Escape') closeThemeModal(); return; }
   // ? to show shortcuts (not when typing)
   if(e.key==='?' && !inInput && !e.metaKey && !e.ctrlKey) { openShortcuts(); return; }
   // sidebar keyboard navigation (also works when search input is focused)
@@ -2862,6 +3000,7 @@ document.addEventListener('keydown', e=>{
   if(e.metaKey || e.ctrlKey) {
     if(e.key==='k') { e.preventDefault(); const s=document.getElementById('searchInput'); s.focus(); s.select(); return; }
     if(e.key==='n') { e.preventDefault(); newPrompt(); return; }
+    if(String(e.key).toLowerCase()==='b' && !e.shiftKey && !e.altKey) { e.preventDefault(); toggleSidebar(); return; }
     if(e.key==='Enter' && activeId) { e.preventDefault(); copyFinal(activeId); return; }
     // Undo a delete via the toast — only outside any text input, so it never
     // fights the template editor's own Cmd+Z (that one's scoped to
@@ -2872,47 +3011,50 @@ document.addEventListener('keydown', e=>{
 });
 
 // ── Help ──────────────────────────────────────────────────────────────────────
-function applyThemeFromData(d) {
-  if (!d) return;
-  if (d.theme) {
-    currentTheme = d.theme;
-    document.documentElement.setAttribute('data-theme', d.theme);
-    localStorage.setItem(THEME_KEY, d.theme);
-  }
-  if (d.colorScheme && THEME_SCHEMES.some(s => s.id === d.colorScheme)) {
-    colorScheme = d.colorScheme;
-    document.documentElement.setAttribute('data-scheme', d.colorScheme);
-    localStorage.setItem(SCHEME_KEY, d.colorScheme);
-  }
+// Only the text size travels with the library; the theme is per-device (see the boot code above).
+function applyAppearanceFromData(d) {
+  if (!d || d.uiScale === undefined || isNaN(parseInt(d.uiScale, 10))) return;
+  uiScale = clampUiScale(d.uiScale);
+  document.documentElement.style.zoom = (uiScale / 100);
+  localStorage.setItem(UI_SCALE_KEY, String(uiScale));
 }
-function toggleTheme() {
-  const next = currentTheme === 'dark' ? 'light' : 'dark';
-  currentTheme = next;
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem(THEME_KEY, next);
-  save(); // persists to localStorage + linked file
+function osPrefersDark() { return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
+function applyTheme() {
+  currentTheme = themePref === 'auto' ? (osPrefersDark() ? 'dark' : 'light') : themePref;
+  document.documentElement.setAttribute('data-theme', currentTheme);
 }
-function renderThemeModal() {
-  document.getElementById('themeOptions').innerHTML = THEME_SCHEMES.map(s => `
-    <div class="theme-option ${s.id===colorScheme?'selected':''}" onclick="setColorScheme('${s.id}')">
-      <div class="theme-option-swatches">${s.swatches.map(c=>`<div class="theme-option-swatch" style="background:${c}"></div>`).join('')}</div>
-      <div class="theme-option-body">
-        <div class="theme-option-name">${s.name}</div>
-        <div class="theme-option-desc">${s.desc}</div>
-      </div>
-      <i class="fa-solid fa-check theme-option-check"></i>
-    </div>
-  `).join('');
+function setThemeMode(mode) {
+  themePref = (mode === 'light' || mode === 'dark') ? mode : 'auto';
+  try { localStorage.setItem(THEME_KEY, themePref); } catch(_) {}
+  applyTheme();
+  renderUiScaleMenu();
 }
-function openThemeModal() { renderThemeModal(); document.getElementById('themeModalBg').classList.add('open'); }
-function closeThemeModal() { document.getElementById('themeModalBg').classList.remove('open'); }
-function setColorScheme(scheme) {
-  colorScheme = scheme;
-  document.documentElement.setAttribute('data-scheme', scheme);
-  localStorage.setItem(SCHEME_KEY, scheme);
-  renderThemeModal();
+function setUiScale(v) {
+  uiScale = clampUiScale(v);
+  document.documentElement.style.zoom = (uiScale / 100);
+  localStorage.setItem(UI_SCALE_KEY, String(uiScale));
+  renderUiScaleMenu();
+  closeUiScaleMenu();
   save();
 }
+function renderUiScaleMenu() {
+  const el = document.getElementById('uiScaleMenu');
+  if (!el) return;
+  const themeBtn = (mode, icon, label, title) => `<button type="button" class="view-switch-btn${themePref===mode?' active':''}" ${title?`title="${title}" `:''}onclick="event.stopPropagation();setThemeMode('${mode}')">${icon}${label}</button>`;
+  el.innerHTML = `
+    <div class="ui-scale-panel">
+      <div class="ui-scale-panel-header">Text Size</div>
+      <div class="view-switch">${UI_SCALE_STEPS.map(s => `
+        <button type="button" class="view-switch-btn${s.pct===uiScale?' active':''}" title="${esc(s.label)}" style="font-size:${s.glyph}px" onclick="setUiScale(${s.pct})">A</button>
+      `).join('')}</div>
+      <div class="ui-scale-panel-header ap-gap">Theme</div>
+      <div class="view-switch">
+        ${themeBtn('light', ICON_SUN, 'Light')}${themeBtn('dark', ICON_MOON, 'Dark')}${themeBtn('auto', ICON_AUTO, 'Auto', "Follow the system's light/dark setting")}
+      </div>
+    </div>`;
+}
+function toggleUiScaleMenu() { renderUiScaleMenu(); document.getElementById('uiScaleMenu')?.classList.toggle('open'); }
+function closeUiScaleMenu()  { document.getElementById('uiScaleMenu')?.classList.remove('open'); }
 function openFileSyncModal(reconnectHandle) {
   const ro = document.getElementById('fileSyncReconnectOption');
   const rl = document.getElementById('fileSyncReconnectLabel');
@@ -2938,6 +3080,7 @@ function openShortcuts() {
   document.getElementById('shortcutsBody').innerHTML = [
     group('Navigation'),
     row('Focus search', mod, 'K'),
+    row('Show/hide sidebar', mod, 'B'),
     row('Navigate prompts', '↑', '↓'),
     row('Select prompt', '↵'),
     row('New prompt', mod, 'N'),
@@ -3122,30 +3265,27 @@ async function _clearFileLink() {
   updateFileSyncUI();
 }
 
-function linkSplitBtnHtml() {
-  return `<div class="split-btn" id="linkSplitBtn">
-    <button class="split-btn-main" onclick="linkFile()" title="Link an existing .json library file">
-      <i class="fa-solid fa-link"></i> Link file
-    </button>
-    <button class="split-btn-chevron" onclick="event.stopPropagation();toggleLinkMenu()" title="More options">
-      <i class="fa-solid fa-chevron-down"></i>
-    </button>
-    <div class="split-btn-menu" id="linkMenu">
-      <div class="split-btn-menu-item" onclick="linkFile();closeLinkMenu()">
-        <i class="fa-solid fa-folder-open split-btn-menu-icon"></i>
-        <div><div class="split-btn-menu-label">Link existing file…</div><div class="split-btn-menu-desc">Open a .json library and sync to it</div></div>
-      </div>
-      <div class="split-btn-menu-item" onclick="createNewLinkedFile();closeLinkMenu()">
-        <i class="fa-solid fa-file-circle-plus split-btn-menu-icon"></i>
-        <div><div class="split-btn-menu-label">Create new file…</div><div class="split-btn-menu-desc">Save current library to a new file</div></div>
-      </div>
-    </div>
-  </div>`;
+// One compact status chip, like mytasks': amber "Link file" when only the browser
+// holds the data, green "Linked" when saved to a file, red "Reconnect" when the
+// browser dropped file permission. Click acts on the state: link (opens the
+// Link/Create modal), unlink (asks first), or reconnect.
+function fileSyncChipHtml(state, name) {
+  const cfg = {
+    unlinked: { icon: 'fa-link',                 label: 'Link file', cls: 'warn', title: 'Not saved to a file — only kept in this browser. Click to choose a file.' },
+    linked:   { icon: 'fa-check',                label: 'Linked',    cls: 'ok',   title: `Saved to ${name} — click to unlink` },
+    lapsed:   { icon: 'fa-triangle-exclamation', label: 'Reconnect', cls: 'bad',  title: `Permission to ${name} was lost — click to reconnect` }
+  }[state];
+  return `<button class="btn btn-sm file-chip ${cfg.cls}" onclick="onFileSyncChipClick('${state}')" title="${esc(cfg.title)}"><i class="fa-solid ${cfg.icon}"></i> ${cfg.label}</button>`;
 }
-function toggleLinkMenu() { document.getElementById('linkMenu')?.classList.toggle('open'); }
-function closeLinkMenu()  { document.getElementById('linkMenu')?.classList.remove('open'); }
+function onFileSyncChipClick(state) {
+  if (state === 'unlinked') openFileSyncModal();
+  else if (state === 'lapsed') reconnectFile();
+  else if (confirm(`Unlink ${fileHandle ? fileHandle.name : 'the file'}? Your prompts stay in this browser, but stop being saved to the file. You can link it again any time.`)) unlinkFile();
+}
 function toggleLibMenu()  { document.getElementById('libMenu')?.classList.toggle('open'); }
 function closeLibMenu()   { document.getElementById('libMenu')?.classList.remove('open'); }
+function toggleHelpMenu() { document.getElementById('helpMenu')?.classList.toggle('open'); }
+function closeHelpMenu()  { document.getElementById('helpMenu')?.classList.remove('open'); }
 
 async function createNewLinkedFile() {
   if (!window.showSaveFilePicker) { showToast('File linking requires Chrome or Edge', true); return; }
@@ -3156,7 +3296,7 @@ async function createNewLinkedFile() {
     });
     fileHandle = handle;
     try { await _fsPut(handle); } catch(_) {}
-    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, theme: currentTheme, colorScheme });
+    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, uiScale });
     updateFileSyncUI();
     showToast(`Linked — auto-saving to ${handle.name}`);
   } catch(e) {
@@ -3184,7 +3324,7 @@ async function linkFile() {
       if (data && data.prompts && data.categories) {
         // Valid library — merge file into current app state (last-write-wins on same name+template)
         mergeCategories(data.categories, data.deletedCategoryIds);
-        applyThemeFromData(data);
+        applyAppearanceFromData(data);
         const {added, updated} = mergePrompts(data.prompts, data.deletedPromptIds);
         normalizePrompts();
         save(); render(); updateFileSyncUI();
@@ -3198,7 +3338,7 @@ async function linkFile() {
       return;
     }
     // Empty file — write current library into it
-    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, theme: currentTheme, colorScheme });
+    await fileSyncWrite({ prompts, categories, deletedPromptIds, deletedCategoryIds, activeId, filterCatId, filterFavs, uiScale });
     updateFileSyncUI();
     showToast(`Linked — auto-saving to ${handle.name}`);
   } catch(e) {
@@ -3227,7 +3367,7 @@ async function reconnectFile() {
       if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
       if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
       normalizePrompts();
-      applyThemeFromData(data);
+      applyAppearanceFromData(data);
       render();
     }
     updateFileSyncUI();
@@ -3239,25 +3379,11 @@ function updateFileSyncUI() {
   const el = document.getElementById('fileSyncIndicator');
   if (!el) return;
   if (!window.showOpenFilePicker) { el.style.display = 'none'; return; }
-  if (!fileHandle) {
-    el.innerHTML = linkSplitBtnHtml();
-    return;
-  }
+  if (!fileHandle) { el.innerHTML = fileSyncChipHtml('unlinked'); return; }
   fileHandle.queryPermission({ mode: 'readwrite' }).then(perm => {
     if (!el) return;
-    if (perm === 'granted') {
-      el.innerHTML = `
-        <span style="font-size:12px;color:var(--green-text);display:flex;align-items:center;gap:5px;max-width:160px">
-          <i class="fa-solid fa-file-circle-check" style="flex-shrink:0"></i>
-          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(fileHandle.name)}">${esc(fileHandle.name)}</span>
-        </span>
-        <button class="btn btn-sm" onclick="unlinkFile()" title="Unlink file" style="padding:4px 8px;line-height:1"><i class="fa-solid fa-link-slash"></i></button>`;
-    } else {
-      el.innerHTML = `<button class="btn btn-sm" onclick="reconnectFile()" style="color:var(--amber-text);border-color:var(--amber-text)" title="Reconnect to ${esc(fileHandle.name)}"><i class="fa-solid fa-triangle-exclamation"></i> Reconnect</button>`;
-    }
-  }).catch(() => {
-    if (el) el.innerHTML = linkSplitBtnHtml();
-  });
+    el.innerHTML = fileSyncChipHtml(perm === 'granted' ? 'linked' : 'lapsed', fileHandle.name);
+  }).catch(() => { if (el) el.innerHTML = fileSyncChipHtml('unlinked'); });
 }
 
 async function initFileSync() {
@@ -3278,7 +3404,7 @@ async function initFileSync() {
           if (data.filterCatId !== undefined) filterCatId = data.filterCatId;
           if (data.filterFavs  !== undefined) filterFavs  = data.filterFavs;
           normalizePrompts();
-          applyThemeFromData(data);
+          applyAppearanceFromData(data);
           render();
         }
       } catch(_) { /* read failed — keep localStorage data */ }
@@ -3300,7 +3426,8 @@ render();
 initFileSync();
 
 document.addEventListener('click', e => {
-  if (!e.target.closest('#linkSplitBtn')) closeLinkMenu();
+  if (!e.target.closest('#helpDropdown')) closeHelpMenu();
+  if (!e.target.closest('#uiScaleDropdown')) closeUiScaleMenu();
   if (!e.target.closest('#libDropdown')) closeLibMenu();
   if (!e.target.closest('#catDropWrap')) closeCatDropdown();
 });

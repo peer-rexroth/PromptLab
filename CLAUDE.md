@@ -12,7 +12,7 @@ A plain `file://` open of `promptlab.html` works fine for quick checks, but PWA 
 
 ## PWA
 
-`manifest.json` and `sw.js` live alongside `promptlab.html`. `icons/icon.svg` is the source artwork (reused from the app's existing favicon/apple-touch-icon design); `icons/icon-180.png`, `icon-192.png`, `icon-512.png` are rendered from it for apple-touch-icon and manifest icons respectively — regenerate them with `qlmanage -t -s <size> -o icons icons/icon.svg` if the source SVG changes. `sw.js` precaches the app shell (HTML, manifest, icons, Font Awesome CSS/fonts) on install, network-first for the page navigation and cache-first for everything else; bump `CACHE_NAME` when the shell's contents change so old caches get evicted. Registration is gated on `location.protocol !== 'file:'` near the end of the `<script>` block, matching the http-only requirement above.
+`manifest.json` and `sw.js` live alongside `promptlab.html`. `icons/icon.svg` is the source artwork (reused from the app's existing favicon/apple-touch-icon design); `icons/icon-180.png`, `icon-192.png`, `icon-512.png` are rendered from it for apple-touch-icon and manifest icons respectively — regenerate them with `qlmanage -t -s <size> -o icons icons/icon.svg` if the source SVG changes. `sw.js` precaches the app shell (HTML, manifest, icons, Font Awesome CSS/fonts) on install, network-first for the page navigation and cache-first for everything else; bump `CACHE_NAME` (currently `promptlab-cache-v2`) when the shell's contents change so old caches get evicted. Registration is gated on `location.protocol !== 'file:'` near the end of the `<script>` block, matching the http-only requirement above.
 
 The install handler caches each `APP_SHELL` entry independently (`cache.add(url).catch(...)` per resource) rather than a single `cache.addAll()` — `addAll()` is all-or-nothing, so one failed request (a CDN hiccup, an ad-blocker on cdnjs) would reject the whole install and leave the service worker never activated, silently disabling offline support entirely.
 
@@ -94,7 +94,7 @@ The app uses direct DOM re-renders (no virtual DOM or framework). Every state mu
 
 ### Modals
 
-Nine modals share a common `.modal-bg` pattern (add `.open` class to show, remove to hide):
+Eight modals share a common `.modal-bg` pattern (add `.open` class to show, remove to hide):
 - `modalBg` — add/edit a variable option
 - `catModalBg` — category manager
 - `importModalBg` — import confirmation
@@ -103,7 +103,6 @@ Nine modals share a common `.modal-bg` pattern (add `.open` class to show, remov
 - `shortcutsModalBg` — keyboard shortcuts reference
 - `fileSyncModalBg` — File System Access API sync setup
 - `backupsModalBg` — restore a local daily backup (see "Local backups" below)
-- `themeModalBg` — pick a color scheme (see "Theme and color scheme" above)
 
 ### Drag-and-drop
 
@@ -133,17 +132,26 @@ Per-prompt undo stacks are kept in `undoStacks` (a `Map<id, { past, future }>`).
 
 `save()` writes to both `localStorage` and, if a `fileHandle` is set, the linked JSON file via the File System Access API. The handle is persisted across page loads in IndexedDB (`promptlab-fs`). `fileSyncWrite` / `fileSyncRead` handle the async file I/O. The sync indicator in the topbar shows the linked filename.
 
-### Theme and color scheme
+### Look: one scheme (Glass), light and dark
 
-Two independent axes control appearance: `data-theme` (`light`/`dark`, toggled by the topbar's circle-half-stroke button — `currentTheme`, stored in `localStorage["promptlab-theme"]` and the main data blob, unchanged since before schemes existed) and `data-scheme` (picked from the palette-icon button's theme modal — `colorScheme`, stored in `localStorage["promptlab-scheme"]` and the main data blob). Each scheme defines its own light *and* dark CSS variable pair, so the two axes combine freely — e.g. `[data-scheme="dracula"][data-theme="dark"]`.
+The app has **one look**, ported from mytasks: Apple "Liquid Glass" / Mail-style. There is no scheme picker, no `colorScheme` state and no theme modal — they were removed when Glass was adopted, and `save()` no longer writes `colorScheme` (an old file that still has one is simply ignored). Appearance lives in one **Appearance popover** (the "aA" button in the topbar's tool group, `#uiScaleMenu`, `renderUiScaleMenu()`), ported from mytasks, with two `.view-switch` pills:
 
-- **`THEME_SCHEMES`** (near `CAT_COLORS`, top of the `<script>` block) is the single source of truth for which schemes exist — each entry has `id`, `name`, `desc`, and `swatches` (three hex values shown as dots in the picker). `id` must exactly match a `[data-scheme="..."]` selector; nothing enforces this automatically except `tests/cases/theme.test.js`'s "every entry has a matching CSS selector" test, which will fail loudly on a typo but won't catch a selector that exists with no matching `THEME_SCHEMES` entry (a harmless orphan, not a crash).
-- **`:root, html[data-scheme="standard"]`** and the bare `html[data-theme="dark"]` block are the original, untouched palette — this is what renders when `data-scheme` is absent entirely, so it must stay exactly as-is. Every other scheme is defined as `html[data-scheme="x"] { ... }` (light) and `html[data-scheme="x"][data-theme="dark"] { ... }` (dark) — the dark block's extra attribute selector always wins on specificity over the bare `html[data-theme="dark"]`, so block order in the file doesn't matter for correctness.
-- PromptLab's `:root` has three Standard-only accent slots (`--coral-bg`/`--coral-text`, `--pink-bg`/`--pink-text`, `--star`/`--star-bg`) with no equivalent token in any of the four ported schemes' source palettes (they don't exist in mytasks' scheme system either, which only has blue/teal/amber/red/green/purple). They're deliberately left undeclared in every non-Standard scheme block, so CSS falls back to `:root`'s/the bare dark block's values for those specific properties regardless of which scheme is active — those three category-color pairs and the favorite-star color simply don't re-theme.
-- Each scheme has its own one-off "signature" rule scoped near its variable block: Modern restyles `.sidebar-footer` into a solid-blue status bar (mirroring VS Code's most recognizable UI element); Dracula adds a purple glow to `.topbar-brand i`; GitHub and GitHub Dimmed both turn `.btn-primary` into GitHub's solid green.
-- **Accuracy convention**: when a scheme claims to replicate a real product's theme (VS Code, GitHub, Dracula, etc.), the actual token values were verified against the real source (fetched from `microsoft/vscode`'s theme JSON, `draculatheme.com/spec`, and `@primer/primitives`) rather than reconstructed from memory — see the comment above each scheme's variable block for exactly what's a real spec value vs. this app's own derivation (e.g. neither GitHub palette has an official teal token, so that slot is an approximation).
+- **Theme** is `themePref` (`'light' | 'dark' | 'auto'`, default **auto**) → `currentTheme` (the resolved value `data-theme` shows), via `applyTheme()`/`setThemeMode()`. Auto follows the system *live* (a `prefers-color-scheme` change listener), not just at load. It is a **per-device preference (`promptlab-theme` in localStorage) and deliberately not in the saved blob or the linked file**: each device should follow its own system, and a synced file must not push one device's choice onto another (`load()` ignores a legacy `theme`). The sun/moon/half-circle icons are inline SVGs (`ICON_SUN`/`ICON_MOON`/`ICON_AUTO`) in the SF Symbols idiom — don't swap in the heavy Font Awesome ones (the mytasks owner disliked them).
+- **Text size** offers only **Medium (100%) and Large (115%)** (`UI_SCALE_STEPS`), shown as a small and a large "A" (each segment's `glyph` is its font size; the name is the tooltip). `uiScale` is applied as a CSS `zoom` on `<html>` (Chromium/Safari; a no-op in Firefox). `clampUiScale()` snaps any stored/imported value to the nearest stop. Unlike the theme it *is* saved in the blob (`uiScale`) and applied from a linked file by `applyAppearanceFromData()`; the per-device `promptlab-uiscale` key lets the first paint avoid a flash.
 
-`setColorScheme(scheme)` updates state + `data-scheme` + `localStorage`, re-renders the picker, and calls `save()`. `applyThemeFromData(d)` (used by `linkFile()`/`reconnectFile()`/`initFileSync()` when adopting a linked file's data) applies `theme` and `colorScheme` independently of each other — a payload with only one of the two still applies that one, rather than an early return on the other being absent.
+- `<html data-scheme="glass">` is set in the markup and is only a styling hook: every Glass selector is written `html[data-scheme="glass"] …`. Don't rewrite them to bare `html …` — that would lower their specificity and change which rules beat the base ones.
+- **The chrome is glass, the content is flat.** Topbar and sidebar are translucent and blur a graphite wallpaper (`--wall`, on `body`); the topbar and editor-header controls are capsules; the editor (`.main`) is opaque and neutral. The Glass section is near the end of the stylesheet (before `#fileInput`).
+- Content is flattened by **scoping variables**, not per-element overrides: `.main` and `.modal` redefine `--bg/--bg-2/--bg-3/--glass-*/--border*` to opaque values (light and dark). When adding a Glass rule, reach for those variables rather than hard-coding colors. The light and dark Glass blocks must define the **same** variables (the light block would otherwise beat the bare `html[data-theme="dark"]` block for any variable only it sets).
+- `backdrop-filter` can't see through a parent that has its own, so only body-level surfaces (topbar, sidebar, modals, toast) blur; menus/popovers inside the topbar or content use the near-opaque `--glass-strong`.
+- `:root` carries the fonts, the three accents Glass doesn't define (`--coral-*`, `--pink-*`, `--star*` — category colors and the favourite star), `--sel-bg` and the focus-ring colors, each with a dark counterpart in the bare `html[data-theme="dark"]` block.
+- **Selection** is Mail's solid accent: the open prompt (`.prompt-item.active`) is a solid `--sel-bg` fill with white text (the `--text*` variables are re-pointed on the row; the inline category stripe is overridden with `!important`). Menu items (`.split-btn-menu-item`, `.cat-drop-item`) hover the same blue.
+- **One focus style** (Mail's colours): inputs/textareas get a 3px `--focus-ring` band + `--focus-edge` border via `:focus-visible` with `!important`; buttons/chips/pills get the same colour as an outline. Selects never show the browser's blue outline.
+- **Corner radii**: topbar/header controls are capsules; content uses `--radius` (10px), sidebar rows `--glass-r-row` (8px), cards `--radius-lg` (14px), menus/modals `--glass-r-menu` (16px). Change the look by editing those variables, not rules.
+- **Select arrows**: Glass draws a thin chevron (`appearance:none` + a data-URI background, one per theme since a data-URI can't read CSS variables). That rule must stay *after* every Glass rule that uses the `background` shorthand.
+- **Topbar** (same shape as mytasks'): the brand is the Home button (`goHome()`); then one status chip for the linked file (`fileSyncChipHtml`/`onFileSyncChipClick` — amber *Link file* opens the Link/Create modal, green *Linked* asks before unlinking, red *Reconnect*), a divider, and one icon-only capsule group (`.tool-group.topbar-tools`, `.tool-btn`) with Categories, Data (export/import/backups menu), Appearance (text size + theme) and Help (guide/shortcuts/about menu). Every button has a tooltip; the two menus reuse `.split-btn-menu` and close on an outside click. The old split "Link file ▾" button, the filename readout and the separate unlink icon are gone.
+- **Collapsible sidebar** (ported from mytasks): the sidebar-panel button at the left of the topbar (`#sidebarToggle`) and **Cmd/Ctrl+B** flip `sidebarCollapsed` (per-device `promptlab-sidebar-collapsed`), applied as `html.sidebar-collapsed`. With no saved choice it starts collapsed at ≤800px, where the sidebar floats over the content; selecting a prompt there closes it again *without* saving (`collapseSidebarIfNarrow()`, called from `select()`), so a phone-sized window never changes the wide-window preference. The collapse CSS sits near the end of the stylesheet so it wins ties with the Glass `.sidebar` rules.
+- **Type scale and borders** follow mytasks' "polish pass" (itself from Milestone): UI text is 1px larger than the original sizes (body 16, `.btn` 14, `.btn-sm` 13, chips/labels 12, brand 23) and hairline borders are 1px, not 0.5px. The overrides live in one block at the very end of the stylesheet so they win at equal specificity — change sizes there, not in the earlier base rules. Unlike mytasks the block adds no `--shadow` on hover (no glow).
+- `prefers-reduced-transparency`, `prefers-contrast` and browsers without `backdrop-filter` get solid chrome and a flat wallpaper.
 
 ## Key functions reference
 
@@ -165,9 +173,9 @@ Two independent axes control appearance: `data-theme` (`light`/`dark`, toggled b
 | `copyFinal(id)` | Copy finished prompt text to clipboard |
 | `exportLibrary()` / `downloadLibrary(cats, proms, filename)` | Download a library as `.json` (version 4 format); `exportLibrary()` is the user-facing action, `downloadLibrary()` is the reusable primitive it and the pre-replace backup both call |
 | `confirmImport()` | Merge or replace library from a parsed import file |
-| `toggleTheme()` | Switch between light and dark mode |
-| `setColorScheme(id)` | Switch the color scheme (Standard/Modern/Dracula/GitHub/GitHub Dimmed) |
-| `applyThemeFromData(d)` | Apply `theme`/`colorScheme` from a linked-file payload, independently of each other |
+| `setThemeMode(mode)` / `applyTheme()` | Pick light/dark/auto (per-device) and resolve it onto `data-theme` |
+| `setUiScale(pct)` / `clampUiScale(v)` | Pick Medium/Large text size; snap any value to a real stop |
+| `applyAppearanceFromData(d)` | Apply `uiScale` from a linked-file payload |
 | `fileSyncWrite(data)` / `fileSyncRead()` | Write/read the linked JSON file via File System Access API |
 | `maybeSnapshotBackup()` | Take a rolling daily local backup snapshot; called from `save()` |
 | `getBackups()` / `restoreBackup(date)` | Read local backups; roll the library back to one, after confirmation |
