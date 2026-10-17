@@ -210,11 +210,6 @@
   .instr-item-actions { display: flex; gap: 3px; opacity: 0; transition: opacity 0.1s; }
   .instr-item:hover .instr-item-actions { opacity: 1; }
   .instr-item.checked .instr-item-actions { opacity: 1; }
-  .instr-act-btn {
-    background: none; border: none; cursor: pointer; padding: 1px 4px;
-    border-radius: 3px; font-size: 11px; color: inherit; opacity: 0.6;
-  }
-  .instr-act-btn:hover { opacity: 1; background: rgba(0,0,0,0.08); }
   .var-row-instr { grid-template-columns: 168px 1fr auto; align-items: start; }
   .instr-item.instr-dragging { opacity: 0.35; }
   .instr-item.instr-drag-top    { box-shadow: inset 0  2px 0 #1d9e75; }
@@ -524,11 +519,15 @@
 
   /* pill controls with a springy press */
   html[data-scheme="glass"] .btn { border-radius: var(--radius); background: var(--bg-3); border: 1px solid var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-rim), 0 1px 4px rgba(40,50,110,.10); transition: transform .35s cubic-bezier(.34,1.56,.64,1), background .15s ease, box-shadow .15s ease, border-color .15s ease; }
-  html[data-scheme="glass"] .btn:hover { background: var(--glass-strong); box-shadow: inset 0 1px 0 var(--glass-rim), 0 4px 14px rgba(40,50,110,.14); }
+  /* hover darkens the fill (like mytasks) instead of growing a drop shadow */
+  html[data-scheme="glass"] .btn:hover { background: color-mix(in srgb, var(--text) 10%, var(--bg-3)); }
+  html[data-scheme="glass"] .main-header .btn:hover { background-color: color-mix(in srgb, var(--text) 10%, var(--bg-2)); }
   html[data-scheme="glass"] :is(.btn, .src-row):active { transform: scale(.94); }
   /* the gradient paints over the border box too (a translucent white border on top of a repeating gradient read as a second, paler blue ring) */
   html[data-scheme="glass"] .btn-primary { background: var(--glass-accent); background-origin: border-box; color: #fff; border-color: transparent; box-shadow: none; }
-  html[data-scheme="glass"] .btn-primary:hover { background: var(--glass-accent); filter: brightness(1.06); opacity: 1; }
+  html[data-scheme="glass"] .btn-primary { transition: filter .12s ease, transform .35s cubic-bezier(.34,1.56,.64,1); }
+  html[data-scheme="glass"] .btn-primary:hover { background: var(--glass-accent); background-origin: border-box; filter: brightness(1.07); opacity: 1; box-shadow: none; }
+  html[data-scheme="glass"] .btn-primary:active { filter: brightness(.94); }
   /* macOS-flavoured refinements (PromptLab only): prominent buttons carry no outer shadow or glow, just the inner top highlight; the sidebar's
      search field and its "+" are a capsule and a circle, like Mail's sidebar controls */
       html[data-scheme="glass"] .sidebar-search input { border-radius: 999px; padding-left: 34px; }
@@ -731,6 +730,21 @@
   .btn-add-opt:hover { background: var(--bg-3); color: var(--text); }
   html[data-scheme="glass"] .btn.btn-quiet { background: transparent; border-color: transparent; box-shadow: none; color: var(--text-2); }
   html[data-scheme="glass"] .btn.btn-quiet:hover:not(:disabled) { background: var(--bg-3); color: var(--text); box-shadow: none; }
+  /* Instruction (checklist) rows, in step with the option pills: flat rows (no box), a round checkbox like mytasks', a soft teal
+     tint when checked, and Edit/Remove as quiet icon buttons that appear on hover/focus only (the ✕ turns red on hover). */
+  html[data-scheme="glass"] .instr-item { border-color: transparent; padding: 4px 6px 4px 8px; }
+  html[data-scheme="glass"] .instr-item:hover { background: var(--bg-3); border-color: transparent; }
+  html[data-scheme="glass"] .instr-item.checked { background: var(--teal-bg); border-color: transparent; }
+  html[data-scheme="glass"] .instr-item.checked:hover { background: var(--teal-bg); filter: brightness(.97); }
+  .instr-cb { width: 16px; height: 16px; border-radius: 50%; font-size: 9px; }
+  .instr-item.checked .instr-cb { color: #fff; }
+  .instr-item-actions, .instr-item.checked .instr-item-actions { opacity: 0; }
+  .instr-item:hover .instr-item-actions, .instr-item:focus-within .instr-item-actions { opacity: 1; }
+  @media (hover: none) { .instr-item-actions, .instr-item.checked .instr-item-actions { opacity: 1; } }
+  .instr-act { font-size: 12px; padding: 5px 7px; border-radius: 999px; color: var(--text-3); }
+  .instr-item.checked .instr-act { color: var(--teal-text); }
+  .instr-act:hover { background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); }
+  .instr-act-del:hover { background: var(--red-bg); color: var(--red-text); }
   #fileInput { display: none; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -1947,11 +1961,11 @@ function renderMain() {
       const items = v.options.map((o,i) => {
         const checked = (v.selected||[]).includes(o);
         return `<div class="instr-item${checked?' checked':''}" ${locked?'':'draggable="true"'} data-opt="${escJs(o)}" data-varkey="${escJs(k)}" data-promptid="${p.id}" onclick="toggleInstr(${p.id},'${escJs(k)}','${escJs(o)}')">
-          <span class="instr-cb">${checked?'✓':''}</span>
+          <span class="instr-cb">${checked?'<i class="fa-solid fa-check"></i>':''}</span>
           <span class="instr-item-text">${esc(o)}</span>
           ${locked?'':` <span class="instr-item-actions">
-            <button class="instr-act-btn" onclick="event.stopPropagation();editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Edit">✎</button>
-            <button class="instr-act-btn" onclick="event.stopPropagation();deleteInstrItem(${p.id},'${escJs(k)}','${escJs(o)}')" title="Remove" style="color:var(--red-text)">✕</button>
+            <button type="button" class="icon-btn instr-act" onclick="event.stopPropagation();editOption(${p.id},'${escJs(k)}','${escJs(o)}')" title="Edit" aria-label="Edit"><i class="fa-solid fa-pen"></i></button>
+            <button type="button" class="icon-btn instr-act instr-act-del" onclick="event.stopPropagation();deleteInstrItem(${p.id},'${escJs(k)}','${escJs(o)}')" title="Remove" aria-label="Remove"><i class="fa-solid fa-xmark"></i></button>
           </span>`}
         </div>`;
       }).join('');
