@@ -707,6 +707,21 @@
   /* Flat variables panel, like the template editor: no rounded outline, hairlines top and bottom only */
   html[data-scheme="glass"] .vars-card { border-width: 1px 0; border-radius: 0; background: var(--bg); }
   html[data-scheme="glass"] .vars-card-header { background: transparent; }
+  /* Manage categories: a quiet list, in step with the rest of the app. The names are inline-edit fields that show a box only
+     on hover/focus (like mytasks' inline rename), the list is a plain hairline-separated column rather than a card inside the
+     modal, the count has a fixed column so the names line up, and delete is a quiet icon that turns red on hover. */
+  html[data-scheme="glass"] .cat-manager { background: transparent; border: 0; border-radius: 0; }
+  html[data-scheme="glass"] .cat-row { padding: 6px 4px; border-bottom: 1px solid var(--border); }
+  html[data-scheme="glass"] .cat-row .cat-row-name-input { background: transparent; border: 1px solid transparent; border-radius: var(--radius); padding: 5px 8px; font-size: 14px; }
+  html[data-scheme="glass"] .cat-row .cat-row-name-input:hover { background: var(--bg-2); }
+  html[data-scheme="glass"] .cat-row .cat-row-name-input:focus-visible { background: var(--bg-2); border-color: var(--focus-edge) !important; }
+  .cat-row-count { width: 76px; text-align: right; flex-shrink: 0; }
+  .cat-del { font-size: 13px; padding: 6px 8px; border-radius: 999px; }
+  .cat-del:hover:not(:disabled) { background: var(--red-bg); color: var(--red-text); }
+  .cat-del:disabled { opacity: .3; cursor: not-allowed; }
+  html[data-scheme="glass"] .cat-add-row { border-top: 0; padding: 12px 4px 2px; }
+  html[data-scheme="glass"] .cat-add-row input { border-radius: 999px; padding: 7px 14px; }
+  .color-swatch { width: 20px; height: 20px; }
   #fileInput { display: none; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -2626,10 +2641,9 @@ function renderCatManagerBody() {
         title="Click to rename">
       <span class="cat-row-count">${count} prompt${count!==1?'s':''}</span>
       <div class="cat-row-actions">
-        <button class="btn btn-sm btn-danger" onclick="deleteCategory('${escJs(c.id)}')"
-          ${canDel?'':'disabled title="Move or delete prompts first"'}
-          style="${canDel?'':'opacity:0.35;cursor:not-allowed'}">
-          <i class="fa-solid fa-trash-can"></i>
+        <button class="icon-btn cat-del" onclick="deleteCategory('${escJs(c.id)}')"
+          ${canDel?'title="Delete category"':'disabled title="Move or delete prompts first"'}>
+          <i class="fa-regular fa-trash-can"></i>
         </button>
       </div>
     </div>`;
