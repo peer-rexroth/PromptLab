@@ -720,15 +720,18 @@
   @media (hover: none) { .var-actions { opacity: 1; } }
   .var-actions .icon-btn { font-size: 13px; padding: 6px 8px; border-radius: 999px; }
   .var-actions .icon-btn:hover:not(:disabled) { background: var(--bg-3); color: var(--text); }
-  /* per-option delete: a small ✕ inside the pill's right end (like the preset chips'). Its slot is ALWAYS reserved and only
-     faded in on hover/focus: a slot that grew on hover widened the pill, so a pill at the end of a row wrapped to the next
-     line, left the pointer, lost hover, shrank, wrapped back, and flickered. The pill's right padding is trimmed to pay for
-     most of the slot. */
-  .option-pill:has(.opt-x) { padding-right: 4px; }
-  .opt-x { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-left: 2px; opacity: 0; pointer-events: none; border-radius: 50%; color: var(--text-3); font-size: 8px; cursor: pointer; vertical-align: middle; transition: opacity .12s ease, background .1s; }
-  .option-pill:hover .opt-x, .option-pill:focus-within .opt-x { opacity: 1; pointer-events: auto; }
+  /* per-option delete: a small ✕ that slides open inside the pill's right end (like the preset chips'), on hover or focus.
+     The pill's layout box never changes, so a pill at the end of a row cannot wrap away from the pointer (the old flicker):
+     at rest it carries a 7px right margin, and on hover its width grows by 10px (12px ✕ + 2px gap − 4px of trimmed padding)
+     while that margin drops to −3px, so margin box + width stay constant. The grown pill just fills most of the empty space
+     beside it (7px margin + 5px flex gap = 12px), leaving a 2px gap to its neighbour. Because the margin box is what flex-wrap measures, a pill that would not fit WITH
+     the ✕ open is already on the next line at rest. */
+  .option-pill:has(.opt-x) { margin-right: 7px; transition: margin-right .15s ease, padding-right .15s ease, border-color .1s, background .1s, color .1s; }
+  .option-pill:has(.opt-x):hover, .option-pill:has(.opt-x):focus-within { margin-right: -3px; padding-right: 6px; }
+  .opt-x { display: inline-flex; align-items: center; justify-content: center; width: 0; height: 14px; margin-left: 0; opacity: 0; overflow: hidden; border-radius: 50%; color: var(--text-3); font-size: 8px; cursor: pointer; vertical-align: middle; transition: width .15s ease, margin-left .15s ease, opacity .12s ease, background .1s; }
+  .option-pill:hover .opt-x, .option-pill:focus-within .opt-x { width: 12px; margin-left: 2px; opacity: 1; }
   .opt-x:hover { background: var(--red-bg); color: var(--red-text); }
-  .opt-x:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 0; opacity: 1; pointer-events: auto; }
+  .opt-x:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 0; }
   .btn-add-opt { border: 0; background: transparent; padding: 4px 8px; border-radius: 999px; color: var(--text-3); }
   .btn-add-opt:hover { background: var(--bg-3); color: var(--text); }
   html[data-scheme="glass"] .btn.btn-quiet { background: transparent; border-color: transparent; box-shadow: none; color: var(--text-2); }
@@ -1957,7 +1960,7 @@ function renderMain() {
       </span>`;
     }).join('')}</div>`;
   })();
-  const hasVars = Object.keys(p.vars).length > 0;
+  const hasVars = hasPresetVars(p);
 
   const varRows = Object.entries(p.vars).map(([k,v]) => {
     if (v.type === 'instruction') {
@@ -2487,9 +2490,11 @@ function buildVersionList(p) {
   }).join('');
 }
 
+// Presets cover option and instruction variables only; a prompt whose variables are all ((text)) has nothing to save
+function hasPresetVars(p) { return Object.values(p.vars || {}).some(v => v.type !== 'text'); }
 function savePreset(id) {
   const p = prompts.find(x => x.id === id);
-  if (p.locked || !Object.keys(p.vars).length) return;
+  if (p.locked || !hasPresetVars(p)) return;
   const name = window.prompt('Name this preset:');
   if (!name || !name.trim()) return;
   const trimmed = name.trim();
@@ -2498,7 +2503,7 @@ function savePreset(id) {
   Object.entries(p.vars).forEach(([k, v]) => {
     if (v.type === 'option') values[k] = v.selected;
     else if (v.type === 'instruction') values[k] = [...(v.selected || [])];
-    else if (v.type === 'text') values[k] = v.value;
+    // ((text)) variables are deliberately not part of a preset (see applyPreset)
   });
   const existing = p.presets.findIndex(x => x.name === trimmed);
   if (existing >= 0) {
@@ -2521,8 +2526,9 @@ function presetMatchesCurrent(p, preset, isClear) {
       return true;
     });
   }
-  const presetKeys = Object.keys(preset.values);
-  if (presetKeys.length !== keys.length) return false;
+  const isPresetVar = k => p.vars[k] && p.vars[k].type !== 'text';
+  const presetKeys = Object.keys(preset.values).filter(isPresetVar);
+  if (presetKeys.length !== keys.filter(isPresetVar).length) return false;
   return presetKeys.every(k => {
     const v = p.vars[k];
     if (!v) return false;
@@ -2532,7 +2538,6 @@ function presetMatchesCurrent(p, preset, isClear) {
       const a = v.selected || [], b = val || [];
       return a.length === b.length && a.every(x => b.includes(x));
     }
-    if (v.type === 'text') return (v.value || '') === (val || '');
     return false;
   });
 }
@@ -2549,12 +2554,13 @@ function applyPreset(id, name) {
       else if (v.type === 'text') v.value = '';
     });
   } else {
+    // A named preset only switches the option and instruction variables. ((text)) variables hold what you typed for *this* use,
+    // so stepping through presets leaves them alone; only the built-in Clear (above) resets them.
     Object.entries(preset.values).forEach(([k, val]) => {
       if (!p.vars[k]) return;
       const v = p.vars[k];
       if (v.type === 'option') v.selected = val;
       else if (v.type === 'instruction') v.selected = Array.isArray(val) ? [...val] : [];
-      else if (v.type === 'text') v.value = val;
     });
   }
   save(); renderMain();

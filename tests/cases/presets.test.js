@@ -134,3 +134,68 @@ test('commitRenamePreset is a no-op once cancelRenamePreset already cleared the 
   assertTrue(p.presets.some(x => x.name === 'Temp'), 'the stale commit should not have applied');
   assertFalse(p.presets.some(x => x.name === 'Sales pitch'));
 });
+
+// ── ((text)) variables are not part of a preset; only Clear resets them ──────
+
+function presetTextPrompt() {
+  return makeUnlockedPrompt({
+    id: 999102,
+    template: 'Write a {{tone}} email about ((topic)) with [[parts]].',
+    vars: {
+      tone: { type: 'option', options: ['formal', 'casual'], selected: 'formal' },
+      topic: { type: 'text', value: 'quarterly results' },
+      parts: { type: 'instruction', options: ['intro', 'ask'], selected: ['intro'] }
+    },
+    presets: [{ name: 'Clear', values: { tone: '', topic: '', parts: [] } }]
+  });
+}
+
+test('savePreset stores option and instruction variables, not ((text)) ones', function () {
+  const p = presetTextPrompt();
+  globalThis.__promptReturn = 'Mine';
+  savePreset(p.id);
+  assertDeepEqual(p.presets.find(x => x.name === 'Mine').values, { tone: 'formal', parts: ['intro'] });
+});
+
+test('applying a named preset leaves ((text)) variables as typed', function () {
+  const p = presetTextPrompt();
+  p.presets.push({ name: 'Casual', values: { tone: 'casual', parts: ['ask'], topic: 'SHOULD NOT APPLY' } });
+  applyPreset(p.id, 'Casual');
+  assertEqual(p.vars.tone.selected, 'casual');
+  assertDeepEqual(p.vars.parts.selected, ['ask']);
+  assertEqual(p.vars.topic.value, 'quarterly results', 'typed text must survive switching presets (even a legacy preset that stored text)');
+});
+
+test('the built-in Clear preset still clears ((text)) variables too', function () {
+  const p = presetTextPrompt();
+  applyPreset(p.id, 'Clear');
+  assertEqual(p.vars.topic.value, '');
+  assertEqual(p.vars.tone.selected, '');
+  assertDeepEqual(p.vars.parts.selected, []);
+});
+
+test('a named preset still highlights as active regardless of what is typed in a ((text)) variable', function () {
+  const p = presetTextPrompt();
+  p.presets.push({ name: 'Formal', values: { tone: 'formal', parts: ['intro'] } });
+  const preset = p.presets.find(x => x.name === 'Formal');
+  assertTrue(presetMatchesCurrent(p, preset, false));
+  p.vars.topic.value = 'something else entirely';
+  assertTrue(presetMatchesCurrent(p, preset, false));
+  p.vars.tone.selected = 'casual';
+  assertFalse(presetMatchesCurrent(p, preset, false));
+});
+
+test('Clear only highlights when ((text)) variables are empty too', function () {
+  const p = presetTextPrompt();
+  p.vars.tone.selected = ''; p.vars.parts.selected = [];
+  assertFalse(presetMatchesCurrent(p, p.presets[0], true), 'topic still has text');
+  p.vars.topic.value = '';
+  assertTrue(presetMatchesCurrent(p, p.presets[0], true));
+});
+
+test('a prompt with only ((text)) variables cannot save a preset', function () {
+  const p = makeUnlockedPrompt({ id: 999103, template: '((a))', vars: { a: { type: 'text', value: 'x' } }, presets: [] });
+  globalThis.__promptReturn = 'Nope';
+  savePreset(p.id);
+  assertEqual(p.presets.length, 0);
+});
