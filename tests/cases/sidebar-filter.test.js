@@ -60,7 +60,8 @@ test('renderSidebar search is case-insensitive', function () {
 
 // ── Source-list filter (All Prompts / Favorites / collapsible Categories) ─────
 
-test('renderFilterStrip lists All Prompts, Favorites and every category with counts', function () {
+test('renderFilterStrip lists All Prompts, Favorites and every category with counts (when the Categories section is expanded)', function () {
+  catsCollapsed = false;   // collapsed is the default, which hides the category rows
   renderFilterStrip();
   const html = document.getElementById('filterStrip').innerHTML;
   assertIncludes(html, 'All Prompts');
@@ -148,4 +149,13 @@ test('stepPrompt does not close the floating sidebar on a narrow window', functi
   sidebarCollapsed = false;
   stepPrompt(1);
   assertEqual(sidebarCollapsed, false);
+});
+
+test('the Categories section is collapsed by default, and only an explicit expand ("0") keeps it open', function () {
+  localStorage.clear();
+  assertEqual(readCatsCollapsed(), true);
+  localStorage.setItem('promptlab-cats-collapsed', '0');
+  assertEqual(readCatsCollapsed(), false);
+  localStorage.setItem('promptlab-cats-collapsed', '1');
+  assertEqual(readCatsCollapsed(), true);
 });

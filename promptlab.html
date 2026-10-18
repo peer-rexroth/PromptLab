@@ -2109,8 +2109,9 @@ function untombstone(list, id) {
 // row. The selected row is a soft grey fill (like mytasks' nav rows) so it never competes with the solid-blue open
 // prompt below. Clicking the selected category again clears the filter. Collapse state is per-device.
 const CATS_COLLAPSED_KEY = 'promptlab-cats-collapsed';
-let catsCollapsed = false;
-try { catsCollapsed = localStorage.getItem(CATS_COLLAPSED_KEY) === '1'; } catch(_) {}
+// Collapsed by default: only an explicit choice to expand it ('0') keeps the section open.
+function readCatsCollapsed() { try { return localStorage.getItem(CATS_COLLAPSED_KEY) !== '0'; } catch(_) { return true; } }
+let catsCollapsed = readCatsCollapsed();
 function toggleCatsSection() {
   catsCollapsed = !catsCollapsed;
   try { localStorage.setItem(CATS_COLLAPSED_KEY, catsCollapsed ? '1' : '0'); } catch(_) {}
