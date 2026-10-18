@@ -42,14 +42,14 @@
   }
   html { --ink: var(--text); --ink-2: var(--text-2); --ink-3: var(--text-3); }
 
-  html, body { height: 100%; }
-  body { font-family: var(--font); background: var(--bg-2); color: var(--text); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; min-height: 100vh; }
+  html, body { height: calc(100vh / var(--ui-zoom, 1)); }
+  body { font-family: var(--font); background: var(--bg-2); color: var(--text); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; min-height: calc(100vh / var(--ui-zoom, 1)); }
 
   /* topbar */
   .topbar { background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 20px; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .topbar-brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 400; letter-spacing: -0.01em; }
-  .topbar-brand .brand-prompt { color: var(--text-2); font-weight: 400; }
-  .topbar-brand .brand-lab { color: var(--text); font-weight: 600; }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 500; letter-spacing: -0.02em; }   /* wordmark only, exactly like myDesk's */
+  .topbar-brand .brand-prompt { color: var(--text-2); font-weight: 400; opacity: .6; }
+  .topbar-brand .brand-lab { color: var(--text); font-weight: 700; }
   .topbar-actions { display: flex; gap: 8px; align-items: center; }
   .topbar-divider { width: 1px; height: 20px; background: var(--border-2); margin: 0 2px; }
   .lib-dropdown { position: relative; display: inline-flex; }
@@ -267,38 +267,24 @@
   .help-badge-blue   { background: var(--blue-bg);  color: var(--blue-text); }
   .help-badge-teal   { background: var(--teal-bg);  color: var(--teal-text); }
 
-  /* onboarding (embedded in main area) */
-  .onboarding {
-    flex: 1; display: flex; align-items: flex-start; justify-content: flex-start; padding: 32px;
-  }
-  .onboarding-card {
-    max-width: 480px; width: 100%; display: flex; flex-direction: column; gap: 28px;
-  }
-  .onboarding-logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 500; color: var(--text-2); }
-  .onboarding-headline { font-size: 24px; font-weight: 500; line-height: 1.35; color: var(--text); }
-  .onboarding-headline span { color: var(--blue-text); }
-  .onboarding-steps { display: flex; flex-direction: column; gap: 4px; }
-  .onboarding-step { display: flex; flex-direction: row; align-items: flex-start; gap: 16px; padding: 12px 0; }
-  .onboarding-step-arrow { color: var(--text-3); font-size: 13px; flex-shrink: 0; text-align: center; padding: 2px 0 2px 12px; width: 48px; }
-  .onboarding-step-icon {
-    width: 44px; height: 44px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 19px; flex-shrink: 0;
-  }
-  .onboarding-step-body { display: flex; flex-direction: column; gap: 3px; }
-  .onboarding-step-title { font-size: 13px; font-weight: 500; color: var(--text); }
-  .onboarding-step-desc  { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+  /* empty state / welcome (embedded in the main area): a quiet, centred macOS-style empty state — the mark, a plain title, the steps in one
+     softly tinted card with neutral icon discs (the Help dialog's list idiom), and the usual blue primary + quiet secondary buttons */
+  .onboarding { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px; }
+  .onboarding-card { max-width: 460px; width: 100%; display: flex; flex-direction: column; align-items: stretch; gap: 22px; text-align: left; }   /* a centred column of left-aligned content: one straight left edge for title, list and buttons */
+  .onboarding-title { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+  .onboarding-sub { margin-top: 4px; font-size: 14px; color: var(--text-2); }
+  .onboarding-list { width: 100%; text-align: left; background: color-mix(in srgb, var(--text) 4%, transparent); border-radius: 12px; padding: 0 14px; }
+  .onboarding-step { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; }
+  .onboarding-step + .onboarding-step { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+  .onboarding-ico { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text-2); font-size: 14px; }
+  .onboarding-step-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .onboarding-step-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .onboarding-step-desc { font-size: 14px; color: var(--text-2); line-height: 1.55; }
+  .onboarding-step-desc strong { color: var(--text); font-weight: 600; }
   .onboarding-badge { display: inline-block; font-family: var(--mono); font-size: 12px; font-weight: 500; padding: 1px 6px; border-radius: 4px; }
   .onboarding-badge-blue { background: var(--blue-bg); color: var(--blue-text); }
   .onboarding-badge-teal { background: var(--teal-bg); color: var(--teal-text); }
   .onboarding-actions { display: flex; gap: 10px; align-items: center; }
-  .btn-onboarding {
-    font-size: 13px; font-weight: 500; padding: 8px 22px;
-    background: var(--text); color: var(--bg); border: none;
-    border-radius: var(--radius); cursor: pointer; font-family: var(--font);
-    display: inline-flex; align-items: center; gap: 7px; transition: opacity 0.15s;
-  }
-  .btn-onboarding:hover { opacity: 0.82; }
 
   /* modal */
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.25); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .15s ease, visibility .15s ease; }
@@ -575,7 +561,8 @@
   .tool-sep { width: 1px; height: 16px; margin: 0 3px; background: var(--border-2); }
   .tool-btn:disabled { opacity: .35; cursor: default; }
   .tool-danger:hover:not(:disabled) { background: var(--red-bg); color: var(--red-text); }
-  .tool-btn.starred { color: var(--star); }
+  .tool-btn.starred { color: var(--star); }   /* amber only when the prompt IS a favourite (the solid star); the empty star is the plain outline */
+  .tool-btn .tb-ico { width: 16px; height: 16px; display: block; }
   .tool-btn.on { background: var(--amber-bg); color: var(--amber-text); }   /* the lock, when the prompt is read-only */
   .tool-btn.on:hover:not(:disabled) { background: var(--amber-bg); opacity: .85; }
   .header-tools { flex-shrink: 0; }
@@ -584,7 +571,6 @@
   .file-chip.ok i { color: var(--green-text); }
   .file-chip.bad { color: var(--red-text); border-color: var(--red-text); }
   .topbar-brand { user-select: none; }
-  .brand-mark { display: block; flex-shrink: 0; color: var(--text); }   /* a one-colour flask glyph drawn from the app icon's shape: it sits on the glass bar like the other toolbar icons and adapts to dark mode */
   /* Appearance button: a small A beside a large A (Safari's "aA"); its menu reuses .view-switch (the same pill as mytasks) */
   .aa-ico { display: inline-flex; align-items: baseline; gap: 1px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
   .aa-s { font-size: 11px; }
@@ -656,7 +642,7 @@
     .sidebar { position: fixed; top: 56px; bottom: 0; left: 0; z-index: 140; width: min(300px, 86vw); box-shadow: 0 0 40px rgba(0,0,0,.25); }
     html.sidebar-collapsed .sidebar { width: min(300px, 86vw); transform: translateX(-100%); box-shadow: none; }
     .sidebar { transition: transform .2s ease; }
-    .topbar-brand > span { display: none; }   /* icon only, so the toggle and the right-hand buttons fit */
+    .topbar-brand > span { display: none; }   /* wordmark hidden on narrow windows so the toggle and the right-hand buttons fit (as in myDesk) */
   }
   /* Scrollbars inside rounded boxes: a plain 6px bar runs into the corner curve. Give the track a margin equal to the
      corner radius and inset the thumb from the edge (transparent border + padding-box clip), so it floats inside the curve. */
@@ -843,17 +829,11 @@
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="brandMark" viewBox="226 186 572 650">
-  <path d="M357.7 560 L666.3 560 L772 742 Q798 792 744 812 L280 812 Q226 792 252 742 Z" fill="#2f8cff"/>
-  <path d="M432 232 L432 432 L252 742 Q226 792 280 812 L744 812 Q798 792 772 742 L592 432 L592 232 Z" fill="none" stroke="currentColor" stroke-width="40" stroke-linejoin="round"/>
-  <rect x="396" y="196" width="232" height="46" rx="23" fill="currentColor"/>
-</symbol></svg>
 
 <div class="topbar">
   <div class="topbar-left">
     <button class="btn btn-icon btn-sm sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-expanded="true" title="Hide sidebar"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2.5"/><path d="M6 2.5v11"/></svg></button>
     <div class="topbar-brand" onclick="goHome()" title="Home" style="cursor:pointer">
-      <svg class="brand-mark" width="26" height="30" aria-hidden="true"><use href="#brandMark"/></svg>
       <span><span class="brand-prompt">Prompt</span><span class="brand-lab">Lab</span></span>
     </div>
   </div>
@@ -1930,6 +1910,9 @@ function clampUiScale(v) {
 }
 const ICON_SUN = '<svg class="theme-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.35 5.35l1.5 1.5M17.15 17.15l1.5 1.5M5.35 18.65l1.5-1.5M17.15 6.85l1.5-1.5"/></svg>';
 const ICON_MOON = '<svg class="theme-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.2 14.4A8.4 8.4 0 0 1 9.6 3.8a8.4 8.4 0 1 0 10.6 10.6z"/></svg>';
+const ICON_LOCK   = '<svg class="tb-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="9.8" width="16.4" height="11.8" rx="3"/><path d="M7.4 9.8V7.6a4.6 4.6 0 0 1 9.2 0v2.2"/></svg>';
+const ICON_UNLOCK = '<svg class="tb-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="9.8" width="16.4" height="11.8" rx="3"/><path d="M7.4 9.8V7.6a4.6 4.6 0 0 1 8.8-1.9"/></svg>';
+const ICON_SYNC   = '<svg class="tb-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5A8 8 0 0 0 6.2 6.3L4 8.6"/><path d="M4 4.2v4.4h4.4"/><path d="M4 12.5a8 8 0 0 0 13.8 5.2l2.2-2.3"/><path d="M20 19.8v-4.4h-4.4"/></svg>';
 const ICON_AUTO = '<svg class="theme-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 3.8a8.2 8.2 0 0 0 0 16.4z" fill="currentColor"/></svg>';
 const BACKUPS_KEY = "promptlab-backups";
 const MAX_BACKUPS = 7;
@@ -1944,6 +1927,9 @@ let activeId = null, filterCatId = null, filterFavs = false;
 let currentTheme = 'light';     // the resolved theme data-theme shows
 let themePref = 'auto';         // what the user chose: 'light' | 'dark' | 'auto' (follow the system)
 let uiScale = UI_SCALE_DEFAULT; // percent, e.g. 100 = 100%
+// The zoom lives on <html>, and 100vh is NOT scaled by it: at 115% the page became 115% of the window tall (the pane ran below the
+// screen, the sidebar footer was cut off, and centred content sat low). --ui-zoom lets the CSS divide the viewport height by the zoom.
+function applyZoom() { document.documentElement.style.zoom = (uiScale / 100); document.documentElement.style.setProperty('--ui-zoom', String(uiScale / 100)); }
 // Apply the saved theme and text size immediately to avoid a flash. Both are per-device
 // preferences (localStorage only): each device follows its own system, and a synced file must not push
 // one device's choice onto another. Auto follows the system live, not just at load.
@@ -1984,7 +1970,7 @@ function collapseSidebarIfNarrow() {
   sidebarCollapsed = v === '1' ? true : v === '0' ? false : (typeof window !== 'undefined' && window.innerWidth <= 800);
   applySidebarState();
 })();
-(function(){ const n = parseInt(localStorage.getItem(UI_SCALE_KEY), 10); if (!isNaN(n)) uiScale = clampUiScale(n); document.documentElement.style.zoom = (uiScale / 100); })();
+(function(){ const n = parseInt(localStorage.getItem(UI_SCALE_KEY), 10); if (!isNaN(n)) uiScale = clampUiScale(n); applyZoom(); })();
 let modalTarget = null, pendingImportData = null, newCatColor = 'blue';
 let renamingPreset = null; // { promptId, name } — which preset chip (if any) shows its rename input
 const undoStacks = new Map(); // promptId → { past: string[], future: string[] }
@@ -2236,36 +2222,27 @@ function renderMain() {
   if (!p) {
     main.innerHTML = `<div class="onboarding">
       <div class="onboarding-card">
-        <div class="onboarding-logo">
-          <svg class="brand-mark" width="24" height="28" aria-hidden="true"><use href="#brandMark"/></svg>
-          <span><span style="color:var(--text-2);font-weight:400">Prompt</span><span style="font-weight:600">Lab</span></span>
+        <div class="onboarding-intro">
+          <h2 class="onboarding-title">Your prompts, always ready to use</h2>
+          <p class="onboarding-sub">Write a prompt once, then change its details with a click.</p>
         </div>
-        <div class="onboarding-headline">Your prompts.<br>Always <span>ready to use</span>.</div>
-        <div class="onboarding-steps">
+        <div class="onboarding-list">
           <div class="onboarding-step">
-            <div class="onboarding-step-icon" style="background:var(--blue-bg);color:var(--blue-text)">
-              <i class="fa-solid fa-pen-to-square"></i>
-            </div>
+            <span class="onboarding-ico"><i class="fa-solid fa-pen-to-square"></i></span>
             <div class="onboarding-step-body">
               <div class="onboarding-step-title">Write your template</div>
               <div class="onboarding-step-desc">Use <span class="onboarding-badge onboarding-badge-blue">{{variable}}</span>, <span class="onboarding-badge onboarding-badge-teal">[[instructions]]</span>, or <span class="onboarding-badge onboarding-badge-amber">((text))</span> as placeholders.</div>
             </div>
           </div>
-          <div class="onboarding-step-arrow"><i class="fa-solid fa-chevron-down"></i></div>
           <div class="onboarding-step">
-            <div class="onboarding-step-icon" style="background:var(--teal-bg);color:var(--teal-text)">
-              <i class="fa-solid fa-sliders"></i>
-            </div>
+            <span class="onboarding-ico"><i class="fa-solid fa-sliders"></i></span>
             <div class="onboarding-step-body">
               <div class="onboarding-step-title">Fill in the options</div>
               <div class="onboarding-step-desc">Pick predefined values for each variable — the preview updates instantly.</div>
             </div>
           </div>
-          <div class="onboarding-step-arrow"><i class="fa-solid fa-chevron-down"></i></div>
           <div class="onboarding-step">
-            <div class="onboarding-step-icon" style="background:var(--amber-bg);color:var(--amber-text)">
-              <i class="fa-regular fa-copy"></i>
-            </div>
+            <span class="onboarding-ico"><i class="fa-regular fa-copy"></i></span>
             <div class="onboarding-step-body">
               <div class="onboarding-step-title">Copy and use</div>
               <div class="onboarding-step-desc">Hit <strong>Copy prompt</strong> to copy the finished prompt to your clipboard.</div>
@@ -2273,10 +2250,8 @@ function renderMain() {
           </div>
         </div>
         <div class="onboarding-actions">
-          <button class="btn-onboarding" onclick="selectFirstPrompt()">
-            Open library <i class="fa-solid fa-arrow-right" style="font-size:12px"></i>
-          </button>
-          <button class="btn" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New prompt</button>
+          <button type="button" class="btn btn-primary" onclick="selectFirstPrompt()">Open library <i class="fa-solid fa-arrow-right" style="font-size:12px"></i></button>
+          <button type="button" class="btn" onclick="newPrompt()"><i class="fa-solid fa-plus"></i> New prompt</button>
         </div>
       </div>
     </div>`; return;
@@ -2385,8 +2360,8 @@ function renderMain() {
       </div>
       <div class="tool-group header-tools" role="toolbar" aria-label="Prompt actions">
         <button type="button" id="headerStarBtn" class="tool-btn${p.favorite?' starred':''}" onclick="toggleFav(event,${p.id})" title="${p.favorite?'Remove from favorites':'Add to favorites'}"><i class="fa-${p.favorite?'solid':'regular'} fa-star"></i></button>
-        <button type="button" class="tool-btn${locked?' on':''}" onclick="toggleLock(${p.id})" title="${locked?'Unlock to enable editing':'Lock to prevent editing'}"><i class="fa-solid fa-${locked?'lock':'lock-open'}"></i></button>
-        ${locked?'':`<button type="button" class="tool-btn" onclick="syncVars(${p.id})" title="Sync variables with the template"><i class="fa-solid fa-rotate"></i></button>`}
+        <button type="button" class="tool-btn${locked?' on':''}" onclick="toggleLock(${p.id})" title="${locked?'Unlock to enable editing':'Lock to prevent editing'}">${locked?ICON_LOCK:ICON_UNLOCK}</button>
+        ${locked?'':`<button type="button" class="tool-btn" onclick="syncVars(${p.id})" title="Sync variables with the template">${ICON_SYNC}</button>`}
         <button type="button" class="tool-btn" onclick="clonePrompt(${p.id})" title="Clone prompt"><i class="fa-regular fa-clone"></i></button>
         ${locked?'':`<span class="tool-sep"></span><button type="button" class="tool-btn tool-danger" onclick="deletePrompt(${p.id})" title="Delete prompt"><i class="fa-regular fa-trash-can"></i></button>`}
       </div>
@@ -3428,7 +3403,7 @@ document.addEventListener('keydown', e=>{
 function applyAppearanceFromData(d) {
   if (!d || d.uiScale === undefined || isNaN(parseInt(d.uiScale, 10))) return;
   uiScale = clampUiScale(d.uiScale);
-  document.documentElement.style.zoom = (uiScale / 100);
+  applyZoom();
   localStorage.setItem(UI_SCALE_KEY, String(uiScale));
 }
 function osPrefersDark() { return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
@@ -3444,7 +3419,7 @@ function setThemeMode(mode) {
 }
 function setUiScale(v) {
   uiScale = clampUiScale(v);
-  document.documentElement.style.zoom = (uiScale / 100);
+  applyZoom();
   localStorage.setItem(UI_SCALE_KEY, String(uiScale));
   renderUiScaleMenu();
   closeUiScaleMenu();

@@ -75,3 +75,12 @@ test('renderUiScaleMenu marks only the active size and theme', function () {
   assertIncludes(html, `view-switch-btn active" onclick="event.stopPropagation();setThemeMode('dark')"`);
   assertNotIncludes(html, `view-switch-btn active" onclick="event.stopPropagation();setThemeMode('light')"`);
 });
+
+test('applyZoom publishes the zoom as --ui-zoom so the CSS can divide 100vh by it (the zoom lives on <html>; 100vh is not scaled)', function () {
+  uiScale = 115;
+  applyZoom();
+  assertEqual(document.documentElement.style.zoom, 1.15);
+  assertEqual(document.documentElement.style['--ui-zoom'], '1.15');
+  setUiScale(100);
+  assertEqual(document.documentElement.style['--ui-zoom'], '1');
+});

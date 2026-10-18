@@ -58,7 +58,7 @@ async function run(argv) {
     const attrs = {};
     return {
       innerHTML: '', textContent: '', value: '', className: '',
-      style: {}, dataset: {}, disabled: false, checked: false,
+      style: { setProperty(k, v) { this[k] = v; } }, dataset: {}, disabled: false, checked: false,
       tabIndex: 0, offsetParent: {}, offsetWidth: 0,
       classList: {
         add() { for (const c of arguments) classSet.add(c); },
