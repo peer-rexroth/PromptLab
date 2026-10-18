@@ -1,10 +1,13 @@
-const CACHE_NAME = 'promptlab-cache-v2';
+const CACHE_NAME = 'promptlab-cache-v3';
 const APP_SHELL = [
   'promptlab.html',
   'manifest.json',
   'icons/icon-180.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
+  'icons/icon-192-maskable.png',
+  'icons/icon-512-maskable.png',
+  'icons/icon.svg',
   // Font Awesome (CSS + the two font files actually used — solid/regular)
   // precached explicitly, since it's cross-origin and would otherwise only
   // get cached after a first successful online load, leaving every icon
