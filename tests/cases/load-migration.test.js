@@ -79,3 +79,44 @@ test('load() ignores a legacy theme in the stored blob (the theme is per-device)
   assertEqual(currentTheme, 'light');
   assertEqual(document.documentElement.getAttribute('data-theme'), 'light');
 });
+
+// ── Bundled defaults: Create performance feedback ────────────────────────────
+
+test('the bundled defaults include "Create performance feedback", locked, in an existing category', function () {
+  const d = DEFAULT_PROMPTS.find(p => p.name === 'Create performance feedback');
+  assertTrue(!!d, 'bundled prompt missing');
+  assertTrue(d.locked, 'bundled prompts load locked');
+  assertTrue(DEFAULT_CATS.some(c => c.id === d.catId), 'its category must exist in DEFAULT_CATS');
+  assertEqual(d.favorite, false);
+  assertDeepEqual(d.versions, []);
+});
+
+test('every placeholder in the bundled performance-feedback template has a matching variable of the same type, and vice versa', function () {
+  const d = DEFAULT_PROMPTS.find(p => p.name === 'Create performance feedback');
+  const detected = detectVars(d.template, {});
+  assertDeepEqual(Object.keys(detected).sort(), Object.keys(d.vars).sort());
+  Object.keys(detected).forEach(k => assertEqual(detected[k].type, d.vars[k].type, 'type of ' + k));
+});
+
+test('the bundled performance-feedback presets only touch real option variables and Clear lists every variable', function () {
+  const d = DEFAULT_PROMPTS.find(p => p.name === 'Create performance feedback');
+  assertEqual(d.presets[0].name, 'Clear');
+  assertDeepEqual(Object.keys(d.presets[0].values).sort(), Object.keys(d.vars).sort());
+  d.presets.slice(1).forEach(pr => {
+    Object.keys(pr.values).forEach(k => {
+      assertTrue(!!d.vars[k], pr.name + ': unknown variable ' + k);
+      assertTrue(d.vars[k].type !== 'text', pr.name + ': text variable ' + k + ' must not be stored in a preset');
+      if (pr.values[k] !== '') assertTrue(d.vars[k].options.includes(pr.values[k]), pr.name + ': ' + k + ' value is not one of its options');
+    });
+  });
+});
+
+test('a fresh install loads the performance-feedback prompt and renders it', function () {
+  localStorage.clear();
+  load();
+  const p = prompts.find(x => x.name === 'Create performance feedback');
+  assertTrue(!!p);
+  activeId = p.id;
+  renderMain();
+  assertIncludes(document.getElementById('mainArea').innerHTML, 'Create performance feedback');
+});
