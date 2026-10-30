@@ -35,4 +35,4 @@ No install step — the suite runs via `osascript -l JavaScript` (JavaScriptCore
 
 ## License
 
-[MIT](LICENSE)
+Copyright © 2026 Peer Rexroth. All rights reserved — see [LICENSE](LICENSE).
