@@ -1,4 +1,4 @@
-const CACHE_NAME = 'promptlab-cache-v3';
+const CACHE_NAME = 'promptlab-cache-v4';
 const APP_SHELL = [
   'promptlab.html',
   'manifest.json',
@@ -49,7 +49,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));
+          if (res.ok) caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));   // an error page must not replace the good saved copy
           return res;
         })
         .catch(() => caches.match(req).then((cached) => cached || caches.match('promptlab.html')))
@@ -62,7 +62,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(req).then((cached) => {
       const fetchPromise = fetch(req)
         .then((res) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));
+          if (res.ok) caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));   // an error page must not replace the good saved copy
           return res;
         })
         .catch(() => cached);
